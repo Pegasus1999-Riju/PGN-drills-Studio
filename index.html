@@ -1,0 +1,3459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>PGN Drills Pro — Studio Overhaul</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chessboard.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <!-- jQuery, Chessboard.js, Chess.js -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <style>
+        .highlight-hint { box-shadow: inset 0 0 4px 4px #eab308 !important; }
+        .highlight-selected { background-color: rgba(59, 130, 246, 0.45) !important; }
+        .highlight-last-from { background-color: rgba(234, 179, 8, 0.35) !important; }
+        .highlight-last-to { background-color: rgba(234, 179, 8, 0.5) !important; }
+        .highlight-check { background-color: rgba(239, 68, 68, 0.6) !important; box-shadow: inset 0 0 6px 6px #dc2626 !important; }
+        .legal-dot { position: relative; }
+        .legal-dot::after {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 28%; height: 28%; background-color: rgba(0, 0, 0, 0.35); border-radius: 50%;
+            pointer-events: none; z-index: 5;
+        }
+        .legal-capture { position: relative; }
+        .legal-capture::after {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 78%; height: 78%; border: 4px solid rgba(0, 0, 0, 0.35); border-radius: 50%;
+            background: transparent; pointer-events: none; z-index: 5;
+        }
+        .theme-brown .white-1e1d7 { background-color: var(--board-light, #f0d9b5) !important; color: var(--board-dark, #b58863); }
+        .theme-brown .black-3c85d { background-color: var(--board-dark, #b58863) !important; color: var(--board-light, #f0d9b5); }
+        .theme-oled { background-color: #000000 !important; color: #e5e7eb !important; }
+        .theme-oled header, .theme-oled main, .theme-oled section { background-color: #000000 !important; }
+        .theme-oled .bg-gray-900, .theme-oled .bg-gray-950 { background-color: #050505 !important; border-color: #1f2937 !important; }
+
+        #board-wrapper, #board, #board-compare-1, #board-compare-2 {
+            touch-action: none !important; -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important; user-select: none !important; overscroll-behavior: none !important;
+        }
+        #board img, #board-compare-1 img, #board-compare-2 img { -webkit-user-drag: none; -webkit-touch-callout: none; }
+        #arrowCanvas { pointer-events: none; position: absolute; top: 0; left: 0; z-index: 20; }
+        .branch-move { color: #38bdf8; font-style: italic; cursor: pointer; padding: 1px 3px; border-radius: 3px; }
+        .branch-move:hover { background-color: rgba(56, 189, 248, 0.2); }
+    </style>
+</head>
+<body id="appBody" class="bg-gray-950 text-gray-100 min-h-screen font-sans select-none flex flex-col pb-14 sm:pb-0">
+
+    <!-- Auto-Sync Toast Banner -->
+    <div id="cloudUpdateToast" class="hidden fixed top-2 left-1/2 -translate-x-1/2 z-50 bg-teal-900 border border-teal-500 text-teal-100 px-4 py-2 rounded-lg shadow-2xl text-xs flex items-center gap-3">
+        <span>☁️ Newer repertoire detected on GitHub Gist!</span>
+        <button id="toastPullBtn" class="bg-teal-600 hover:bg-teal-500 px-2.5 py-1 rounded font-bold text-white uppercase text-[10px]">Pull</button>
+        <button id="toastDismissBtn" class="text-teal-300 hover:text-white font-bold ml-1">&times;</button>
+    </div>
+
+    <!-- Global Header -->
+    <header class="bg-gray-900 border-b border-gray-800 px-3 sm:px-5 py-2.5 flex items-center justify-between sticky top-0 z-30 shadow-md">
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button id="navHomeBtn" class="flex items-center gap-1.5 sm:gap-2 text-white font-bold tracking-tight hover:opacity-90 transition">
+                <span class="text-xl">♟️</span>
+                <span class="text-sm sm:text-lg">PGN Drills <span class="text-teal-400 font-mono text-[10px] uppercase px-1.5 py-0.5 bg-teal-950 border border-teal-800 rounded">Studio Pro</span></span>
+            </button>
+            <div id="breadcrumbBar" class="hidden text-xs text-gray-400 items-center gap-1.5 pl-2 sm:pl-3 border-l border-gray-800">
+                <span id="breadcrumbRoot" class="hover:text-white cursor-pointer transition">Categories</span>
+                <span>/</span>
+                <span id="breadcrumbSub" class="text-teal-300 font-semibold truncate max-w-[120px] sm:max-w-[200px]"></span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 sm:gap-2">
+            <button id="openBoardSettingsBtn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2 py-1 rounded text-xs text-amber-300 font-medium transition flex items-center gap-1" title="Board Styling, Interaction & Visual Controls">
+                <span>🎨</span> <span class="hidden md:inline">Board Settings</span>
+            </button>
+
+            <button id="openSyncModalBtn" class="relative bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2.5 py-1 rounded text-xs text-teal-300 font-medium transition flex items-center gap-1.5" title="GitHub Cloud Sync">
+                <span id="syncDirtyDot" class="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-gray-900"></span>
+                <span>☁️</span> <span class="hidden sm:inline">Sync</span>
+            </button>
+
+            <button id="openSettingsModalBtn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2.5 py-1 rounded text-xs text-gray-300 font-medium transition flex items-center gap-1" title="General Preferences">
+                <span>⚙️</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Views Manager -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-2.5 sm:p-5 flex flex-col justify-center">
+
+        <!-- VIEW 1: HOME DASHBOARD & ACCURACY BAR CHART -->
+        <section id="viewHome" class="space-y-6 max-w-4xl mx-auto w-full py-2">
+            <div class="text-center space-y-1">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Chess Repertoire Gym</h1>
+                <p class="text-xs sm:text-sm text-gray-400">Recall under pressure, explore deep engine variations, or experiment freely.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button id="homeGoDrillBtn" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-indigo-950/40 hover:to-gray-900 border border-gray-800 hover:border-indigo-500/80 p-4 sm:p-5 rounded-xl text-left transition duration-200 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-3xl">🎯</span>
+                            <span class="text-[10px] uppercase font-mono tracking-widest bg-indigo-900/60 border border-indigo-700/60 text-indigo-300 px-2 py-0.5 rounded">Recall</span>
+                        </div>
+                        <h2 class="text-base sm:text-lg font-bold text-white group-hover:text-indigo-400 transition">Drill Mode</h2>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            Strict line enforcement, auto-orientation, auto-advance, mistake rewind, and spaced repetition intervals.
+                        </p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-800 flex items-center text-xs font-semibold text-indigo-400">
+                        <span>Select Category &rarr;</span>
+                    </div>
+                </button>
+
+                <button id="homeGoExploreBtn" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-teal-950/40 hover:to-gray-900 border border-gray-800 hover:border-teal-500/80 p-4 sm:p-5 rounded-xl text-left transition duration-200 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-3xl">🧭</span>
+                            <span class="text-[10px] uppercase font-mono tracking-widest bg-teal-900/60 border border-teal-700/60 text-teal-300 px-2 py-0.5 rounded">Analysis</span>
+                        </div>
+                        <h2 class="text-base sm:text-lg font-bold text-white group-hover:text-teal-400 transition">Explore Mode</h2>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            Stockfish NNUE, Syzygy 7-piece tablebases, Lichess Masters book stats, position compare, and voice annotations.
+                        </p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-800 flex items-center text-xs font-semibold text-teal-400">
+                        <span>Browse Repertoire &rarr;</span>
+                    </div>
+                </button>
+
+                <button id="homeGoSandboxBtn" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-amber-950/40 hover:to-gray-900 border border-gray-800 hover:border-amber-500/80 p-4 sm:p-5 rounded-xl text-left transition duration-200 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-3xl">♟️</span>
+                            <span class="text-[10px] uppercase font-mono tracking-widest bg-amber-900/60 border border-amber-700/60 text-amber-300 px-2 py-0.5 rounded">Laboratory</span>
+                        </div>
+                        <h2 class="text-base sm:text-lg font-bold text-white group-hover:text-amber-400 transition">Sandbox Lab</h2>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            Isolated scratchpad for FEN batch analysis, position drafting, side-by-side comparison, and direct PGN export.
+                        </p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-800 flex items-center text-xs font-semibold text-amber-400">
+                        <span>Open Blank Lab &rarr;</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Home Accuracy Chart -->
+            <div class="bg-gray-900 border border-gray-800 p-4 sm:p-5 rounded-xl shadow-xl space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <span>📊 Subfolder Gold Medal Mastery Bar Chart</span>
+                        </h3>
+                        <p class="text-[11px] text-gray-400">Calculated as: (Gold Medals Acquired ⭐ / Total Lines in Subfolder) × 100%.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="homeDrillAllMistakesBtn" class="px-3 py-1 bg-rose-700 hover:bg-rose-600 text-white rounded font-bold text-xs shadow flex items-center gap-1">
+                            <span>🔥 Test All Mistakes (<span id="homeMistakeCountBadge">0</span>)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="subfolderAccuracyChartContainer" class="space-y-2.5 max-h-56 overflow-y-auto pr-1"></div>
+
+                <div class="pt-3 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-400 gap-2">
+                    <div class="flex items-center gap-2">
+                        <span>Training Streak: <b id="homeStreakCount" class="text-teal-400 font-mono">1 day</b></span>
+                        <span class="text-gray-600">|</span>
+                        <span>Total Repertoire Lines: <b id="homeTotalDrillCount" class="text-gray-200 font-mono">0</b></span>
+                    </div>
+                    <div id="homeSpeedWarning" class="hidden text-amber-400 text-[11px] font-mono">⚠️ Moves taking &gt;5s detected in recent drill</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: FOLDER & REPERTOIRE BROWSER -->
+        <section id="viewFolderHub" class="hidden space-y-4 max-w-4xl mx-auto w-full py-2">
+            <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <button id="folderHubBackBtn" class="text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2.5 py-1 rounded text-gray-300 font-semibold transition">&larr; Back</button>
+                    <h2 id="folderHubTitle" class="text-sm sm:text-base font-bold text-white">Select a Category</h2>
+                </div>
+                <div id="targetModeBadge" class="text-xs uppercase font-mono font-bold px-2 py-0.5 rounded"></div>
+            </div>
+
+            <div id="rootFolderDeck" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button class="root-category-card group bg-gray-900 hover:bg-gray-850 border border-gray-800 hover:border-gray-600 p-4 rounded-lg text-left transition shadow" data-root="Openings">
+                    <div class="text-2xl mb-1">📖</div>
+                    <h3 class="text-sm font-bold text-white group-hover:text-teal-400 transition">Openings</h3>
+                    <p class="text-[11px] text-gray-400 mt-1" id="countOpenings">0 drills</p>
+                </button>
+                <button class="root-category-card group bg-gray-900 hover:bg-gray-850 border border-gray-800 hover:border-gray-600 p-4 rounded-lg text-left transition shadow" data-root="Tactics">
+                    <div class="text-2xl mb-1">⚡</div>
+                    <h3 class="text-sm font-bold text-white group-hover:text-teal-400 transition">Tactics</h3>
+                    <p class="text-[11px] text-gray-400 mt-1" id="countTactics">0 drills</p>
+                </button>
+                <button class="root-category-card group bg-gray-900 hover:bg-gray-850 border border-gray-800 hover:border-gray-600 p-4 rounded-lg text-left transition shadow" data-root="Endgames">
+                    <div class="text-2xl mb-1">👑</div>
+                    <h3 class="text-sm font-bold text-white group-hover:text-teal-400 transition">Endgames</h3>
+                    <p class="text-[11px] text-gray-400 mt-1" id="countEndgames">0 drills</p>
+                </button>
+            </div>
+
+            <div id="subfolderDeckContainer" class="hidden space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Subfolders in <span id="currentRootName" class="text-teal-300"></span></span>
+                    <div class="flex items-center gap-2">
+                        <button id="cleanEmptyFoldersBtn" class="text-xs bg-rose-950 border border-rose-700 hover:bg-rose-900 text-rose-300 px-2 py-0.5 rounded font-semibold transition" title="Delete folders with 0 games">
+                            🗑️ Prune Empty Folders
+                        </button>
+                        <button id="createSubfolderBtn" class="text-xs bg-teal-800 hover:bg-teal-700 text-teal-100 px-2.5 py-0.5 rounded font-semibold transition">+ New Subfolder</button>
+                    </div>
+                </div>
+                <div id="subfolderList" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs"></div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: UNIFIED WORKSPACE -->
+        <section id="viewWorkspace" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-5 w-full">
+            
+            <!-- Left: Board Column -->
+            <div id="leftBoardColumn" class="lg:col-span-7 flex flex-col items-center relative">
+                
+                <div class="w-full max-w-[440px] flex justify-between items-center mb-1.5 px-1 text-xs">
+                    <div class="flex items-center gap-1.5 truncate">
+                        <button id="wsBackToFoldersBtn" class="text-teal-400 hover:text-teal-200 transition font-bold px-1.5 py-0.5 bg-gray-800 rounded border border-gray-700">&larr; Folders</button>
+                        <span class="text-gray-600">|</span>
+                        <span id="wsScopeName" class="font-bold text-teal-300 truncate max-w-[190px]">All Games</span>
+                        <span id="wsMasteryStarBadge" class="hidden text-amber-400 text-xs font-bold" title="Mastery Level">⭐</span>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 font-mono text-[11px]">
+                        <span id="wsMistakeBadge" class="hidden bg-rose-950 border border-rose-700 text-rose-300 px-1.5 py-0.5 rounded text-[10px]">Mistakes Queue</span>
+                        <span id="wsCounter" class="bg-gray-800 border border-gray-700 px-2 py-0.5 rounded text-gray-300">0/0</span>
+                    </div>
+                </div>
+
+                <div id="syzygyBanner" class="hidden w-full max-w-[440px] mb-1 bg-purple-950/80 border border-purple-600/50 text-purple-200 text-xs px-2.5 py-1 rounded-lg text-center shadow font-mono"></div>
+                <div id="coachNote" class="hidden w-full max-w-[440px] mb-1.5 bg-blue-950/80 border border-blue-600/50 text-blue-200 text-xs px-3 py-1.5 rounded-lg text-center shadow-md"></div>
+                <div id="masterBookBanner" class="hidden w-full max-w-[440px] mb-1.5 bg-gray-900 border border-gray-800 text-gray-300 text-[11px] px-2.5 py-1 rounded text-center font-mono"></div>
+
+                <div id="board-wrapper" class="relative flex items-center justify-center gap-2 w-full max-w-[470px]">
+                    <div id="evalBarWrapper" class="w-4 h-[320px] sm:h-[380px] bg-gray-800 rounded-full overflow-hidden flex flex-col justify-end border border-gray-700 shadow relative transition-all duration-200">
+                        <div id="evalBarWhite" class="w-full bg-gray-100 transition-all duration-300" style="height: 50%;"></div>
+                        <span id="evalBarScoreText" class="absolute inset-x-0 bottom-1 text-[9px] font-mono font-bold text-center text-gray-900 pointer-events-none">+0.0</span>
+                    </div>
+
+                    <div class="relative theme-brown" id="boardThemeContainer">
+                        <div id="board" class="w-[320px] sm:w-[380px] aspect-square rounded shadow-2xl relative"></div>
+                        <canvas id="arrowCanvas" class="w-[320px] sm:w-[380px] h-[320px] sm:h-[380px] rounded"></canvas>
+                        
+                        <div id="promotionModal" class="hidden absolute inset-0 bg-black/85 rounded flex flex-col items-center justify-center z-50">
+                            <span class="text-xs font-bold text-white mb-3 tracking-wider uppercase">Choose Promotion Piece</span>
+                            <div id="promotionChoices" class="flex gap-2 bg-gray-900 p-3 rounded-lg border border-gray-700 shadow-2xl"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-2 w-full max-w-[440px] flex items-center justify-center gap-2 bg-gray-900 p-1.5 rounded-lg border border-gray-800 text-xs">
+                    <span class="text-gray-400 font-semibold text-[11px]">Play as:</span>
+                    <button id="togglePlayWhiteBtn" class="px-3 py-1 rounded font-bold transition bg-gray-800 text-gray-300 hover:text-white border border-gray-700">⚪ White</button>
+                    <button id="togglePlayBlackBtn" class="px-3 py-1 rounded font-bold transition bg-gray-800 text-gray-300 hover:text-white border border-gray-700">⚫ Black</button>
+                    <button id="togglePlayAutoBtn" class="px-2.5 py-1 rounded font-bold transition bg-teal-800 text-teal-200 border border-teal-600">Auto</button>
+                </div>
+
+                <div class="mt-1.5 flex items-center justify-center gap-2 min-h-[22px]">
+                    <p id="statusMsg" class="text-xs sm:text-sm font-medium text-teal-400 text-center"></p>
+                    <button id="quickInspectErrorBtn" class="hidden px-2 py-0.5 bg-teal-800 hover:bg-teal-700 text-teal-100 rounded text-[11px] font-bold">🧭 View in Explore</button>
+                </div>
+
+                <div class="mt-1.5 w-full max-w-[440px] flex flex-wrap justify-center gap-1.5 text-xs">
+                    <button id="wsFlipBtn" class="px-2.5 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-200 font-semibold transition">Flip (F)</button>
+                    
+                    <button id="drillBackPrevBtn" class="drill-only px-2.5 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-200 font-semibold transition" title="Go back to the previous drill">
+                        &larr; Prev Drill
+                    </button>
+                    <button id="drillHintBtn" class="drill-only px-3 py-1 bg-amber-700 hover:bg-amber-600 rounded text-white font-semibold transition">Hint (Space)</button>
+                    <button id="drillRepeatBtn" class="drill-only px-2.5 py-1 bg-purple-700 hover:bg-purple-600 rounded text-white font-semibold transition">Repeat (R)</button>
+                    <button id="drillNextBtn" class="drill-only px-3 py-1 bg-teal-600 hover:bg-teal-500 rounded text-white font-bold transition">Next &rarr;</button>
+
+                    <button id="drillRandomPlyBtn" class="drill-only px-2 py-1 bg-indigo-950 border border-indigo-700 hover:bg-indigo-900 text-indigo-200 rounded font-semibold text-[11px]" title="Start drilling from random in-line tabiya">
+                        🎲 Random Start
+                    </button>
+                    <button id="drillTargetPlyBtn" class="drill-only px-2 py-1 bg-indigo-950 border border-indigo-700 hover:bg-indigo-900 text-indigo-200 rounded font-semibold text-[11px]" title="Restrict drill depth (e.g. moves 1-10)">
+                        🎯 Target Ply
+                    </button>
+                    <button id="drillToggleEngineBtn" class="drill-only px-2.5 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-semibold rounded text-[11px]">
+                        Engine: Off
+                    </button>
+
+                    <button id="wsClearArrowsBtn" class="explore-only sandbox-only px-2.5 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-200 font-semibold transition">Clear Arrows</button>
+
+                    <button id="sandboxUndoBtn" class="sandbox-only hidden px-3 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-white font-semibold transition">Undo &larr;</button>
+                    <button id="sandboxResetBtn" class="sandbox-only hidden px-3 py-1 bg-amber-700 hover:bg-amber-600 rounded text-white font-semibold transition">Reset Pos</button>
+                    <button id="sandboxSaveDrillBtn" class="sandbox-only hidden px-3 py-1 bg-emerald-700 hover:bg-emerald-600 rounded text-white font-bold transition">+ Save as Drill</button>
+                </div>
+            </div>
+
+            <!-- Right: Control & Move Column -->
+            <div class="lg:col-span-5 flex flex-col bg-gray-900 border border-gray-800 p-3.5 sm:p-4 rounded-xl shadow-xl space-y-3">
+                
+                <div id="modeSwitcherRow" class="flex items-center justify-between bg-gray-950 p-1 rounded-lg border border-gray-800 text-xs font-semibold">
+                    <button id="toggleToDrillBtn" class="flex-1 py-1.5 rounded-md transition text-center flex items-center justify-center gap-1.5">
+                        <span>🎯</span> <span>Drill Mode</span>
+                    </button>
+                    <button id="toggleToExploreBtn" class="flex-1 py-1.5 rounded-md transition text-center flex items-center justify-center gap-1.5">
+                        <span>🧭</span> <span>Explore Mode</span>
+                    </button>
+                </div>
+
+                <div id="exploreToolbar" class="explore-only hidden space-y-2 bg-gray-950/60 p-2 rounded-lg border border-gray-800">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-gray-400 font-mono text-[11px]">Timeline</span>
+                        <div class="flex gap-1">
+                            <button id="expStartBtn" class="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-gray-200 font-bold transition">&laquo;</button>
+                            <button id="expPrevBtn" class="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-gray-200 font-bold transition">&larr;</button>
+                            <button id="expNextBtn" class="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-gray-200 font-bold transition">&rarr;</button>
+                            <button id="expEndBtn" class="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-gray-200 font-bold transition">&raquo;</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-1.5 text-xs pt-0.5">
+                        <button id="expSparBtn" class="px-2 py-1 bg-amber-700 hover:bg-amber-600 rounded text-white font-bold transition">⚔️ Spar Engine</button>
+                        <button id="expExtractBranchBtn" class="px-2 py-1 bg-teal-700 hover:bg-teal-600 rounded text-white font-bold transition">🌿 Extract Branch</button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-1.5 text-xs">
+                        <button id="openComparePositionsBtn" class="px-2 py-1 bg-indigo-950 border border-indigo-700 hover:bg-indigo-900 rounded text-indigo-200 font-bold transition flex items-center justify-center gap-1">
+                            <span>🔍</span> <span>Compare Lines</span>
+                        </button>
+                        <button id="openSubfolderManagerBtn" class="px-2 py-1 bg-indigo-900/60 hover:bg-indigo-900 border border-indigo-700/60 rounded text-indigo-200 font-semibold flex items-center justify-center gap-1 transition">
+                            <span>📂</span> <span>Folder Games (<span id="subfolderGamesBadgeCount">0</span>)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Upgraded Engine Section with SF NNUE Indicator -->
+                <div id="engineSection" class="space-y-1">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-gray-400 font-mono text-[11px] uppercase tracking-wider font-bold">
+                            Stockfish (<span id="engineVersionBadge" class="text-teal-400 font-bold">NNUE 16</span> MultiPV 3)
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] text-gray-400">WDL: <b id="wdlText" class="text-teal-400 font-mono">50/50</b></span>
+                            <span class="text-[10px] text-gray-500">Depth:</span>
+                            <input type="number" id="engineDepthInput" min="10" max="25" value="18" class="w-10 bg-gray-950 border border-gray-700 rounded px-1 py-0.5 text-center text-white text-[11px]">
+                        </div>
+                    </div>
+                    <div id="engineLinesBox" class="text-xs font-mono text-gray-300 bg-gray-950 p-2 rounded h-20 overflow-y-auto flex flex-col gap-1 border border-gray-800/80 cursor-pointer">
+                        <div class="pv-line truncate hover:text-teal-300 transition" data-pv="1">1. <span class="text-gray-500">Stockfish ready...</span></div>
+                        <div class="pv-line truncate hover:text-teal-300 transition" data-pv="2">2. <span class="text-gray-500">Stockfish ready...</span></div>
+                        <div class="pv-line truncate hover:text-teal-300 transition" data-pv="3">3. <span class="text-gray-500">Stockfish ready...</span></div>
+                    </div>
+                </div>
+
+                <div id="drillStatsSection" class="drill-only space-y-2 bg-gray-950/60 p-2.5 rounded-lg border border-gray-800">
+                    <div class="flex items-center justify-between text-xs font-mono">
+                        <span class="text-gray-400">Accuracy: <b id="statAccuracy" class="text-green-400">100%</b></span>
+                        <span class="text-gray-400">Speed: <b id="statAvgTime" class="text-blue-400">0.0s</b></span>
+                        <span class="text-gray-400">Level: <b id="statMasteryLevel" class="text-amber-400">Bronze</b></span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <select id="queueSelect" class="bg-gray-800 border border-gray-700 text-white rounded p-1 outline-none">
+                            <option value="all">Queue: All in Folder</option>
+                            <option value="mistakes">Queue: Mistakes Only (0)</option>
+                        </select>
+                        <label class="flex items-center gap-1.5 cursor-pointer text-gray-300 text-xs">
+                            <input type="checkbox" id="shuffleDrillCheckbox" class="w-3.5 h-3.5 accent-teal-600" checked>
+                            <span>Shuffle Order</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex-1 flex flex-col min-h-[170px]">
+                    <div class="flex justify-between items-center mb-1 text-xs text-gray-400">
+                        <span class="font-bold uppercase tracking-wider text-[11px]">Move History</span>
+                        <span id="historyProgressMeta" class="font-mono text-[11px]"></span>
+                    </div>
+
+                    <div id="moveHistory" class="flex-1 bg-gray-950 rounded p-2.5 h-44 overflow-y-auto text-xs leading-relaxed space-y-1.5 border border-gray-800 font-mono"></div>
+                </div>
+
+                <div class="pt-2 border-t border-gray-800 flex justify-between items-center text-xs">
+                    <button id="openPgnManagerBtn" class="text-teal-400 hover:text-teal-300 font-semibold underline">Global Repertoire Manager</button>
+                    <button id="wsQuickExportBtn" class="text-gray-400 hover:text-white underline">&#x2B07; Export Line PGN</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
+    <nav class="sm:hidden fixed bottom-0 inset-x-0 bg-gray-900 border-t border-gray-800 px-4 py-2 flex justify-around items-center z-40 text-[11px]">
+        <button id="mobileNavHomeBtn" class="flex flex-col items-center text-gray-400 hover:text-teal-300">
+            <span>🏠</span> <span>Home</span>
+        </button>
+        <button id="mobileNavDrillBtn" class="flex flex-col items-center text-indigo-400">
+            <span>🎯</span> <span>Drill</span>
+        </button>
+        <button id="mobileNavExploreBtn" class="flex flex-col items-center text-teal-400">
+            <span>🧭</span> <span>Explore</span>
+        </button>
+        <button id="mobileNavSyncBtn" class="flex flex-col items-center text-gray-400">
+            <span>☁️</span> <span>Sync</span>
+        </button>
+    </nav>
+
+    <!-- MODAL: DEDICATED BOARD SETTINGS -->
+    <div id="boardSettingsModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl max-w-sm w-full p-4 shadow-2xl flex flex-col gap-3 text-xs">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+                    <span>🎨 Dedicated Board Settings</span>
+                </h3>
+                <button id="closeBoardSettingsModalBtn" class="text-gray-400 hover:text-white text-base font-bold">&times;</button>
+            </div>
+
+            <div class="space-y-3">
+                <div class="bg-gray-950 p-2 rounded-lg border border-teal-800/60">
+                    <label class="text-teal-300 font-bold mb-1 block">Piece Move Interaction (Tap vs Drag)</label>
+                    <select id="boardSettingInputMode" class="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-white font-semibold outline-none focus:border-teal-500">
+                        <option value="tap">Tap to Move (Dot Indicator)</option>
+                        <option value="drag">Drag & Drop (Classic Drag)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-gray-300 font-semibold mb-1 block">Custom Square Colors (Hex)</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="text-[10px] text-gray-400">Light Square</span>
+                            <input type="color" id="boardLightColorPicker" value="#f0d9b5" class="w-full h-8 bg-transparent cursor-pointer rounded">
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-gray-400">Dark Square</span>
+                            <input type="color" id="boardDarkColorPicker" value="#b58863" class="w-full h-8 bg-transparent cursor-pointer rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-gray-300 font-semibold mb-1 block">Custom Piece Set URL Pattern</label>
+                    <input type="text" id="customPieceSetUrlInput" placeholder="https://example.com/pieces/{piece}.svg" class="w-full bg-gray-950 border border-gray-700 rounded p-1.5 text-white outline-none">
+                    <span class="text-[10px] text-gray-500">Leave blank to use standard pieces.</span>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-gray-300 font-semibold">Arrow Opacity</label>
+                        <span id="arrowOpacityValText" class="font-mono text-teal-400">80%</span>
+                    </div>
+                    <input type="range" id="arrowOpacitySlider" min="20" max="100" value="80" class="w-full accent-teal-500">
+                </div>
+
+                <label class="flex items-center gap-2 cursor-pointer text-gray-300">
+                    <input type="checkbox" id="clearArrowsOnMoveCheckbox" class="w-3.5 h-3.5 accent-teal-600" checked>
+                    <span>Auto-clear drawn arrows on move execution</span>
+                </label>
+
+                <div>
+                    <label class="text-gray-300 font-semibold mb-1 block">Board Size Preset</label>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button class="board-size-preset-btn bg-gray-800 hover:bg-gray-700 py-1 rounded text-center" data-size="320">Compact</button>
+                        <button class="board-size-preset-btn bg-gray-800 hover:bg-gray-700 py-1 rounded text-center" data-size="380">Standard</button>
+                        <button class="board-size-preset-btn bg-gray-800 hover:bg-gray-700 py-1 rounded text-center" data-size="440">Large</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2 border-t border-gray-800 flex justify-end">
+                <button id="saveBoardSettingsBtn" class="px-4 py-1.5 bg-teal-600 hover:bg-teal-500 rounded text-white font-bold">Apply Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SIDE-BY-SIDE POSITION COMPARISON -->
+    <div id="compareModal" class="hidden fixed inset-0 bg-black/85 flex items-center justify-center p-3 sm:p-5 z-50">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl max-w-4xl w-full p-4 shadow-2xl flex flex-col gap-3 text-xs max-h-[90vh]">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+                    <span>🔍 Side-by-Side Position Compare (Explore / Sandbox)</span>
+                </h3>
+                <button id="closeCompareModalBtn" class="text-gray-400 hover:text-white text-base font-bold">&times;</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 overflow-y-auto p-1">
+                <div class="flex flex-col items-center space-y-1">
+                    <span class="font-bold text-teal-400 text-xs">Primary Active Position</span>
+                    <div id="board-compare-1" class="w-[280px] sm:w-[320px] aspect-square rounded border border-gray-700 theme-brown"></div>
+                    <span id="compareFen1Text" class="text-[10px] text-gray-500 font-mono truncate max-w-[280px]"></span>
+                </div>
+                <div class="flex flex-col items-center space-y-1">
+                    <span class="font-bold text-indigo-400 text-xs">Reference Mainline End / Starting Tabiya</span>
+                    <div id="board-compare-2" class="w-[280px] sm:w-[320px] aspect-square rounded border border-gray-700 theme-brown"></div>
+                    <span id="compareFen2Text" class="text-[10px] text-gray-500 font-mono truncate max-w-[280px]"></span>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-gray-800">
+                <button id="doneCompareModalBtn" class="px-4 py-1 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded">Close Compare</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SUBFOLDER DRILLS & REPERTOIRE MANAGER -->
+    <div id="subfolderManagerModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl max-w-xl w-full p-4 sm:p-5 shadow-2xl flex flex-col max-h-[85vh] text-xs">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-800">
+                <div class="flex items-center gap-2">
+                    <span class="text-base sm:text-lg">📁</span>
+                    <div>
+                        <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+                            <span id="sfModalFolderName">Subfolder Games</span>
+                            <span id="sfModalGameCountBadge" class="text-[10px] bg-indigo-900 border border-indigo-700 text-indigo-300 px-1.5 py-0.5 rounded font-mono">0</span>
+                        </h3>
+                    </div>
+                </div>
+                <button id="closeSubfolderModalBtn" class="text-gray-400 hover:text-white text-base font-bold">&times;</button>
+            </div>
+
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <input type="text" id="sfSearchInput" placeholder="Search lines by title or moves..." class="flex-1 bg-gray-950 border border-gray-700 rounded px-2.5 py-1.5 text-white outline-none text-xs">
+                <button id="sfDeduplicateBtn" class="bg-rose-950 border border-rose-700 hover:bg-rose-900 px-2 py-1.5 rounded text-rose-300 font-bold text-[11px] whitespace-nowrap">
+                    🧹 Deduplicate Lines
+                </button>
+                <button id="sfExportAllBtn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2.5 py-1.5 rounded text-gray-200 font-semibold text-xs whitespace-nowrap">
+                    ⬇ Export All
+                </button>
+            </div>
+
+            <div id="subfolderDrillsList" class="flex-1 overflow-y-auto space-y-1.5 pr-1 border border-gray-800 rounded p-2 bg-gray-950 max-h-72"></div>
+
+            <div class="flex justify-end pt-3 border-t border-gray-800 mt-2">
+                <button id="doneSubfolderModalBtn" class="px-4 py-1.5 bg-teal-600 hover:bg-teal-500 rounded text-xs font-bold text-white">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GITHUB GIST SYNC & OFFLINE JSON BACKUP -->
+    <div id="syncModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl max-w-sm w-full p-4 shadow-2xl flex flex-col gap-3 text-xs">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+                    <span>☁️ GitHub Gist Cloud & Local Backup</span>
+                </h3>
+                <button id="closeSyncModalBtn" class="text-gray-400 hover:text-white text-base font-bold">&times;</button>
+            </div>
+
+            <div class="space-y-2">
+                <div>
+                    <label class="text-gray-300 mb-1 block">GitHub Personal Access Token (PAT)</label>
+                    <input type="password" id="syncPatInput" placeholder="ghp_xxxxxxxxxxxx" class="w-full bg-gray-950 border border-gray-700 rounded p-1.5 text-white font-mono outline-none">
+                </div>
+                <div>
+                    <label class="text-gray-300 mb-1 block">Private Gist ID</label>
+                    <input type="text" id="syncGistIdInput" placeholder="e.g. 8a7b6c5d4e3f..." class="w-full bg-gray-950 border border-gray-700 rounded p-1.5 text-white font-mono outline-none">
+                </div>
+            </div>
+
+            <div id="syncStatusMessage" class="text-[11px] min-h-[16px] text-gray-400 italic"></div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <button id="syncPullBtn" class="px-3 py-1.5 bg-teal-700 hover:bg-teal-600 rounded text-xs text-white font-bold transition">⬇ Pull (Load)</button>
+                <button id="syncPushBtn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-xs text-white font-bold transition">⬆ Push (Save)</button>
+            </div>
+
+            <div class="pt-2 border-t border-gray-800 space-y-2">
+                <span class="text-gray-400 font-bold text-[11px] block">Offline JSON Backup</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="exportLocalJsonBtn" class="px-2 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-300 font-semibold">💾 Export JSON</button>
+                    <label class="px-2 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-300 font-semibold text-center cursor-pointer">
+                        <span>📂 Import JSON</span>
+                        <input type="file" id="importLocalJsonInput" accept=".json" class="hidden">
+                    </label>
+                </div>
+                <div class="flex justify-between items-center text-[10px] text-gray-500 pt-1">
+                    <span>Local Storage Usage:</span>
+                    <span id="storageUsageText" class="font-mono text-teal-400">0 KB / 5 MB</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VOICE NOTE EDITOR -->
+    <div id="noteModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl max-w-md w-full p-4 shadow-2xl flex flex-col gap-3 text-xs">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span>📝 Move Note</span>
+                    <span id="noteModalPlyBadge" class="text-[10px] bg-teal-700 px-1.5 py-0.5 rounded text-white font-mono"></span>
+                </h3>
+                <button id="closeNoteModalBtn" class="text-gray-400 hover:text-white text-base font-bold">&times;</button>
+            </div>
+
+            <div class="relative">
+                <textarea id="noteModalTextarea" rows="3" placeholder="Type or click 🎤 to dictate your notes..."
+                    class="w-full bg-gray-950 border border-gray-700 rounded-lg p-2.5 text-xs text-gray-100 font-sans outline-none focus:border-teal-500 pr-10 resize-none"></textarea>
+                
+                <button id="voiceDictateBtn" type="button" title="Start voice dictation"
+                    class="absolute right-2.5 top-2.5 p-1.5 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 transition flex items-center justify-center">
+                    <span id="micIcon" class="text-sm">🎤</span>
+                </button>
+            </div>
+
+            <div id="voiceStatusMsg" class="text-[11px] text-gray-400 italic min-h-[16px]"></div>
+
+            <div class="flex justify-end gap-2 pt-1">
+                <button id="cancelNoteModalBtn" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-xs rounded text-white font-semibold">Cancel</button>
+                <button id="saveNoteModalBtn" class="px-3 py-1 bg-teal-600 hover:bg-teal-500 text-xs rounded text-white font-bold">Save Note</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GLOBAL SETTINGS -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl max-w-sm w-full p-4 shadow-2xl flex flex-col gap-3 text-xs">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+                    <span>⚙️ General Preferences</span>
+                </h3>
+                <button id="closeSettingsModalBtn" class="text-gray-400 hover:text-white text-base font-bold">&times;</button>
+            </div>
+
+            <div class="space-y-2.5">
+                <div>
+                    <label class="text-gray-300 mb-1 block">Board Player Side Default</label>
+                    <select id="settingPlayerSide" class="w-full bg-gray-950 border border-gray-700 rounded p-1.5 text-white outline-none">
+                        <option value="auto">Auto-Detect by Repertoire Line</option>
+                        <option value="w">Always Play White</option>
+                        <option value="b">Always Play Black</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-gray-300 mb-1 block">Theme Atmosphere</label>
+                    <select id="settingAtmosphereTheme" class="w-full bg-gray-950 border border-gray-700 rounded p-1.5 text-white outline-none">
+                        <option value="dark">Studio Dark</option>
+                        <option value="oled">Pure OLED Black (#000000)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-gray-300 mb-1 block">Audio Theme</label>
+                    <select id="settingSoundTheme" class="w-full bg-gray-950 border border-gray-700 rounded p-1.5 text-white outline-none">
+                        <option value="synth">Web Audio Synthesizer</option>
+                        <option value="wood">Wood Clack</option>
+                        <option value="beep">Digital Beep</option>
+                        <option value="silent">Muted</option>
+                    </select>
+                </div>
+                <div class="pt-2 border-t border-gray-800 flex justify-between items-center">
+                    <button id="resetMasteryLevelsBtn" class="text-rose-400 hover:text-rose-300 underline font-semibold">Reset Mastery Stars</button>
+                    <button id="doneSettingsModalBtn" class="px-3 py-1 bg-teal-600 hover:bg-teal-500 rounded text-white font-bold">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GLOBAL PGN MANAGER -->
+    <div id="pgnManagerModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl max-w-xl w-full p-4 sm:p-5 shadow-2xl flex flex-col max-h-[85vh] text-xs">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-800">
+                <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    <span>Global PGN Database & Ingestion</span>
+                    <span id="manageGamesCount" class="text-[10px] bg-gray-800 text-teal-300 px-2 py-0.5 rounded font-mono">0 games</span>
+                </h3>
+                <button id="closePgnManagerBtn" class="text-gray-400 hover:text-white text-base font-bold">&times;</button>
+            </div>
+
+            <div class="space-y-2 mb-3 bg-gray-950 p-2.5 rounded-lg border border-gray-800 flex flex-col">
+                <input type="file" id="bulkPgnFileInput" multiple accept=".pgn,.txt,*/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-teal-700 file:text-white hover:file:bg-teal-600 cursor-pointer">
+                <textarea id="pastePgnInput" rows="3" placeholder="Paste raw PGN text here..." class="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-gray-200 font-mono outline-none focus:border-teal-500"></textarea>
+                <button id="loadPgnTextBtn" type="button" class="px-3 py-1 bg-teal-600 hover:bg-teal-500 text-white rounded font-bold text-xs self-end">Append PGN</button>
+            </div>
+
+            <div id="pgnManagerList" class="flex-1 overflow-y-auto space-y-1 pr-1 border border-gray-800 rounded p-2 bg-gray-950 max-h-48"></div>
+            <div class="flex justify-end pt-2 border-t border-gray-800 mt-2">
+                <button id="donePgnManagerBtn" class="px-4 py-1.5 bg-teal-600 hover:bg-teal-500 rounded text-xs font-bold text-white">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+    (() => {
+        'use strict';
+
+        const $id = id => document.getElementById(id);
+        const els = {
+            appBody: $id('appBody'),
+            viewHome: $id('viewHome'),
+            viewFolderHub: $id('viewFolderHub'),
+            viewWorkspace: $id('viewWorkspace'),
+            breadcrumbBar: $id('breadcrumbBar'),
+            breadcrumbRoot: $id('breadcrumbRoot'),
+            breadcrumbSub: $id('breadcrumbSub'),
+            navHomeBtn: $id('navHomeBtn'),
+            mobileNavHomeBtn: $id('mobileNavHomeBtn'),
+            mobileNavDrillBtn: $id('mobileNavDrillBtn'),
+            mobileNavExploreBtn: $id('mobileNavExploreBtn'),
+            mobileNavSyncBtn: $id('mobileNavSyncBtn'),
+
+            // Home
+            homeGoDrillBtn: $id('homeGoDrillBtn'),
+            homeGoExploreBtn: $id('homeGoExploreBtn'),
+            homeGoSandboxBtn: $id('homeGoSandboxBtn'),
+            homeDrillAllMistakesBtn: $id('homeDrillAllMistakesBtn'),
+            homeMistakeCountBadge: $id('homeMistakeCountBadge'),
+            subfolderAccuracyChartContainer: $id('subfolderAccuracyChartContainer'),
+            homeStreakCount: $id('homeStreakCount'),
+            homeTotalDrillCount: $id('homeTotalDrillCount'),
+            homeSpeedWarning: $id('homeSpeedWarning'),
+
+            // Folder Hub
+            folderHubTitle: $id('folderHubTitle'),
+            folderHubBackBtn: $id('folderHubBackBtn'),
+            targetModeBadge: $id('targetModeBadge'),
+            rootFolderDeck: $id('rootFolderDeck'),
+            subfolderDeckContainer: $id('subfolderDeckContainer'),
+            currentRootName: $id('currentRootName'),
+            subfolderList: $id('subfolderList'),
+            createSubfolderBtn: $id('createSubfolderBtn'),
+            cleanEmptyFoldersBtn: $id('cleanEmptyFoldersBtn'),
+            countOpenings: $id('countOpenings'),
+            countTactics: $id('countTactics'),
+            countEndgames: $id('countEndgames'),
+
+            // Workspace
+            leftBoardColumn: $id('leftBoardColumn'),
+            wsBackToFoldersBtn: $id('wsBackToFoldersBtn'),
+            wsScopeName: $id('wsScopeName'),
+            wsCounter: $id('wsCounter'),
+            wsMistakeBadge: $id('wsMistakeBadge'),
+            wsMasteryStarBadge: $id('wsMasteryStarBadge'),
+            toggleToDrillBtn: $id('toggleToDrillBtn'),
+            toggleToExploreBtn: $id('toggleToExploreBtn'),
+            modeSwitcherRow: $id('modeSwitcherRow'),
+            board: $id('board'),
+            boardThemeContainer: $id('boardThemeContainer'),
+            arrowCanvas: $id('arrowCanvas'),
+            evalBarWrapper: $id('evalBarWrapper'),
+            evalBarWhite: $id('evalBarWhite'),
+            evalBarScoreText: $id('evalBarScoreText'),
+            syzygyBanner: $id('syzygyBanner'),
+            coachNote: $id('coachNote'),
+            masterBookBanner: $id('masterBookBanner'),
+            statusMsg: $id('statusMsg'),
+            quickInspectErrorBtn: $id('quickInspectErrorBtn'),
+            moveHistory: $id('moveHistory'),
+            historyProgressMeta: $id('historyProgressMeta'),
+            statAccuracy: $id('statAccuracy'),
+            statAvgTime: $id('statAvgTime'),
+            statMasteryLevel: $id('statMasteryLevel'),
+            queueSelect: $id('queueSelect'),
+            shuffleDrillCheckbox: $id('shuffleDrillCheckbox'),
+            promotionModal: $id('promotionModal'),
+            promotionChoices: $id('promotionChoices'),
+
+            // Play Side Toggles
+            togglePlayWhiteBtn: $id('togglePlayWhiteBtn'),
+            togglePlayBlackBtn: $id('togglePlayBlackBtn'),
+            togglePlayAutoBtn: $id('togglePlayAutoBtn'),
+
+            // Workspace Buttons
+            wsFlipBtn: $id('wsFlipBtn'),
+            drillBackPrevBtn: $id('drillBackPrevBtn'),
+            drillHintBtn: $id('drillHintBtn'),
+            drillRepeatBtn: $id('drillRepeatBtn'),
+            drillNextBtn: $id('drillNextBtn'),
+            drillRandomPlyBtn: $id('drillRandomPlyBtn'),
+            drillTargetPlyBtn: $id('drillTargetPlyBtn'),
+            drillToggleEngineBtn: $id('drillToggleEngineBtn'),
+            wsClearArrowsBtn: $id('wsClearArrowsBtn'),
+            sandboxUndoBtn: $id('sandboxUndoBtn'),
+            sandboxResetBtn: $id('sandboxResetBtn'),
+            sandboxSaveDrillBtn: $id('sandboxSaveDrillBtn'),
+            expStartBtn: $id('expStartBtn'),
+            expPrevBtn: $id('expPrevBtn'),
+            expNextBtn: $id('expNextBtn'),
+            expEndBtn: $id('expEndBtn'),
+            expSparBtn: $id('expSparBtn'),
+            expExtractBranchBtn: $id('expExtractBranchBtn'),
+            openComparePositionsBtn: $id('openComparePositionsBtn'),
+            openSubfolderManagerBtn: $id('openSubfolderManagerBtn'),
+            subfolderGamesBadgeCount: $id('subfolderGamesBadgeCount'),
+            exploreToolbar: $id('exploreToolbar'),
+            engineSection: $id('engineSection'),
+            engineLinesBox: $id('engineLinesBox'),
+            engineDepthInput: $id('engineDepthInput'),
+            engineVersionBadge: $id('engineVersionBadge'),
+            wdlText: $id('wdlText'),
+            drillStatsSection: $id('drillStatsSection'),
+            wsQuickExportBtn: $id('wsQuickExportBtn'),
+
+            // Board Settings Modal
+            boardSettingsModal: $id('boardSettingsModal'),
+            openBoardSettingsBtn: $id('openBoardSettingsBtn'),
+            closeBoardSettingsModalBtn: $id('closeBoardSettingsModalBtn'),
+            boardSettingInputMode: $id('boardSettingInputMode'),
+            boardLightColorPicker: $id('boardLightColorPicker'),
+            boardDarkColorPicker: $id('boardDarkColorPicker'),
+            customPieceSetUrlInput: $id('customPieceSetUrlInput'),
+            arrowOpacitySlider: $id('arrowOpacitySlider'),
+            arrowOpacityValText: $id('arrowOpacityValText'),
+            clearArrowsOnMoveCheckbox: $id('clearArrowsOnMoveCheckbox'),
+            saveBoardSettingsBtn: $id('saveBoardSettingsBtn'),
+
+            // Compare Positions Modal
+            compareModal: $id('compareModal'),
+            closeCompareModalBtn: $id('closeCompareModalBtn'),
+            doneCompareModalBtn: $id('doneCompareModalBtn'),
+            compareFen1Text: $id('compareFen1Text'),
+            compareFen2Text: $id('compareFen2Text'),
+
+            // Subfolder Manager Modal
+            subfolderManagerModal: $id('subfolderManagerModal'),
+            closeSubfolderModalBtn: $id('closeSubfolderModalBtn'),
+            doneSubfolderModalBtn: $id('doneSubfolderModalBtn'),
+            sfModalFolderName: $id('sfModalFolderName'),
+            sfModalGameCountBadge: $id('sfModalGameCountBadge'),
+            sfSearchInput: $id('sfSearchInput'),
+            sfDeduplicateBtn: $id('sfDeduplicateBtn'),
+            sfExportAllBtn: $id('sfExportAllBtn'),
+            subfolderDrillsList: $id('subfolderDrillsList'),
+
+            // Sync Modal & Toast
+            syncModal: $id('syncModal'),
+            openSyncModalBtn: $id('openSyncModalBtn'),
+            closeSyncModalBtn: $id('closeSyncModalBtn'),
+            syncPatInput: $id('syncPatInput'),
+            syncGistIdInput: $id('syncGistIdInput'),
+            syncStatusMessage: $id('syncStatusMessage'),
+            syncPushBtn: $id('syncPushBtn'),
+            syncPullBtn: $id('syncPullBtn'),
+            syncDirtyDot: $id('syncDirtyDot'),
+            exportLocalJsonBtn: $id('exportLocalJsonBtn'),
+            importLocalJsonInput: $id('importLocalJsonInput'),
+            storageUsageText: $id('storageUsageText'),
+            cloudUpdateToast: $id('cloudUpdateToast'),
+            toastPullBtn: $id('toastPullBtn'),
+            toastDismissBtn: $id('toastDismissBtn'),
+
+            // Voice Note Modal
+            noteModal: $id('noteModal'),
+            noteModalPlyBadge: $id('noteModalPlyBadge'),
+            noteModalTextarea: $id('noteModalTextarea'),
+            voiceDictateBtn: $id('voiceDictateBtn'),
+            micIcon: $id('micIcon'),
+            voiceStatusMsg: $id('voiceStatusMsg'),
+            closeNoteModalBtn: $id('closeNoteModalBtn'),
+            cancelNoteModalBtn: $id('cancelNoteModalBtn'),
+            saveNoteModalBtn: $id('saveNoteModalBtn'),
+
+            // General Settings Modal
+            settingsModal: $id('settingsModal'),
+            openSettingsModalBtn: $id('openSettingsModalBtn'),
+            closeSettingsModalBtn: $id('closeSettingsModalBtn'),
+            doneSettingsModalBtn: $id('doneSettingsModalBtn'),
+            settingPlayerSide: $id('settingPlayerSide'),
+            settingAtmosphereTheme: $id('settingAtmosphereTheme'),
+            settingSoundTheme: $id('settingSoundTheme'),
+            resetMasteryLevelsBtn: $id('resetMasteryLevelsBtn'),
+
+            // Global PGN Manager Modal
+            pgnManagerModal: $id('pgnManagerModal'),
+            openPgnManagerBtn: $id('openPgnManagerBtn'),
+            closePgnManagerBtn: $id('closePgnManagerBtn'),
+            donePgnManagerBtn: $id('donePgnManagerBtn'),
+            manageGamesCount: $id('manageGamesCount'),
+            bulkPgnFileInput: $id('bulkPgnFileInput'),
+            pastePgnInput: $id('pastePgnInput'),
+            loadPgnTextBtn: $id('loadPgnTextBtn'),
+            pgnManagerList: $id('pgnManagerList')
+        };
+
+        const DEFAULT_FOLDERS = [
+            'Openings', 'Openings/Bird', 'Openings/E4 Vienna', 'Openings/E4 Sicilian',
+            'Openings/E4 others', 'Openings/Caro-Kann', 'Openings/Grunfeld', 'Openings/Budapest',
+            'Tactics', 'Endgames'
+        ];
+
+        const STARTER_SAMPLE_PGNS = [
+            {
+                folder: 'Openings/E4 Vienna',
+                pgn: `[Event "Vienna Gambit Mainline"]\n[White "Player"]\n[Black "Opponent"]\n\n{Control the center and prepare f4!} 1. e4 e5 2. Nc3 Nf6 3. f4 d5 {Black must counter in the center.} 4. fxe5 Nxe4 5. Qf3 {Pressuring f7 and the e4 knight.}`
+            },
+            {
+                folder: 'Openings/Bird',
+                pgn: `[Event "Bird's Opening: Dutch Variation"]\n[White "Player"]\n[Black "Opponent"]\n\n1. f4 {Clamping down on e5 from move one.} d5 2. Nf3 Nf6 3. e3 g6 4. b3 {Fianchettoing the queen's bishop to dominate the long diagonal.} Bg7 5. Bb2 O-O`
+            },
+            {
+                folder: 'Openings/Caro-Kann',
+                pgn: `[Event "Caro-Kann Advance Variation"]\n[White "Opponent"]\n[Black "Player"]\n\n1. e4 c6 {Solid Caro-Kann defense.} 2. d4 d5 3. e5 Bf5 {Develop the light-squared bishop outside the pawn chain before playing e6!} 4. Nf3 e6 5. Be2 c5`
+            },
+            {
+                folder: 'Tactics',
+                pgn: `[Event "Greek Gift Sacrifice Pattern"]\n[White "Player"]\n[Black "Opponent"]\n[SetUp "1"]\n[FEN "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/2NBPN2/PP3PPP/R1BQK2R w KQ - 0 7"]\n\n1. cxd5 exd5 2. Bd2 {Preparing queenside or kingside pressure.} Re8 3. O-O`
+            },
+            {
+                folder: 'Endgames',
+                pgn: `[Event "Lucena Position Bridge Building"]\n[White "Player"]\n[Black "Opponent"]\n[SetUp "1"]\n[FEN "1K1k4/1P6/8/8/8/8/r7/2R5 w - - 0 1"]\n\n{Build the bridge on the 4th rank!} 1. Rd1+ Ke7 2. Rc1 {Forcing the rook to the 4th rank.} Kd6 3. Rc4 {The bridge is ready.}`
+            }
+        ];
+
+        // Central Application State
+        const state = {
+            currentView: 'home',
+            activeMode: 'drill',
+            targetLaunchMode: 'drill',
+            activeRootCategory: null,
+            activeSubfolder: 'all',
+
+            // Repertoire Storage
+            pgnList: [],
+            pgnFolders: {},
+            availableFolders: [...DEFAULT_FOLDERS],
+            currentIndex: 0,
+            drillHistoryIndexStack: [],
+            completedGames: new Set(),
+            mistakeQueue: new Set(),
+            activeQueueMode: 'all',
+            masteryStreaks: {},
+
+            // Board & Chess Game
+            board: null,
+            boardCompare1: null,
+            boardCompare2: null,
+            game: new Chess(),
+            scratchGame: new Chess(),
+            expectedMoves: [],
+            currentLineMoves: [],
+            activeBranchMoves: [],
+            branchStartPly: -1,
+            currentMoveIndex: 0,
+            explorePlyIndex: 0,
+            moveAnnotations: {},
+            initialFen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+            sandboxHistoryFenList: [],
+            selectedSquare: null,
+
+            // Drill Controls & Engine Visibility
+            targetMaxPly: 999,
+            randomStartActive: false,
+            lastMoveSquares: null,
+            drillShowEngine: false,
+
+            // Canvas Drawing
+            activeArrows: [],
+            activeRings: [],
+            arrowStartSquare: null,
+            arrowOpacity: 0.8,
+            clearArrowsOnMove: true,
+
+            // Board Settings & Interaction
+            boardSize: 380,
+            boardLightColor: '#f0d9b5',
+            boardDarkColor: '#b58863',
+            customPieceUrlPattern: '',
+            inputMode: 'tap',
+
+            // Preferences
+            playerSide: 'auto',
+            soundTheme: 'synth',
+            atmosphereTheme: 'dark',
+            isDirtySync: false,
+
+            // Metrics & Timers
+            correctAttempts: 0,
+            totalAttempts: 0,
+            moveStartTime: Date.now(),
+            totalMoveSeconds: 0,
+            timedMovesCount: 0,
+            hadMistake: false,
+            isSparring: false,
+            subfolderStats: {},
+
+            // Stockfish Eval Store
+            currentEvalScore: 0,
+            isMateScore: false
+        };
+
+        const syncState = {
+            pat: localStorage.getItem('pgn_pro_sync_pat') || '',
+            gistId: localStorage.getItem('pgn_pro_sync_gist') || ''
+        };
+
+        const arrowCtx = els.arrowCanvas.getContext('2d');
+        let audioCtx = null;
+        let evalDebounceTimer = null;
+        let tablebaseDebounceTimer = null;
+        let oppMoveTimer = null;
+        let engineWorker = null;
+        let idleWorkerTimer = null;
+
+        // --- Voice Dictation ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let activeNotePly = null;
+        let isRecording = false;
+
+        function initSpeechRecognition() {
+            if (!SpeechRecognition) {
+                els.voiceDictateBtn.title = 'Voice dictation not supported in this browser';
+                return;
+            }
+            try {
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    els.voiceDictateBtn.classList.add('bg-rose-700', 'text-white', 'animate-pulse');
+                    els.voiceStatusMsg.textContent = '🎙️ Listening... Speak your move note now.';
+                };
+
+                recognition.onresult = event => {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                    els.noteModalTextarea.value = transcript;
+                };
+
+                recognition.onerror = event => {
+                    isRecording = false;
+                    els.voiceDictateBtn.classList.remove('bg-rose-700', 'text-white', 'animate-pulse');
+                    els.voiceStatusMsg.textContent = `Voice error: ${event.error}`;
+                };
+
+                recognition.onend = () => {
+                    isRecording = false;
+                    els.voiceDictateBtn.classList.remove('bg-rose-700', 'text-white', 'animate-pulse');
+                    if (els.voiceStatusMsg.textContent.startsWith('🎙️')) {
+                        els.voiceStatusMsg.textContent = 'Dictation captured.';
+                    }
+                };
+            } catch (e) {
+                recognition = null;
+            }
+        }
+
+        function toggleDictation() {
+            if (!recognition) {
+                els.voiceStatusMsg.textContent = 'Speech recognition is not supported by your browser.';
+                return;
+            }
+            if (isRecording) {
+                stopDictation();
+            } else {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    els.voiceStatusMsg.textContent = 'Could not start microphone.';
+                }
+            }
+        }
+
+        function stopDictation() {
+            if (recognition && isRecording) {
+                try { recognition.stop(); } catch (e) {}
+            }
+            isRecording = false;
+            els.voiceDictateBtn.classList.remove('bg-rose-700', 'text-white', 'animate-pulse');
+        }
+
+        function openNoteModal(ply, sanLabel = '') {
+            activeNotePly = ply;
+            els.noteModalPlyBadge.textContent = ply === 0 ? 'Intro' : `Ply ${ply} (${sanLabel || 'Move'})`;
+            els.noteModalTextarea.value = state.moveAnnotations[ply] || '';
+            els.voiceStatusMsg.textContent = '';
+            els.noteModal.classList.remove('hidden');
+            setTimeout(() => els.noteModalTextarea.focus(), 50);
+        }
+
+        function markSyncDirty(isDirty = true) {
+            state.isDirtySync = isDirty;
+            els.syncDirtyDot.className = `w-2 h-2 rounded-full ring-2 ring-gray-900 ${isDirty ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`;
+            try { localStorage.setItem('pgn_pro_dirty', isDirty ? 'true' : 'false'); } catch (e) {}
+        }
+
+        // --- Audio Synthesizer ---
+        function playSound(type) {
+            if (state.soundTheme === 'silent') return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (state.soundTheme === 'wood') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(type === 'capture' ? 120 : 180, now);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (state.soundTheme === 'beep') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(type === 'capture' ? 440 : 880, now);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else {
+                    const freqs = { move: [320, 140], capture: [180, 80], check: [600, 900], error: [130, 110] };
+                    const types = { move: 'triangle', capture: 'square', check: 'sine', error: 'sawtooth' };
+                    const dur = type === 'error' ? 0.2 : (type === 'check' ? 0.18 : (type === 'capture' ? 0.12 : 0.08));
+                    const fPair = freqs[type] || freqs.move;
+
+                    osc.type = types[type] || 'triangle';
+                    osc.frequency.setValueAtTime(fPair[0], now);
+                    if (fPair[1]) osc.frequency.exponentialRampToValueAtTime(fPair[1], now + dur);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + dur);
+                    osc.start(now);
+                    osc.stop(now + dur);
+                }
+            } catch (e) {}
+        }
+
+        function triggerHaptic(type) {
+            if ('vibrate' in navigator) {
+                try {
+                    if (type === 'error') navigator.vibrate([40, 60, 40]);
+                    else navigator.vibrate(25);
+                } catch (e) {}
+            }
+        }
+
+        // --- Persistent Storage ---
+        function persist() {
+            try {
+                localStorage.setItem('pgn_pro_list', JSON.stringify(state.pgnList));
+                localStorage.setItem('pgn_pro_folders', JSON.stringify(state.pgnFolders));
+                localStorage.setItem('pgn_pro_avail_folders_v2', JSON.stringify(state.availableFolders));
+                localStorage.setItem('pgn_pro_index', state.currentIndex);
+                localStorage.setItem('pgn_pro_completed', JSON.stringify([...state.completedGames]));
+                localStorage.setItem('pgn_pro_mistakes', JSON.stringify([...state.mistakeQueue]));
+                localStorage.setItem('pgn_pro_mastery', JSON.stringify(state.masteryStreaks));
+                localStorage.setItem('pgn_pro_side', state.playerSide);
+                localStorage.setItem('pgn_pro_input_mode', state.inputMode);
+                localStorage.setItem('pgn_pro_sound_theme', state.soundTheme);
+                localStorage.setItem('pgn_pro_atmosphere', state.atmosphereTheme);
+                localStorage.setItem('pgn_pro_subfolder_stats', JSON.stringify(state.subfolderStats));
+                localStorage.setItem('pgn_pro_board_light', state.boardLightColor);
+                localStorage.setItem('pgn_pro_board_dark', state.boardDarkColor);
+                localStorage.setItem('pgn_pro_board_size', state.boardSize);
+                localStorage.setItem('pgn_pro_piece_url', state.customPieceUrlPattern);
+                localStorage.setItem('pgn_pro_correct', state.correctAttempts);
+                localStorage.setItem('pgn_pro_total', state.totalAttempts);
+                markSyncDirty(true);
+                updateStorageUsage();
+            } catch (e) {}
+        }
+
+        function restore() {
+            try {
+                const get = k => localStorage.getItem(k);
+                state.correctAttempts = parseInt(get('pgn_pro_correct') || '0', 10);
+                state.totalAttempts = parseInt(get('pgn_pro_total') || '0', 10);
+
+                if (get('pgn_pro_side')) state.playerSide = els.settingPlayerSide.value = get('pgn_pro_side');
+                if (get('pgn_pro_input_mode')) state.inputMode = els.boardSettingInputMode.value = get('pgn_pro_input_mode');
+                if (get('pgn_pro_sound_theme')) state.soundTheme = els.settingSoundTheme.value = get('pgn_pro_sound_theme');
+                if (get('pgn_pro_atmosphere')) {
+                    state.atmosphereTheme = els.settingAtmosphereTheme.value = get('pgn_pro_atmosphere');
+                    applyAtmosphereTheme();
+                }
+                if (get('pgn_pro_board_light')) state.boardLightColor = els.boardLightColorPicker.value = get('pgn_pro_board_light');
+                if (get('pgn_pro_board_dark')) state.boardDarkColor = els.boardDarkColorPicker.value = get('pgn_pro_board_dark');
+                if (get('pgn_pro_board_size')) state.boardSize = parseInt(get('pgn_pro_board_size'), 10);
+                if (get('pgn_pro_piece_url')) state.customPieceUrlPattern = els.customPieceSetUrlInput.value = get('pgn_pro_piece_url');
+
+                applyBoardCustomColors();
+                syncPlaySideTogglesUI();
+
+                const savedAvail = get('pgn_pro_avail_folders_v2');
+                state.availableFolders = savedAvail ? JSON.parse(savedAvail) : [...DEFAULT_FOLDERS];
+
+                if (get('pgn_pro_completed')) state.completedGames = new Set(JSON.parse(get('pgn_pro_completed')));
+                if (get('pgn_pro_mistakes')) state.mistakeQueue = new Set(JSON.parse(get('pgn_pro_mistakes')));
+                if (get('pgn_pro_mastery')) state.masteryStreaks = JSON.parse(get('pgn_pro_mastery'));
+                if (get('pgn_pro_folders')) state.pgnFolders = JSON.parse(get('pgn_pro_folders'));
+                if (get('pgn_pro_subfolder_stats')) state.subfolderStats = JSON.parse(get('pgn_pro_subfolder_stats'));
+
+                const savedList = get('pgn_pro_list');
+                if (savedList !== null) {
+                    state.pgnList = JSON.parse(savedList);
+                    const savedIdx = parseInt(get('pgn_pro_index') || '0', 10);
+                    state.currentIndex = Math.max(0, Math.min(savedIdx, Math.max(0, state.pgnList.length - 1)));
+                } else {
+                    // Seed default starter repertoire on first-time launch
+                    STARTER_SAMPLE_PGNS.forEach((item, idx) => {
+                        state.pgnList.push(item.pgn);
+                        state.pgnFolders[idx] = item.folder;
+                    });
+                    persist();
+                }
+
+                markSyncDirty(get('pgn_pro_dirty') === 'true');
+                updateDashboard();
+                updateAnalyticsUI();
+                updateStorageUsage();
+            } catch (e) {}
+        }
+
+        // Safely delete indices from state.pgnList and re-index all maps/sets
+        function deleteGamesByIndices(indicesToDelete) {
+            const delSet = new Set(indicesToDelete);
+            const newPgnList = [];
+            const newPgnFolders = {};
+            const newMasteryStreaks = {};
+            const newCompleted = new Set();
+            const newMistakes = new Set();
+
+            state.pgnList.forEach((pgn, oldIdx) => {
+                if (!delSet.has(oldIdx)) {
+                    const newIdx = newPgnList.length;
+                    newPgnList.push(pgn);
+                    newPgnFolders[newIdx] = state.pgnFolders[oldIdx] || 'Openings';
+                    if (state.masteryStreaks[oldIdx]) newMasteryStreaks[newIdx] = state.masteryStreaks[oldIdx];
+                    if (state.completedGames.has(oldIdx)) newCompleted.add(newIdx);
+                    if (state.mistakeQueue.has(oldIdx)) newMistakes.add(newIdx);
+                }
+            });
+
+            state.pgnList = newPgnList;
+            state.pgnFolders = newPgnFolders;
+            state.masteryStreaks = newMasteryStreaks;
+            state.completedGames = newCompleted;
+            state.mistakeQueue = newMistakes;
+            state.drillHistoryIndexStack = [];
+            state.currentIndex = Math.max(0, Math.min(state.currentIndex, Math.max(0, state.pgnList.length - 1)));
+            persist();
+            updateDashboard();
+            updateAnalyticsUI();
+        }
+
+        function updateStorageUsage() {
+            let total = 0;
+            for (let x in localStorage) {
+                if (Object.prototype.hasOwnProperty.call(localStorage, x)) {
+                    total += (localStorage[x].length * 2);
+                }
+            }
+            const kb = Math.round(total / 1024);
+            els.storageUsageText.textContent = `${kb} KB / 5 MB`;
+        }
+
+        function applyAtmosphereTheme() {
+            if (state.atmosphereTheme === 'oled') els.appBody.classList.add('theme-oled');
+            else els.appBody.classList.remove('theme-oled');
+        }
+
+        function applyBoardCustomColors() {
+            document.documentElement.style.setProperty('--board-light', state.boardLightColor);
+            document.documentElement.style.setProperty('--board-dark', state.boardDarkColor);
+        }
+
+        function applyBoardSize(sz) {
+            const maxAllowed = Math.max(260, Math.min(sz, window.innerWidth - 48));
+            els.board.style.width = `${maxAllowed}px`;
+            els.board.style.height = `${maxAllowed}px`;
+            els.evalBarWrapper.style.height = `${maxAllowed}px`;
+            if (state.board) state.board.resize();
+            resizeCanvas();
+        }
+
+        function getPieceImg(piece) {
+            if (state.customPieceUrlPattern && state.customPieceUrlPattern.includes('{piece}')) {
+                return state.customPieceUrlPattern.replace('{piece}', piece);
+            }
+            return `https://chessboardjs.com/img/chesspieces/wikipedia/${piece}.png`;
+        }
+
+        // --- PGN Comment Parser & Stripper ---
+        function stripVariationsKeepMainline(pgnText) {
+            let out = '';
+            let inComment = false;
+            let varDepth = 0;
+            for (let i = 0; i < pgnText.length; i++) {
+                const ch = pgnText[i];
+                if (inComment) {
+                    out += ch;
+                    if (ch === '}') inComment = false;
+                } else if (ch === '{') {
+                    if (varDepth === 0) {
+                        inComment = true;
+                        out += ch;
+                    } else {
+                        while (i < pgnText.length && pgnText[i] !== '}') i++;
+                    }
+                } else if (ch === '(') {
+                    varDepth++;
+                } else if (ch === ')') {
+                    if (varDepth > 0) varDepth--;
+                } else if (varDepth === 0) {
+                    out += ch;
+                }
+            }
+            return out;
+        }
+
+        function stripAllCommentsAndVariations(pgnText) {
+            const mainOnly = stripVariationsKeepMainline(pgnText);
+            return mainOnly.replace(/\{[^}]*\}/g, ' ');
+        }
+
+        function parseComments(rawPgn) {
+            state.moveAnnotations = {};
+            const withoutHeaders = rawPgn.replace(/\[[^\]]*\]\s*/g, '');
+            const mainlineText = stripVariationsKeepMainline(withoutHeaders);
+
+            let ply = 0;
+            const tokenRegex = /\{([^}]*)\}|(\d+\.+)|([^\s{}]+)/g;
+            let match;
+            while ((match = tokenRegex.exec(mainlineText)) !== null) {
+                if (match[1] !== undefined) {
+                    const comment = match[1].trim();
+                    if (comment) {
+                        state.moveAnnotations[ply] = state.moveAnnotations[ply]
+                            ? `${state.moveAnnotations[ply]} ${comment}`
+                            : comment;
+                    }
+                } else if (match[2] !== undefined) {
+                    // Move number token (e.g. "1." or "1...")
+                    continue;
+                } else if (match[3] !== undefined) {
+                    const tok = match[3];
+                    if (['1-0', '0-1', '1/2-1/2', '*'].includes(tok) || tok.startsWith('$')) continue;
+                    ply++;
+                }
+            }
+        }
+
+        function syncAnnotationsToCurrentPgn() {
+            if (state.activeMode === 'sandbox' || !state.pgnList[state.currentIndex]) return;
+            const rawPgn = state.pgnList[state.currentIndex];
+            const headers = (rawPgn.match(/\[[^\]]+\]/g) || []).join('\n');
+            const moves = state.expectedMoves;
+            const parts = [];
+
+            if (state.moveAnnotations[0]) {
+                parts.push(`{${state.moveAnnotations[0].replace(/[{}]/g, '')}}`);
+            }
+
+            for (let i = 0; i < moves.length; i++) {
+                const ply = i + 1;
+                if (i % 2 === 0) {
+                    parts.push(`${Math.floor(i / 2) + 1}.`);
+                }
+                parts.push(moves[i].san);
+                if (state.moveAnnotations[ply]) {
+                    parts.push(`{${state.moveAnnotations[ply].replace(/[{}]/g, '')}}`);
+                }
+            }
+
+            state.pgnList[state.currentIndex] = headers ? `${headers}\n\n${parts.join(' ')}` : parts.join(' ');
+        }
+
+        function updateCoachNote() {
+            const ply = state.activeMode === 'drill' ? state.currentMoveIndex : state.game.history().length;
+            const note = state.moveAnnotations[ply];
+            if (note) {
+                els.coachNote.textContent = `💬 ${note}`;
+                els.coachNote.classList.remove('hidden');
+            } else {
+                els.coachNote.classList.add('hidden');
+            }
+        }
+
+        // --- Move History Renderer & Ply Jumper ---
+        function renderHistory(activePlyOverride) {
+            const isDrill = state.activeMode === 'drill';
+            const isExplore = state.activeMode === 'explore';
+            const playedMoves = state.game.history({ verbose: true });
+
+            const baseMoves = isDrill
+                ? playedMoves
+                : (isExplore ? state.expectedMoves : state.currentLineMoves);
+
+            const activePly = activePlyOverride !== undefined
+                ? activePlyOverride
+                : playedMoves.length;
+
+            if (isDrill) {
+                const maxTarget = Math.min(state.expectedMoves.length, state.targetMaxPly);
+                els.historyProgressMeta.textContent = `${playedMoves.length} / ${maxTarget} plies`;
+            } else {
+                els.historyProgressMeta.textContent = `Ply ${activePly} / ${baseMoves.length}`;
+            }
+
+            els.moveHistory.innerHTML = '';
+
+            if (state.moveAnnotations[0]) {
+                const introDiv = document.createElement('div');
+                introDiv.className = 'text-[11px] text-blue-300 italic bg-blue-950/40 px-2 py-1 rounded border border-blue-800/40 mb-1 flex justify-between items-center';
+                introDiv.innerHTML = `<span>💬 ${state.moveAnnotations[0]}</span>`;
+                if (!isDrill) {
+                    const editIntroBtn = document.createElement('button');
+                    editIntroBtn.className = 'text-[10px] text-gray-400 hover:text-white ml-2';
+                    editIntroBtn.textContent = '📝';
+                    editIntroBtn.onclick = () => openNoteModal(0, 'Intro');
+                    introDiv.appendChild(editIntroBtn);
+                }
+                els.moveHistory.appendChild(introDiv);
+            }
+
+            if (!baseMoves.length && (!isExplore || !state.activeBranchMoves.length)) {
+                const empty = document.createElement('div');
+                empty.className = 'text-gray-500 italic text-center py-4';
+                empty.textContent = isDrill ? 'Waiting for first move...' : 'No moves played yet.';
+                els.moveHistory.appendChild(empty);
+                return;
+            }
+
+            const frag = document.createDocumentFragment();
+            for (let i = 0; i < baseMoves.length; i += 2) {
+                const moveNum = Math.floor(i / 2) + 1;
+                const wMove = baseMoves[i];
+                const bMove = baseMoves[i + 1];
+                const wPly = i + 1;
+                const bPly = i + 2;
+
+                const row = document.createElement('div');
+                row.className = 'flex flex-col gap-0.5 py-0.5 border-b border-gray-900/80';
+
+                const lineRow = document.createElement('div');
+                lineRow.className = 'flex items-center gap-1.5 flex-wrap';
+
+                const numSpan = document.createElement('span');
+                numSpan.className = 'text-gray-500 w-7 select-none';
+                numSpan.textContent = `${moveNum}.`;
+                lineRow.appendChild(numSpan);
+
+                // White Move
+                if (wMove) {
+                    const wSpan = document.createElement('span');
+                    const isWActive = activePly === wPly && (!state.activeBranchMoves.length || state.branchStartPly >= wPly);
+                    wSpan.className = `move-link px-1.5 py-0.5 rounded ${!isDrill ? 'cursor-pointer hover:bg-gray-800' : ''} ${isWActive ? 'bg-teal-700 text-white font-bold' : 'text-gray-200'}`;
+                    wSpan.dataset.ply = wPly;
+                    wSpan.textContent = wMove.san;
+                    lineRow.appendChild(wSpan);
+
+                    if (!isDrill) {
+                        const wNoteBtn = document.createElement('button');
+                        wNoteBtn.className = `note-edit-btn text-[10px] px-0.5 ${state.moveAnnotations[wPly] ? 'text-amber-400' : 'text-gray-600 hover:text-gray-300'}`;
+                        wNoteBtn.dataset.ply = wPly;
+                        wNoteBtn.dataset.san = wMove.san;
+                        wNoteBtn.title = state.moveAnnotations[wPly] || 'Add/Edit move note';
+                        wNoteBtn.textContent = '📝';
+                        lineRow.appendChild(wNoteBtn);
+                    }
+                }
+
+                // Black Move
+                if (bMove) {
+                    const bSpan = document.createElement('span');
+                    const isBActive = activePly === bPly && (!state.activeBranchMoves.length || state.branchStartPly >= bPly);
+                    bSpan.className = `move-link px-1.5 py-0.5 rounded ml-1 ${!isDrill ? 'cursor-pointer hover:bg-gray-800' : ''} ${isBActive ? 'bg-teal-700 text-white font-bold' : 'text-gray-200'}`;
+                    bSpan.dataset.ply = bPly;
+                    bSpan.textContent = bMove.san;
+                    lineRow.appendChild(bSpan);
+
+                    if (!isDrill) {
+                        const bNoteBtn = document.createElement('button');
+                        bNoteBtn.className = `note-edit-btn text-[10px] px-0.5 ${state.moveAnnotations[bPly] ? 'text-amber-400' : 'text-gray-600 hover:text-gray-300'}`;
+                        bNoteBtn.dataset.ply = bPly;
+                        bNoteBtn.dataset.san = bMove.san;
+                        bNoteBtn.title = state.moveAnnotations[bPly] || 'Add/Edit move note';
+                        bNoteBtn.textContent = '📝';
+                        lineRow.appendChild(bNoteBtn);
+                    }
+                }
+
+                row.appendChild(lineRow);
+
+                // Inline annotations for this move pair
+                [wPly, bPly].forEach(p => {
+                    if (state.moveAnnotations[p]) {
+                        const cDiv = document.createElement('div');
+                        cDiv.className = 'text-[10px] text-teal-300/90 italic pl-7';
+                        cDiv.textContent = `↳ ${state.moveAnnotations[p]}`;
+                        row.appendChild(cDiv);
+                    }
+                });
+
+                // Render sideline branch if it branched on this row
+                if (isExplore && state.activeBranchMoves.length > 0 && (state.branchStartPly === wPly - 1 || state.branchStartPly === bPly - 1)) {
+                    const branchDiv = document.createElement('div');
+                    branchDiv.className = 'pl-7 text-[11px] flex flex-wrap items-center gap-1 pt-0.5';
+                    const bLabel = document.createElement('span');
+                    bLabel.className = 'text-sky-400 font-semibold';
+                    bLabel.textContent = '🌿 Sideline:';
+                    branchDiv.appendChild(bLabel);
+
+                    state.activeBranchMoves.forEach((bm, bIdx) => {
+                        const bmSpan = document.createElement('span');
+                        bmSpan.className = 'branch-move';
+                        bmSpan.textContent = bm.san;
+                        bmSpan.dataset.branchIdx = bIdx;
+                        branchDiv.appendChild(bmSpan);
+                    });
+                    row.appendChild(branchDiv);
+                }
+
+                frag.appendChild(row);
+            }
+
+            els.moveHistory.appendChild(frag);
+            els.moveHistory.scrollTop = els.moveHistory.scrollHeight;
+        }
+
+        function jumpToPly(targetPly) {
+            const sourceMoves = state.activeMode === 'explore' ? state.expectedMoves : state.currentLineMoves;
+            const clampedPly = Math.max(0, Math.min(targetPly, sourceMoves.length));
+
+            state.activeBranchMoves = [];
+            state.branchStartPly = -1;
+            state.game.load(state.initialFen);
+            state.lastMoveSquares = null;
+
+            for (let i = 0; i < clampedPly; i++) {
+                const m = sourceMoves[i];
+                state.game.move({ from: m.from, to: m.to, promotion: m.promotion || 'q' });
+                if (i === clampedPly - 1) {
+                    state.lastMoveSquares = { from: m.from, to: m.to };
+                }
+            }
+
+            state.explorePlyIndex = clampedPly;
+            state.board.position(state.game.fen());
+            renderHistory(clampedPly);
+            renderLastMoveHighlights();
+            updateCoachNote();
+            evalBoard();
+            checkSyzygy();
+            fetchOpeningBookStats(state.game.fen());
+            playSound('move');
+        }
+
+        // --- View Router ---
+        function switchView(viewName) {
+            state.currentView = viewName;
+            if (oppMoveTimer) { clearTimeout(oppMoveTimer); oppMoveTimer = null; }
+            els.viewHome.classList.add('hidden');
+            els.viewFolderHub.classList.add('hidden');
+            els.viewWorkspace.classList.add('hidden');
+
+            if (viewName === 'home') {
+                els.viewHome.classList.remove('hidden');
+                els.breadcrumbBar.classList.add('hidden');
+                updateDashboard();
+            } else if (viewName === 'folderHub') {
+                els.viewFolderHub.classList.remove('hidden');
+                els.breadcrumbBar.classList.remove('hidden');
+                els.breadcrumbBar.classList.add('flex');
+                els.breadcrumbRoot.textContent = 'Categories';
+                els.breadcrumbSub.textContent = state.activeRootCategory || 'Select';
+                renderFolderHub();
+            } else if (viewName === 'workspace') {
+                els.viewWorkspace.classList.remove('hidden');
+                els.breadcrumbBar.classList.remove('hidden');
+                els.breadcrumbBar.classList.add('flex');
+                els.breadcrumbRoot.textContent = state.activeMode === 'sandbox' ? 'Sandbox' : (state.activeRootCategory || 'Repertoire');
+                els.breadcrumbSub.textContent = state.activeMode === 'sandbox' ? 'Draft Lab' : state.activeSubfolder;
+                applyWorkspaceModeUI();
+                if (state.activeMode === 'sandbox') {
+                    initSandboxWorkspace();
+                } else {
+                    loadGame();
+                }
+                setTimeout(() => applyBoardSize(state.boardSize), 100);
+            }
+        }
+
+        // --- Home Subfolder Accuracy Bar (Gold Medals / Total PGNs) ---
+        function updateDashboard() {
+            let op = 0, tac = 0, end = 0;
+            state.pgnList.forEach((_, i) => {
+                const f = state.pgnFolders[i] || 'Openings';
+                if (f.startsWith('Openings')) op++;
+                else if (f.startsWith('Tactics')) tac++;
+                else if (f.startsWith('Endgames')) end++;
+            });
+            els.countOpenings.textContent = `${op} drills`;
+            els.countTactics.textContent = `${tac} drills`;
+            els.countEndgames.textContent = `${end} drills`;
+            els.homeMistakeCountBadge.textContent = state.mistakeQueue.size;
+            els.homeTotalDrillCount.textContent = state.pgnList.length;
+
+            const frag = document.createDocumentFragment();
+            const subs = state.availableFolders.filter(f => f.includes('/'));
+
+            if (!subs.length) {
+                els.subfolderAccuracyChartContainer.innerHTML = '<div class="text-gray-500 py-2 text-center text-xs italic">No subfolders created yet.</div>';
+                return;
+            }
+
+            subs.forEach(sub => {
+                let totalPgnsInSub = 0;
+                let goldMedalsInSub = 0;
+
+                state.pgnList.forEach((_, idx) => {
+                    const f = state.pgnFolders[idx] || 'Openings';
+                    if (f === sub) {
+                        totalPgnsInSub++;
+                        if ((state.masteryStreaks[idx] || 0) >= 3) {
+                            goldMedalsInSub++;
+                        }
+                    }
+                });
+
+                const pct = totalPgnsInSub > 0 ? Math.round((goldMedalsInSub / totalPgnsInSub) * 100) : 0;
+                const barCol = pct >= 80 ? 'bg-emerald-500' : (pct >= 40 ? 'bg-amber-500' : 'bg-rose-500');
+
+                const row = document.createElement('div');
+                row.className = 'space-y-1';
+                row.innerHTML = `
+                    <div class="flex justify-between items-center text-xs font-mono">
+                        <span class="text-gray-300 truncate max-w-[220px] font-semibold">${sub}</span>
+                        <span class="${pct >= 80 ? 'text-emerald-400' : (pct >= 40 ? 'text-amber-400' : 'text-rose-400')}">
+                            ${pct}% (${goldMedalsInSub}⭐ / ${totalPgnsInSub} lines)
+                        </span>
+                    </div>
+                    <div class="w-full bg-gray-950 h-2 rounded-full overflow-hidden border border-gray-800">
+                        <div class="${barCol} h-full transition-all duration-300" style="width: ${pct}%;"></div>
+                    </div>
+                `;
+                frag.appendChild(row);
+            });
+
+            els.subfolderAccuracyChartContainer.innerHTML = '';
+            els.subfolderAccuracyChartContainer.appendChild(frag);
+        }
+
+        // --- Folder Prune & Deduplicate ---
+        function pruneEmptyFolders() {
+            const counts = {};
+            state.pgnList.forEach((_, idx) => {
+                const f = state.pgnFolders[idx] || 'Openings';
+                counts[f] = (counts[f] || 0) + 1;
+            });
+
+            const emptySubs = state.availableFolders.filter(f => f.includes('/') && !counts[f]);
+            if (!emptySubs.length) return alert('No empty subfolders found.');
+
+            if (confirm(`PRUNE CONFIRMATION: Remove ${emptySubs.length} empty subfolder(s)?\n\n${emptySubs.join('\n')}`)) {
+                state.availableFolders = state.availableFolders.filter(f => !emptySubs.includes(f));
+                persist();
+                renderFolderHub();
+                setStatus(`Pruned ${emptySubs.length} empty subfolder(s).`);
+            }
+        }
+
+        function deduplicateFolderLines() {
+            const pool = getFilteredPool();
+            if (pool.length < 2) return alert('At least 2 lines required to check duplicates.');
+
+            const seenFens = new Map();
+            const duplicateIndices = [];
+
+            pool.forEach(idx => {
+                const pgn = state.pgnList[idx] || '';
+                const cleanPgn = stripAllCommentsAndVariations(pgn);
+                state.scratchGame.reset();
+                state.scratchGame.load_pgn(cleanPgn);
+                const finalFen = state.scratchGame.fen().split(' ').slice(0, 4).join(' ');
+                if (seenFens.has(finalFen)) {
+                    duplicateIndices.push(idx);
+                } else {
+                    seenFens.set(finalFen, idx);
+                }
+            });
+
+            if (!duplicateIndices.length) return alert('No duplicate final positions detected in this folder!');
+
+            if (confirm(`DEDUPLICATION CONFIRMATION: Found ${duplicateIndices.length} duplicate line(s) sharing identical ending positions. Permanently delete them?`)) {
+                deleteGamesByIndices(duplicateIndices);
+                renderSubfolderManagerModal();
+                loadGame();
+                setStatus(`Removed ${duplicateIndices.length} duplicate lines.`);
+            }
+        }
+
+        function renderSubfolderManagerModal() {
+            const pool = getFilteredPool();
+            const query = (els.sfSearchInput.value || '').toLowerCase().trim();
+            const scopeTitle = state.activeSubfolder === 'all'
+                ? `All ${state.activeRootCategory || 'Repertoire'}`
+                : state.activeSubfolder;
+
+            els.sfModalFolderName.textContent = scopeTitle;
+            els.sfModalGameCountBadge.textContent = pool.length;
+
+            const frag = document.createDocumentFragment();
+            let shownCount = 0;
+
+            pool.forEach(idx => {
+                const rawPgn = state.pgnList[idx] || '';
+                const eventMatch = rawPgn.match(/\[Event\s+"([^"]+)"\]/i);
+                const ecoMatch = rawPgn.match(/\[ECO\s+"([^"]+)"\]/i);
+                const title = eventMatch ? eventMatch[1] : `Drill Line #${idx + 1}`;
+                const eco = ecoMatch ? `[${ecoMatch[1]}] ` : '';
+
+                if (query && !title.toLowerCase().includes(query) && !rawPgn.toLowerCase().includes(query)) {
+                    return;
+                }
+                shownCount++;
+
+                const streak = state.masteryStreaks[idx] || 0;
+                const badge = streak >= 3 ? '⭐ Gold' : (streak >= 1 ? '⭐ Silver' : 'Bronze');
+                const isMistake = state.mistakeQueue.has(idx);
+
+                const item = document.createElement('div');
+                item.className = `flex items-center justify-between p-2 rounded border ${idx === state.currentIndex ? 'bg-gray-800 border-teal-600' : 'bg-gray-900 border-gray-800'}`;
+                item.innerHTML = `
+                    <button class="select-subfolder-game-btn flex-1 text-left truncate pr-2" data-idx="${idx}">
+                        <div class="font-bold text-gray-100 truncate">${eco}${title}</div>
+                        <div class="text-[10px] text-gray-400 flex items-center gap-2 mt-0.5">
+                            <span class="text-amber-400 font-mono">${badge}</span>
+                            ${isMistake ? '<span class="text-rose-400 font-bold">🔥 Mistake</span>' : ''}
+                        </div>
+                    </button>
+                    <button class="delete-subfolder-game-btn text-gray-400 hover:text-rose-400 px-2 py-1" data-idx="${idx}" title="Delete line">🗑️</button>
+                `;
+                frag.appendChild(item);
+            });
+
+            els.subfolderDrillsList.innerHTML = '';
+            if (shownCount === 0) {
+                els.subfolderDrillsList.innerHTML = '<div class="text-gray-500 text-center py-4 italic">No matching lines found in this folder.</div>';
+            } else {
+                els.subfolderDrillsList.appendChild(frag);
+            }
+        }
+
+        function renderFolderHub() {
+            updateDashboard();
+            const mode = state.targetLaunchMode;
+            els.targetModeBadge.textContent = mode.toUpperCase();
+            els.targetModeBadge.className = `text-xs uppercase font-mono font-bold px-2 py-0.5 rounded ${mode === 'drill' ? 'bg-indigo-950 border border-indigo-700 text-indigo-300' : 'bg-teal-950 border border-teal-700 text-teal-300'}`;
+
+            if (!state.activeRootCategory) {
+                els.folderHubTitle.textContent = `Choose Category to ${mode === 'drill' ? 'Drill' : 'Explore'}`;
+                els.rootFolderDeck.classList.remove('hidden');
+                els.subfolderDeckContainer.classList.add('hidden');
+            } else {
+                els.folderHubTitle.textContent = `${state.activeRootCategory} Subfolders`;
+                els.rootFolderDeck.classList.add('hidden');
+                els.subfolderDeckContainer.classList.remove('hidden');
+                els.currentRootName.textContent = state.activeRootCategory;
+
+                const root = state.activeRootCategory;
+                const subs = state.availableFolders.filter(f => f === root || f.startsWith(root + '/'));
+                
+                const folderCounts = {};
+                state.pgnList.forEach((_, idx) => {
+                    const f = state.pgnFolders[idx] || 'Openings';
+                    folderCounts[f] = (folderCounts[f] || 0) + 1;
+                });
+
+                const frag = document.createDocumentFragment();
+
+                const allBtn = document.createElement('button');
+                allBtn.className = 'p-3 bg-gray-900 hover:bg-gray-850 border border-gray-800 hover:border-gray-600 rounded-lg text-left flex justify-between items-center transition';
+                const totalInRoot = state.pgnList.filter((_, idx) => (state.pgnFolders[idx] || 'Openings').startsWith(root)).length;
+                allBtn.innerHTML = `<div><div class="font-bold text-white">📁 All ${root}</div><div class="text-[10px] text-gray-400">Drill everything in this category</div></div><span class="text-xs font-mono bg-gray-800 px-2 py-0.5 rounded text-gray-300">${totalInRoot} games</span>`;
+                allBtn.onclick = () => {
+                    state.activeSubfolder = 'all';
+                    state.activeQueueMode = 'all';
+                    els.queueSelect.value = 'all';
+                    state.activeMode = state.targetLaunchMode;
+                    switchView('workspace');
+                };
+                frag.appendChild(allBtn);
+
+                subs.forEach(folderPath => {
+                    if (folderPath === root) return;
+                    const folderName = folderPath.substring(root.length + 1);
+                    const count = folderCounts[folderPath] || 0;
+                    const card = document.createElement('div');
+                    card.className = 'p-3 bg-gray-900 border border-gray-800 rounded-lg flex items-center justify-between transition hover:border-teal-700/60';
+                    card.innerHTML = `
+                        <button class="flex-1 text-left select-subfolder-btn" data-folder="${folderPath}">
+                            <div class="font-bold text-teal-300 truncate">${folderName}</div>
+                            <div class="text-[10px] text-gray-400">${count} games</div>
+                        </button>
+                    `;
+                    frag.appendChild(card);
+                });
+
+                els.subfolderList.innerHTML = '';
+                els.subfolderList.appendChild(frag);
+            }
+        }
+
+        // --- Play Side Toggle State Sync ---
+        function syncPlaySideTogglesUI() {
+            const side = state.playerSide;
+            els.togglePlayWhiteBtn.className = `px-3 py-1 rounded font-bold transition border ${side === 'w' ? 'bg-blue-600 border-blue-400 text-white' : 'bg-gray-800 border-gray-700 text-gray-300 hover:text-white'}`;
+            els.togglePlayBlackBtn.className = `px-3 py-1 rounded font-bold transition border ${side === 'b' ? 'bg-blue-600 border-blue-400 text-white' : 'bg-gray-800 border-gray-700 text-gray-300 hover:text-white'}`;
+            els.togglePlayAutoBtn.className = `px-2.5 py-1 rounded font-bold transition border ${side === 'auto' ? 'bg-teal-700 border-teal-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-300 hover:text-white'}`;
+        }
+
+        function setPlaySide(side) {
+            state.playerSide = side;
+            els.settingPlayerSide.value = side;
+            syncPlaySideTogglesUI();
+            persist();
+            if (side === 'w') state.board.orientation('white');
+            else if (side === 'b') state.board.orientation('black');
+            else {
+                const rawPgn = state.pgnList[state.currentIndex] || '';
+                applyAutoOrientation(rawPgn);
+            }
+            resizeCanvas();
+            setStatus(`Playing as: ${side === 'w' ? 'White' : (side === 'b' ? 'Black' : 'Auto')}`);
+
+            if (state.activeMode === 'drill' && state.expectedMoves.length > state.currentMoveIndex) {
+                const activePlayerSide = state.board.orientation() === 'black' ? 'b' : 'w';
+                if (state.game.turn() !== activePlayerSide) {
+                    if (oppMoveTimer) clearTimeout(oppMoveTimer);
+                    oppMoveTimer = setTimeout(oppMove, 450);
+                }
+            }
+        }
+
+        // --- Workspace UI Controller ---
+        function applyWorkspaceModeUI() {
+            const isDrill = state.activeMode === 'drill';
+            const isExp = state.activeMode === 'explore';
+            const isSand = state.activeMode === 'sandbox';
+
+            if (isSand) {
+                els.modeSwitcherRow.classList.add('hidden');
+                els.wsScopeName.textContent = 'Sandbox Lab';
+            } else {
+                els.modeSwitcherRow.classList.remove('hidden');
+                els.wsScopeName.textContent = state.activeSubfolder === 'all' ? `📁 All ${state.activeRootCategory || 'Repertoire'}` : `📁 ${state.activeSubfolder.split('/').pop()}`;
+                
+                els.toggleToDrillBtn.className = `flex-1 py-1.5 rounded-md transition text-center flex items-center justify-center gap-1.5 ${isDrill ? 'bg-indigo-600 text-white font-bold shadow' : 'text-gray-400 hover:text-white'}`;
+                els.toggleToExploreBtn.className = `flex-1 py-1.5 rounded-md transition text-center flex items-center justify-center gap-1.5 ${isExp ? 'bg-teal-600 text-white font-bold shadow' : 'text-gray-400 hover:text-white'}`;
+            }
+
+            document.querySelectorAll('.drill-only').forEach(el => el.classList.toggle('hidden', !isDrill));
+            document.querySelectorAll('.explore-only').forEach(el => el.classList.toggle('hidden', !isExp));
+            document.querySelectorAll('.sandbox-only').forEach(el => el.classList.toggle('hidden', !isSand));
+
+            if (isExp || isSand) {
+                els.engineSection.classList.remove('hidden');
+                els.evalBarWrapper.classList.remove('hidden');
+                evalBoard();
+                fetchOpeningBookStats(state.game.fen());
+                setStatus(isSand ? 'Sandbox Active: Experiment freely.' : 'Explore Mode: Engine, Book, and Notes active.');
+            } else if (isDrill) {
+                state.activeArrows = [];
+                state.activeRings = [];
+                renderCanvasOverlays();
+                els.masterBookBanner.classList.add('hidden');
+                els.engineSection.classList.toggle('hidden', !state.drillShowEngine);
+                els.evalBarWrapper.classList.toggle('hidden', !state.drillShowEngine);
+                if (state.drillShowEngine) evalBoard();
+                setStatus('Drill Mode: Recall your moves under pressure.');
+            }
+        }
+
+        function setStatus(msg, isErr = false) {
+            els.statusMsg.textContent = msg;
+            els.statusMsg.className = `text-xs sm:text-sm font-medium text-center ${isErr ? 'text-rose-400' : 'text-teal-400'}`;
+        }
+
+        function getFilteredPool() {
+            const pool = [];
+            for (let i = 0; i < state.pgnList.length; i++) {
+                const f = state.pgnFolders[i] || 'Openings';
+                const inCategory = !state.activeRootCategory || f.startsWith(state.activeRootCategory);
+                const inSubfolder = state.activeSubfolder === 'all' || f === state.activeSubfolder;
+                if (!inCategory || !inSubfolder) continue;
+
+                if (state.activeQueueMode === 'mistakes') {
+                    if (state.mistakeQueue.has(i)) pool.push(i);
+                } else {
+                    pool.push(i);
+                }
+            }
+            return pool;
+        }
+
+        function applyAutoOrientation(rawPgn) {
+            if (state.playerSide !== 'auto') {
+                state.board.orientation(state.playerSide === 'w' ? 'white' : 'black');
+                resizeCanvas();
+                return;
+            }
+            const blackMatch = rawPgn.match(/\[Black\s+"([^"]+)"\s*\]/i);
+            const whiteMatch = rawPgn.match(/\[White\s+"([^"]+)"\s*\]/i);
+            const isBlackLine = blackMatch && /user|player|me/i.test(blackMatch[1]);
+            const isWhiteLine = whiteMatch && /user|player|me/i.test(whiteMatch[1]);
+
+            if (isBlackLine && !isWhiteLine) {
+                state.board.orientation('black');
+            } else {
+                state.board.orientation('white');
+            }
+            resizeCanvas();
+        }
+
+        function loadGame(isRepeat = false) {
+            if (oppMoveTimer) { clearTimeout(oppMoveTimer); oppMoveTimer = null; }
+            state.selectedSquare = null;
+            els.promotionModal.classList.add('hidden');
+            els.syzygyBanner.classList.add('hidden');
+            els.masterBookBanner.classList.add('hidden');
+            els.quickInspectErrorBtn.classList.add('hidden');
+            state.activeArrows = [];
+            state.activeRings = [];
+            state.activeBranchMoves = [];
+            state.branchStartPly = -1;
+            renderCanvasOverlays();
+            clearHighlights();
+            state.game.reset();
+            state.currentMoveIndex = 0;
+            state.explorePlyIndex = 0;
+            state.expectedMoves = [];
+            state.currentLineMoves = [];
+            state.hadMistake = false;
+            state.moveStartTime = Date.now();
+            state.lastMoveSquares = null;
+
+            const pool = getFilteredPool();
+            els.subfolderGamesBadgeCount.textContent = pool.length;
+
+            if (!pool.length) {
+                state.board.position(state.game.fen());
+                els.wsCounter.textContent = '0/0';
+                els.coachNote.classList.add('hidden');
+                renderHistory();
+                setStatus('No drills found in this queue. Import PGNs or switch queue.');
+                return;
+            }
+
+            if (!pool.includes(state.currentIndex)) {
+                state.currentIndex = pool[0];
+            }
+
+            const rawPgn = state.pgnList[state.currentIndex].replace(/\r\n/g, '\n');
+            parseComments(rawPgn);
+            applyAutoOrientation(rawPgn);
+
+            const streak = state.masteryStreaks[state.currentIndex] || 0;
+            if (streak >= 3) {
+                els.statMasteryLevel.textContent = '⭐ Gold';
+                els.wsMasteryStarBadge.classList.remove('hidden');
+            } else if (streak >= 1) {
+                els.statMasteryLevel.textContent = '⭐ Silver';
+                els.wsMasteryStarBadge.classList.remove('hidden');
+            } else {
+                els.statMasteryLevel.textContent = 'Bronze';
+                els.wsMasteryStarBadge.classList.add('hidden');
+            }
+
+            const fenMatch = rawPgn.match(/\[FEN\s+"([^"]+)"\]/i);
+            state.initialFen = fenMatch ? fenMatch[1] : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
+            const cleanPgn = stripAllCommentsAndVariations(rawPgn);
+            state.scratchGame.reset();
+            if (state.scratchGame.load_pgn(cleanPgn)) {
+                state.expectedMoves = state.scratchGame.history({ verbose: true });
+                state.currentLineMoves = [...state.expectedMoves];
+                els.wsCounter.textContent = `${pool.indexOf(state.currentIndex) + 1}/${pool.length}`;
+
+                state.game.load(state.initialFen);
+
+                if (state.activeMode === 'drill' && state.randomStartActive && state.expectedMoves.length > 4) {
+                    const jumpIndex = Math.min(Math.floor(Math.random() * (state.expectedMoves.length - 2)) + 1, state.expectedMoves.length - 1);
+                    for (let p = 0; p < jumpIndex; p++) {
+                        const em = state.expectedMoves[p];
+                        state.game.move({ from: em.from, to: em.to, promotion: em.promotion || 'q' });
+                        if (p === jumpIndex - 1) state.lastMoveSquares = { from: em.from, to: em.to };
+                    }
+                    state.currentMoveIndex = jumpIndex;
+                }
+
+                state.board.position(state.game.fen());
+                renderLastMoveHighlights();
+                updateCoachNote();
+                renderHistory();
+                checkSyzygy();
+                fetchOpeningBookStats(state.game.fen());
+                persist();
+
+                if (state.activeMode === 'drill') {
+                    setStatus(isRepeat ? 'Drill reset. Make your move!' : 'Play the required repertoire move.');
+                    const currentTurnColor = state.game.turn();
+                    const activePlayerSide = state.board.orientation() === 'black' ? 'b' : 'w';
+
+                    if (currentTurnColor !== activePlayerSide && state.expectedMoves.length > state.currentMoveIndex) {
+                        setStatus('Opponent thinking...');
+                        oppMoveTimer = setTimeout(oppMove, 450);
+                    }
+                } else {
+                    evalBoard();
+                }
+            } else {
+                setStatus('Error parsing PGN line.', true);
+            }
+        }
+
+        function oppMove() {
+            if (oppMoveTimer) { clearTimeout(oppMoveTimer); oppMoveTimer = null; }
+            if (state.currentMoveIndex >= state.expectedMoves.length || state.currentMoveIndex >= state.targetMaxPly) {
+                return completeDrill();
+            }
+            const m = state.expectedMoves[state.currentMoveIndex++];
+            const res = state.game.move({ from: m.from, to: m.to, promotion: m.promotion || 'q' });
+            state.lastMoveSquares = { from: m.from, to: m.to };
+            state.board.position(state.game.fen());
+            renderHistory();
+            updateCoachNote();
+            checkSyzygy();
+            renderLastMoveHighlights();
+            if (state.drillShowEngine) evalBoard();
+
+            playSound(res?.captured ? 'capture' : (state.game.in_check() ? 'check' : 'move'));
+
+            if (state.currentMoveIndex >= state.expectedMoves.length || state.currentMoveIndex >= state.targetMaxPly) {
+                completeDrill();
+            } else {
+                setStatus('Opponent moved. Your turn.');
+                state.moveStartTime = Date.now();
+            }
+        }
+
+        function completeDrill() {
+            state.completedGames.add(state.currentIndex);
+            state.drillHistoryIndexStack.push(state.currentIndex);
+
+            const sub = state.pgnFolders[state.currentIndex] || 'Openings';
+            if (!state.subfolderStats[sub]) state.subfolderStats[sub] = { correct: 0, total: 0 };
+            state.subfolderStats[sub].total++;
+
+            if (!state.hadMistake) {
+                state.mistakeQueue.delete(state.currentIndex);
+                state.subfolderStats[sub].correct++;
+                state.masteryStreaks[state.currentIndex] = (state.masteryStreaks[state.currentIndex] || 0) + 1;
+                playSound('check');
+                setStatus('Drill completed cleanly! Auto-advancing...');
+
+                setTimeout(() => {
+                    if (state.activeMode === 'drill' && state.currentView === 'workspace') nextDrill();
+                }, 1300);
+            } else {
+                state.masteryStreaks[state.currentIndex] = 0;
+                setStatus('Line completed with errors. Logged to Mistakes.');
+            }
+
+            updateAnalyticsUI();
+            persist();
+        }
+
+        function nextDrill() {
+            const pool = getFilteredPool();
+            if (!pool.length) return setStatus('All drills in queue completed!');
+
+            let nextIdx = -1;
+            if (els.shuffleDrillCheckbox.checked) {
+                const sub = pool.filter(i => i !== state.currentIndex);
+                const candidates = sub.length ? sub : pool;
+                nextIdx = candidates[Math.floor(Math.random() * candidates.length)];
+            } else {
+                nextIdx = pool.find(i => i > state.currentIndex) ?? pool[0];
+            }
+
+            if (nextIdx !== -1) {
+                state.currentIndex = nextIdx;
+                loadGame();
+            }
+        }
+
+        function backToPreviousDrill() {
+            if (state.drillHistoryIndexStack.length > 0) {
+                state.currentIndex = state.drillHistoryIndexStack.pop();
+                loadGame();
+                setStatus('Restored previous drill.');
+            } else {
+                setStatus('No previous drill in session history.');
+            }
+        }
+
+        // --- Move Validation & Explore Sideline Branch Tracking ---
+        function attemptMove(source, target, promo = 'q') {
+            clearHighlights();
+
+            if (state.clearArrowsOnMove && state.activeMode !== 'drill') {
+                state.activeArrows = [];
+                state.activeRings = [];
+                renderCanvasOverlays();
+            }
+
+            if (state.activeMode === 'sandbox' || state.activeMode === 'explore') {
+                const curHistoryLen = state.game.history().length;
+                const move = state.game.move({ from: source, to: target, promotion: promo });
+                if (!move) {
+                    renderLastMoveHighlights();
+                    return false;
+                }
+
+                state.lastMoveSquares = { from: source, to: target };
+
+                if (state.activeMode === 'explore') {
+                    const expMove = state.expectedMoves[curHistoryLen];
+                    const isMainlineMatch = expMove && expMove.from === source && expMove.to === target && (!expMove.promotion || expMove.promotion === promo);
+
+                    if (!isMainlineMatch || state.activeBranchMoves.length > 0) {
+                        if (state.branchStartPly === -1) {
+                            state.branchStartPly = curHistoryLen;
+                        }
+                        state.activeBranchMoves.push(move);
+                    }
+                    state.explorePlyIndex = curHistoryLen + 1;
+                } else {
+                    state.currentLineMoves = state.game.history({ verbose: true });
+                    state.sandboxHistoryFenList.push(state.game.fen());
+                }
+
+                renderHistory(state.game.history().length);
+                renderLastMoveHighlights();
+                updateCoachNote();
+                evalBoard();
+                checkSyzygy();
+                fetchOpeningBookStats(state.game.fen());
+                playSound(move.captured ? 'capture' : (state.game.in_check() ? 'check' : 'move'));
+                return true;
+            }
+
+            if (state.activeMode === 'drill') {
+                if (state.currentMoveIndex >= state.expectedMoves.length) return false;
+                const exp = state.expectedMoves[state.currentMoveIndex];
+                const directMatch = source === exp.from && target === exp.to && (!exp.promotion || exp.promotion === promo);
+
+                state.scratchGame.load(state.game.fen());
+                const legal = state.scratchGame.move({ from: source, to: target, promotion: promo });
+                state.totalAttempts++;
+
+                if (!legal) {
+                    triggerHaptic('error');
+                    playSound('error');
+                    state.hadMistake = true;
+                    state.mistakeQueue.add(state.currentIndex);
+                    updateAnalyticsUI();
+                    renderLastMoveHighlights();
+                    setStatus('Illegal move! Try again.', true);
+                    return false;
+                }
+
+                const userFenNormalized = state.scratchGame.fen().split(' ').slice(0, 4).join(' ');
+                state.scratchGame.load(state.game.fen());
+                state.scratchGame.move({ from: exp.from, to: exp.to, promotion: exp.promotion || 'q' });
+                const transpositionMatch = userFenNormalized === state.scratchGame.fen().split(' ').slice(0, 4).join(' ');
+
+                if (directMatch || transpositionMatch) {
+                    const res = state.game.move({ from: source, to: target, promotion: promo });
+                    state.lastMoveSquares = { from: source, to: target };
+                    state.currentMoveIndex++;
+                    renderHistory();
+                    updateCoachNote();
+                    checkSyzygy();
+                    renderLastMoveHighlights();
+                    if (state.drillShowEngine) evalBoard();
+
+                    const moveSec = (Date.now() - state.moveStartTime) / 1000;
+                    if (moveSec > 5.0) els.homeSpeedWarning.classList.remove('hidden');
+                    state.totalMoveSeconds += moveSec;
+                    state.timedMovesCount++;
+                    state.correctAttempts++;
+                    updateAnalyticsUI();
+
+                    triggerHaptic('success');
+                    playSound(res.captured ? 'capture' : (state.game.in_check() ? 'check' : 'move'));
+                    setStatus(transpositionMatch && !directMatch ? 'Transposition matched!' : 'Correct move!');
+
+                    if (state.currentMoveIndex < state.expectedMoves.length && state.currentMoveIndex < state.targetMaxPly) {
+                        oppMoveTimer = setTimeout(oppMove, 450);
+                    } else {
+                        completeDrill();
+                    }
+                    return true;
+                } else {
+                    triggerHaptic('error');
+                    playSound('error');
+                    state.hadMistake = true;
+                    state.mistakeQueue.add(state.currentIndex);
+                    updateAnalyticsUI();
+                    renderLastMoveHighlights();
+                    setStatus(`Blunder: ${legal.san} is not the repertoire move!`, true);
+                    els.quickInspectErrorBtn.classList.remove('hidden');
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        // --- Canvas Overlays ---
+        function resizeCanvas() {
+            const rect = els.board.getBoundingClientRect();
+            if (!rect.width) return;
+            const dpr = window.devicePixelRatio || 1;
+            els.arrowCanvas.width = rect.width * dpr;
+            els.arrowCanvas.height = rect.height * dpr;
+            els.arrowCanvas.style.width = `${rect.width}px`;
+            els.arrowCanvas.style.height = `${rect.height}px`;
+            arrowCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            renderCanvasOverlays();
+        }
+
+        function getSquareCoord(sq) {
+            const rect = els.board.getBoundingClientRect();
+            const flip = state.board && state.board.orientation() === 'black';
+            let file = sq.charCodeAt(0) - 97;
+            let rank = parseInt(sq[1], 10) - 1;
+            if (flip) file = 7 - file; else rank = 7 - rank;
+            const size = rect.width / 8;
+            return { x: file * size + size / 2, y: rank * size + size / 2, size };
+        }
+
+        function renderCanvasOverlays() {
+            const rect = els.board.getBoundingClientRect();
+            arrowCtx.clearRect(0, 0, rect.width, rect.height);
+
+            if (state.activeMode === 'drill') return;
+
+            state.activeRings.forEach(({ sq, color }) => {
+                const { x, y, size } = getSquareCoord(sq);
+                arrowCtx.beginPath();
+                arrowCtx.arc(x, y, size * 0.4, 0, 2 * Math.PI);
+                arrowCtx.lineWidth = size * 0.08;
+                arrowCtx.strokeStyle = color || 'rgba(59, 130, 246, 0.8)';
+                arrowCtx.stroke();
+            });
+
+            state.activeArrows.forEach(({ from, to, color }) => {
+                const f = getSquareCoord(from), t = getSquareCoord(to);
+                const angle = Math.atan2(t.y - f.y, t.x - f.x);
+                const head = rect.width * 0.035;
+
+                arrowCtx.strokeStyle = arrowCtx.fillStyle = color || `rgba(20, 184, 166, ${state.arrowOpacity})`;
+                arrowCtx.lineWidth = rect.width * 0.024;
+                arrowCtx.lineCap = 'round';
+
+                arrowCtx.beginPath();
+                arrowCtx.moveTo(f.x, f.y);
+                arrowCtx.lineTo(t.x - Math.cos(angle) * (head * 0.8), t.y - Math.sin(angle) * (head * 0.8));
+                arrowCtx.stroke();
+
+                arrowCtx.beginPath();
+                arrowCtx.moveTo(t.x, t.y);
+                arrowCtx.lineTo(t.x - head * Math.cos(angle - Math.PI / 6), t.y - head * Math.sin(angle - Math.PI / 6));
+                arrowCtx.lineTo(t.x - head * Math.cos(angle + Math.PI / 6), t.y - head * Math.sin(angle + Math.PI / 6));
+                arrowCtx.closePath();
+                arrowCtx.fill();
+            });
+        }
+
+        function renderLastMoveHighlights() {
+            clearHighlights();
+            if (state.lastMoveSquares) {
+                els.board.querySelector(`.square-${state.lastMoveSquares.from}`)?.classList.add('highlight-last-from');
+                els.board.querySelector(`.square-${state.lastMoveSquares.to}`)?.classList.add('highlight-last-to');
+            }
+            if (state.game.in_check()) {
+                const kingSquare = findKingSquare(state.game.turn());
+                if (kingSquare) {
+                    els.board.querySelector(`.square-${kingSquare}`)?.classList.add('highlight-check');
+                }
+            }
+        }
+
+        function findKingSquare(color) {
+            const b = state.game.board();
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = b[r][c];
+                    if (p && p.type === 'k' && p.color === color) {
+                        return String.fromCharCode(97 + c) + (8 - r);
+                    }
+                }
+            }
+            return null;
+        }
+
+        function clearHighlights() {
+            els.board.querySelectorAll('.square-55d63').forEach(el => {
+                el.classList.remove('highlight-hint', 'highlight-selected', 'legal-dot', 'legal-capture', 'highlight-last-from', 'highlight-last-to', 'highlight-check');
+            });
+        }
+
+        function showDots(sq) {
+            clearHighlights();
+            els.board.querySelector(`.square-${sq}`)?.classList.add('highlight-selected');
+            for (const m of state.game.moves({ square: sq, verbose: true })) {
+                els.board.querySelector(`.square-${m.to}`)?.classList.add(m.captured ? 'legal-capture' : 'legal-dot');
+            }
+        }
+
+        function handleSquare(sq) {
+            const p = state.game.get(sq);
+            if (!state.selectedSquare) {
+                if (p) {
+                    if (state.activeMode === 'drill') {
+                        const curTurn = state.game.turn();
+                        const activePlayer = state.board.orientation() === 'black' ? 'b' : 'w';
+                        if (p.color !== activePlayer || p.color !== curTurn) return;
+                    } else {
+                        if (p.color !== state.game.turn()) return;
+                    }
+                    state.selectedSquare = sq;
+                    showDots(sq);
+                }
+            } else {
+                if (state.selectedSquare === sq) {
+                    state.selectedSquare = null;
+                    clearHighlights();
+                    renderLastMoveHighlights();
+                    return;
+                }
+                if (p && p.color === state.game.turn()) {
+                    state.selectedSquare = sq;
+                    showDots(sq);
+                    return;
+                }
+
+                const from = state.selectedSquare, to = sq;
+                if (checkPromo(from, to)) {
+                    state.selectedSquare = null;
+                    clearHighlights();
+                    showPromoDialog(from, to, choice => {
+                        attemptMove(from, to, choice);
+                        state.board.position(state.game.fen());
+                        renderLastMoveHighlights();
+                    });
+                    return;
+                }
+
+                attemptMove(from, to, 'q');
+                state.board.position(state.game.fen());
+                state.selectedSquare = null;
+                renderLastMoveHighlights();
+            }
+        }
+
+        function checkPromo(s, t) {
+            const p = state.game.get(s);
+            if (!p || p.type !== 'p') return false;
+            const legalMoves = state.game.moves({ square: s, verbose: true });
+            return legalMoves.some(m => m.to === t && m.promotion);
+        }
+
+        function showPromoDialog(s, t, cb) {
+            const piece = state.game.get(s);
+            const col = piece ? piece.color : state.game.turn();
+            els.promotionChoices.innerHTML = '';
+            for (const p of ['q', 'r', 'b', 'n']) {
+                const img = document.createElement('img');
+                img.src = getPieceImg(`${col}${p.toUpperCase()}`);
+                img.className = 'w-11 h-11 cursor-pointer hover:bg-gray-700 p-1 rounded transition';
+                img.onclick = () => {
+                    els.promotionModal.classList.add('hidden');
+                    cb(p);
+                };
+                els.promotionChoices.appendChild(img);
+            }
+            els.promotionModal.classList.remove('hidden');
+        }
+
+        // --- Stockfish Engine Loader with Queueing & SAN Parser ---
+        function formatUciPvToSan(fen, uciPvStr) {
+            if (!state.scratchGame.load(fen)) return uciPvStr;
+            const tokens = uciPvStr.trim().split(/\s+/);
+            const sanOut = [];
+            let moveNum = parseInt(fen.split(' ')[5], 10) || 1;
+            let turn = fen.split(' ')[1];
+
+            for (let i = 0; i < Math.min(tokens.length, 6); i++) {
+                const u = tokens[i];
+                if (!u || u.length < 4) break;
+                const m = state.scratchGame.move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || 'q' });
+                if (!m) break;
+
+                if (turn === 'w') {
+                    sanOut.push(`${moveNum}. ${m.san}`);
+                    turn = 'b';
+                } else {
+                    sanOut.push(i === 0 ? `${moveNum}... ${m.san}` : m.san);
+                    turn = 'w';
+                    moveNum++;
+                }
+            }
+            return sanOut.join(' ');
+        }
+
+        function initStockfish() {
+            const workerBootstrapCode = `
+                var cmdQueue = [];
+                self.onmessage = function(e) { cmdQueue.push(e.data); };
+
+                function bootFallback() {
+                    try {
+                        self.onmessage = null;
+                        importScripts('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
+                        self.postMessage('uciok_sf10');
+                        while (cmdQueue.length > 0 && typeof self.onmessage === 'function') {
+                            self.onmessage({ data: cmdQueue.shift() });
+                        }
+                    } catch (err) {
+                        self.postMessage('sf_error');
+                    }
+                }
+
+                if (typeof SharedArrayBuffer !== 'undefined') {
+                    try {
+                        importScripts('https://unpkg.com/stockfish@16.0.0/src/stockfish-nnue-16-single.js');
+                        if (typeof Stockfish === 'function') {
+                            Stockfish({
+                                locateFile: function(path) {
+                                    return 'https://unpkg.com/stockfish@16.0.0/src/' + path;
+                                }
+                            }).then(function(sf) {
+                                sf.addMessageListener(function(line) { self.postMessage(line); });
+                                self.onmessage = function(e) { sf.postMessage(e.data); };
+                                self.postMessage('uciok_nnue16');
+                                while (cmdQueue.length > 0) {
+                                    sf.postMessage(cmdQueue.shift());
+                                }
+                            }).catch(bootFallback);
+                        } else {
+                            bootFallback();
+                        }
+                    } catch (e) {
+                        bootFallback();
+                    }
+                } else {
+                    bootFallback();
+                }
+            `;
+
+            try {
+                const blob = new Blob([workerBootstrapCode], { type: 'application/javascript' });
+                engineWorker = new Worker(URL.createObjectURL(blob));
+                engineWorker.postMessage('uci');
+                engineWorker.postMessage('setoption name MultiPV value 3');
+                engineWorker.postMessage('isready');
+
+                const engineLines = { 1: '', 2: '', 3: '' };
+                const enginePvs = { 1: '', 2: '', 3: '' };
+
+                engineWorker.onmessage = e => {
+                    const line = String(e.data || '');
+
+                    if (line === 'uciok_nnue16') {
+                        if (els.engineVersionBadge) els.engineVersionBadge.textContent = 'NNUE 16';
+                        return;
+                    }
+                    if (line === 'uciok_sf10' || line.includes('Stockfish 10')) {
+                        if (els.engineVersionBadge) els.engineVersionBadge.textContent = 'SF 10.0';
+                        if (line === 'uciok_sf10') return;
+                    }
+                    
+                    if (state.isSparring && line.startsWith('bestmove')) {
+                        const uci = line.split(' ')[1];
+                        const userColor = state.board.orientation() === 'black' ? 'b' : 'w';
+                        if (uci && uci !== '(none)' && state.game.turn() !== userColor) {
+                            const res = state.game.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] || 'q' });
+                            if (res) {
+                                state.lastMoveSquares = { from: uci.slice(0, 2), to: uci.slice(2, 4) };
+                                state.board.position(state.game.fen());
+                                if (state.activeMode === 'explore') {
+                                    if (state.branchStartPly === -1) state.branchStartPly = state.game.history().length - 1;
+                                    state.activeBranchMoves.push(res);
+                                } else {
+                                    state.currentLineMoves = state.game.history({ verbose: true });
+                                }
+                                renderHistory(state.game.history().length);
+                                renderLastMoveHighlights();
+                                evalBoard();
+                                checkSyzygy();
+                                playSound(res.captured ? 'capture' : (state.game.in_check() ? 'check' : 'move'));
+                            }
+                        }
+                    }
+
+                    if (line.startsWith('info') && line.includes('multipv')) {
+                        const m = line.match(/multipv\s+(\d+).*?score\s+(cp|mate)\s+(-?\d+).*?pv\s+(.*)/);
+                        if (m) {
+                            const [, mpv, type, rawVal, pv] = m;
+                            let val = parseInt(rawVal, 10);
+                            if (state.game.turn() === 'b') val = -val;
+
+                            if (mpv === '1') {
+                                state.currentEvalScore = val;
+                                state.isMateScore = type === 'mate';
+                                const pct = type === 'mate' ? (val > 0 ? 100 : 0) : 50 + (Math.max(-10, Math.min(10, val / 100)) / 10) * 50;
+                                els.evalBarWhite.style.height = `${pct}%`;
+                                els.evalBarScoreText.textContent = type === 'mate' ? `M${val}` : `${val > 0 ? '+' : ''}${(val / 100).toFixed(1)}`;
+                                
+                                const winProb = type === 'mate' ? (val > 0 ? 100 : 0) : Math.round(1 / (1 + Math.pow(10, -val / 400)) * 100);
+                                els.wdlText.textContent = `${winProb}% W / ${100 - winProb}% B`;
+
+                                if (state.activeMode === 'explore' && pv.length >= 4) {
+                                    const u1 = pv.split(' ')[0];
+                                    if (u1 && u1.length >= 4) {
+                                        state.activeArrows = [{ from: u1.slice(0, 2), to: u1.slice(2, 4), color: 'rgba(239, 68, 68, 0.7)' }];
+                                        renderCanvasOverlays();
+                                    }
+                                }
+                            }
+
+                            const scoreStr = type === 'cp' ? (val > 0 ? `+${(val / 100).toFixed(2)}` : (val / 100).toFixed(2)) : `M${val}`;
+                            const col = val > 0 ? 'text-teal-400' : (val < 0 ? 'text-rose-400' : 'text-gray-300');
+                            
+                            const formattedSanPv = formatUciPvToSan(state.game.fen(), pv);
+                            engineLines[mpv] = `<span class="font-bold ${col}">[${scoreStr}]</span> ${formattedSanPv}`;
+                            enginePvs[mpv] = pv;
+
+                            els.engineLinesBox.children[0].innerHTML = `1. ${engineLines[1] || '...'}`;
+                            els.engineLinesBox.children[1].innerHTML = `2. ${engineLines[2] || '...'}`;
+                            els.engineLinesBox.children[2].innerHTML = `3. ${engineLines[3] || '...'}`;
+                            els.engineLinesBox.children[0].dataset.pvMove = enginePvs[1].split(' ')[0] || '';
+                            els.engineLinesBox.children[1].dataset.pvMove = enginePvs[2].split(' ')[0] || '';
+                            els.engineLinesBox.children[2].dataset.pvMove = enginePvs[3].split(' ')[0] || '';
+                        }
+                    }
+                };
+            } catch (err) {
+                els.engineLinesBox.innerHTML = '<div class="text-rose-400">Stockfish unavailable.</div>';
+            }
+        }
+
+        function evalBoard() {
+            if (!engineWorker) return;
+            if (state.activeMode === 'drill' && !state.drillShowEngine) return;
+            clearTimeout(evalDebounceTimer);
+            clearTimeout(idleWorkerTimer);
+
+            evalDebounceTimer = setTimeout(() => {
+                if (state.game.game_over()) {
+                    engineWorker.postMessage('stop');
+                    return;
+                }
+                const userColor = state.board && state.board.orientation() === 'black' ? 'b' : 'w';
+                const isEngineSparTurn = state.isSparring && state.game.turn() !== userColor;
+                const rawDepth = Math.max(10, Math.min(25, parseInt(els.engineDepthInput.value, 10) || 18));
+                const depth = isEngineSparTurn ? Math.min(rawDepth, 13) : rawDepth;
+
+                engineWorker.postMessage('stop');
+                engineWorker.postMessage('position fen ' + state.game.fen());
+                engineWorker.postMessage(`go depth ${depth}`);
+
+                idleWorkerTimer = setTimeout(() => {
+                    engineWorker.postMessage('stop');
+                }, 60000);
+            }, 60);
+        }
+
+        function checkSyzygy() {
+            clearTimeout(tablebaseDebounceTimer);
+            const fen = state.game.fen();
+            const pieceCount = (fen.split(' ')[0].match(/[rnbqkpRNBQKP]/g) || []).length;
+            if (pieceCount > 7) {
+                els.syzygyBanner.classList.add('hidden');
+                return;
+            }
+
+            tablebaseDebounceTimer = setTimeout(() => {
+                fetch(`https://tablebase.lichess.ovh/standard?fen=${encodeURIComponent(fen)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data?.category) return;
+                        const dtz = data.dtz !== undefined ? `DTZ: ${Math.abs(data.dtz)}` : '';
+                        const best = data.moves?.[0] ? `Best: ${data.moves[0].san}` : '';
+                        els.syzygyBanner.textContent = `🔮 Syzygy Tablebase: ${data.category.toUpperCase()} (${dtz}) ${best}`.trim();
+                        els.syzygyBanner.classList.remove('hidden');
+                    })
+                    .catch(() => els.syzygyBanner.classList.add('hidden'));
+            }, 100);
+        }
+
+        function fetchOpeningBookStats(fen) {
+            if (state.activeMode === 'drill') return;
+            fetch(`https://explorer.lichess.ovh/masters?fen=${encodeURIComponent(fen)}`)
+                .then(r => r.json())
+                .then(d => {
+                    if (d?.moves?.length) {
+                        const top = d.moves.slice(0, 3).map(m => `${m.san} (${m.white}W/${m.draws}D/${m.black}B)`).join(' · ');
+                        els.masterBookBanner.textContent = `📚 Masters: ${top}`;
+                        els.masterBookBanner.classList.remove('hidden');
+                    } else {
+                        els.masterBookBanner.classList.add('hidden');
+                    }
+                })
+                .catch(() => els.masterBookBanner.classList.add('hidden'));
+        }
+
+        function openCompareModal() {
+            els.compareModal.classList.remove('hidden');
+            const fen1 = state.game.fen();
+
+            // Reference position: final tabiya of current mainline
+            state.scratchGame.load(state.initialFen);
+            for (const m of state.expectedMoves) {
+                state.scratchGame.move({ from: m.from, to: m.to, promotion: m.promotion || 'q' });
+            }
+            const fen2 = state.expectedMoves.length ? state.scratchGame.fen() : state.initialFen;
+
+            els.compareFen1Text.textContent = fen1;
+            els.compareFen2Text.textContent = fen2;
+
+            setTimeout(() => {
+                if (state.boardCompare1) state.boardCompare1.destroy();
+                if (state.boardCompare2) state.boardCompare2.destroy();
+                state.boardCompare1 = Chessboard('board-compare-1', { position: fen1, draggable: false, pieceTheme: getPieceImg });
+                state.boardCompare2 = Chessboard('board-compare-2', { position: fen2, draggable: false, pieceTheme: getPieceImg });
+            }, 100);
+        }
+
+        function initSandboxWorkspace() {
+            state.game.reset();
+            state.scratchGame.reset();
+            state.initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+            state.currentLineMoves = [];
+            state.expectedMoves = [];
+            state.activeBranchMoves = [];
+            state.branchStartPly = -1;
+            state.moveAnnotations = {};
+            state.sandboxHistoryFenList = [state.game.fen()];
+            state.lastMoveSquares = null;
+            state.activeArrows = [];
+            state.activeRings = [];
+
+            state.board.position('start');
+            clearHighlights();
+            renderCanvasOverlays();
+            renderHistory(0);
+            evalBoard();
+            checkSyzygy();
+            fetchOpeningBookStats(state.game.fen());
+            setStatus('Sandbox reset to starting position.');
+        }
+
+        async function pushToGist() {
+            syncState.pat = els.syncPatInput.value.trim();
+            syncState.gistId = els.syncGistIdInput.value.trim();
+            localStorage.setItem('pgn_pro_sync_pat', syncState.pat);
+            localStorage.setItem('pgn_pro_sync_gist', syncState.gistId);
+
+            if (!syncState.pat || !syncState.gistId) return alert('Enter GitHub Token & Gist ID.');
+            els.syncStatusMessage.textContent = 'Uploading to Gist...';
+
+            try {
+                const nowTs = Date.now();
+                const payload = JSON.stringify({
+                    timestamp: nowTs,
+                    pgnList: state.pgnList,
+                    pgnFolders: state.pgnFolders,
+                    availableFolders: state.availableFolders,
+                    completedGames: [...state.completedGames],
+                    mistakeQueue: [...state.mistakeQueue],
+                    masteryStreaks: state.masteryStreaks,
+                    subfolderStats: state.subfolderStats,
+                    currentIndex: state.currentIndex
+                }, null, 2);
+
+                const res = await fetch(`https://api.github.com/gists/${syncState.gistId}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${syncState.pat}`, 'Accept': 'application/vnd.github+json' },
+                    body: JSON.stringify({ files: { 'pgn_drills_state.json': { content: payload } } })
+                });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const remoteUpdated = data.updated_at ? new Date(data.updated_at).getTime() : Date.now();
+                localStorage.setItem('pgn_pro_last_sync', String(remoteUpdated));
+
+                els.syncStatusMessage.textContent = 'Uploaded successfully! ✅';
+                markSyncDirty(false);
+                setStatus('Cloud Sync complete.');
+            } catch (err) {
+                els.syncStatusMessage.textContent = `Upload failed: ${err.message}`;
+            }
+        }
+
+        async function pullFromGist() {
+            syncState.pat = els.syncPatInput.value.trim();
+            syncState.gistId = els.syncGistIdInput.value.trim();
+            localStorage.setItem('pgn_pro_sync_pat', syncState.pat);
+            localStorage.setItem('pgn_pro_sync_gist', syncState.gistId);
+
+            if (!syncState.pat || !syncState.gistId) return alert('Enter GitHub Token & Gist ID.');
+            els.syncStatusMessage.textContent = 'Pulling latest state...';
+
+            try {
+                const res = await fetch(`https://api.github.com/gists/${syncState.gistId}`, {
+                    headers: { 'Authorization': `Bearer ${syncState.pat}`, 'Accept': 'application/vnd.github+json' }
+                });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const content = data.files['pgn_drills_state.json']?.content;
+                if (!content) throw new Error('State file not found in Gist.');
+
+                const parsed = JSON.parse(content);
+                state.pgnList = parsed.pgnList || [];
+                state.pgnFolders = parsed.pgnFolders || {};
+                state.availableFolders = parsed.availableFolders || [...DEFAULT_FOLDERS];
+                state.completedGames = new Set(parsed.completedGames || []);
+                state.mistakeQueue = new Set(parsed.mistakeQueue || []);
+                state.masteryStreaks = parsed.masteryStreaks || {};
+                state.subfolderStats = parsed.subfolderStats || {};
+                state.currentIndex = Math.max(0, Math.min(parsed.currentIndex || 0, Math.max(0, state.pgnList.length - 1)));
+
+                const remoteUpdated = data.updated_at ? new Date(data.updated_at).getTime() : Date.now();
+                localStorage.setItem('pgn_pro_last_sync', String(remoteUpdated));
+
+                persist();
+                markSyncDirty(false);
+                els.syncStatusMessage.textContent = 'Restored successfully! ✅';
+                els.cloudUpdateToast.classList.add('hidden');
+                updateDashboard();
+                if (state.currentView === 'workspace') loadGame();
+            } catch (err) {
+                els.syncStatusMessage.textContent = `Pull failed: ${err.message}`;
+            }
+        }
+
+        async function checkSilentGistUpdate() {
+            if (!syncState.pat || !syncState.gistId) return;
+            try {
+                const res = await fetch(`https://api.github.com/gists/${syncState.gistId}`, {
+                    headers: { 'Authorization': `Bearer ${syncState.pat}`, 'Accept': 'application/vnd.github+json' }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const gistDate = new Date(data.updated_at).getTime();
+                    const localTimestamp = parseInt(localStorage.getItem('pgn_pro_last_sync') || '0', 10);
+                    if (localTimestamp > 0 && gistDate > localTimestamp && state.isDirtySync === false) {
+                        els.cloudUpdateToast.classList.remove('hidden');
+                    }
+                }
+            } catch (e) {}
+        }
+
+        function downloadTextFile(filename, textContent, mime = 'text/plain') {
+            const blob = new Blob([textContent], { type: mime });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function exportLocalJson() {
+            const data = {
+                timestamp: Date.now(),
+                pgnList: state.pgnList,
+                pgnFolders: state.pgnFolders,
+                availableFolders: state.availableFolders,
+                completedGames: [...state.completedGames],
+                mistakeQueue: [...state.mistakeQueue],
+                masteryStreaks: state.masteryStreaks,
+                subfolderStats: state.subfolderStats
+            };
+            downloadTextFile(
+                `pgn_drills_backup_${new Date().toISOString().slice(0, 10)}.json`,
+                JSON.stringify(data, null, 2),
+                'application/json'
+            );
+        }
+
+        function importLocalJson(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const r = new FileReader();
+            r.onload = ev => {
+                try {
+                    const d = JSON.parse(ev.target.result);
+                    state.pgnList = d.pgnList || [];
+                    state.pgnFolders = d.pgnFolders || {};
+                    state.availableFolders = d.availableFolders || [...DEFAULT_FOLDERS];
+                    state.completedGames = new Set(d.completedGames || []);
+                    state.mistakeQueue = new Set(d.mistakeQueue || []);
+                    state.masteryStreaks = d.masteryStreaks || {};
+                    state.subfolderStats = d.subfolderStats || {};
+                    persist();
+                    alert('Backup restored successfully!');
+                    location.reload();
+                } catch (err) {
+                    alert('Invalid JSON file format.');
+                }
+            };
+            r.readAsText(file);
+        }
+
+        function updateAnalyticsUI() {
+            const acc = state.totalAttempts ? Math.round((state.correctAttempts / state.totalAttempts) * 100) : 100;
+            els.statAccuracy.textContent = `${acc}%`;
+            const avg = state.timedMovesCount ? (state.totalMoveSeconds / state.timedMovesCount).toFixed(1) : '0.0';
+            els.statAvgTime.textContent = `${avg}s`;
+            els.queueSelect.options[1].text = `Queue: Mistakes Only (${state.mistakeQueue.size})`;
+            els.wsMistakeBadge.classList.toggle('hidden', state.activeQueueMode !== 'mistakes');
+            els.homeMistakeCountBadge.textContent = state.mistakeQueue.size;
+        }
+
+        function handleGlobalKeydown(e) {
+            if (['TEXTAREA', 'INPUT', 'SELECT'].includes(document.activeElement?.tagName)) return;
+
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+                if (state.activeMode === 'drill') els.drillHintBtn.click();
+            } else if (e.key === 'f' || e.key === 'F') {
+                els.wsFlipBtn.click();
+            } else if (e.key === 'r' || e.key === 'R') {
+                if (state.activeMode === 'drill') loadGame(true);
+                else if (state.activeMode === 'sandbox') els.sandboxResetBtn.click();
+            } else if (e.key === 'z' || e.key === 'Z' || e.key === 'ArrowLeft') {
+                if (state.activeMode === 'explore') els.expPrevBtn.click();
+                else if (state.activeMode === 'sandbox') els.sandboxUndoBtn.click();
+            } else if (e.key === 'x' || e.key === 'X' || e.key === 'ArrowRight') {
+                if (state.activeMode === 'explore') els.expNextBtn.click();
+            } else if (e.key === 'e' || e.key === 'E') {
+                if (state.currentView === 'workspace' && state.activeMode !== 'sandbox') {
+                    if (state.activeMode === 'drill') els.toggleToExploreBtn.click();
+                    else els.toggleToDrillBtn.click();
+                }
+            } else if (e.key === 'm' || e.key === 'M') {
+                if (state.currentView === 'workspace') els.openSubfolderManagerBtn.click();
+            }
+        }
+
+        // --- Chessboard Instance Initializer (Safe to call multiple times) ---
+        function initBoard() {
+            const prevOrientation = state.board ? state.board.orientation() : 'white';
+            if (state.board) {
+                state.board.destroy();
+            }
+            state.board = Chessboard('board', {
+                draggable: state.inputMode === 'drag',
+                position: state.game.fen(),
+                orientation: prevOrientation,
+                pieceTheme: getPieceImg,
+                onDragStart: (s, p) => {
+                    if (state.game.game_over()) return false;
+                    if (state.activeMode === 'drill') {
+                        const activePlayer = state.board.orientation() === 'black' ? 'b' : 'w';
+                        if (p[0] !== activePlayer || p[0] !== state.game.turn()) return false;
+                    } else {
+                        if (p[0] !== state.game.turn()) return false;
+                    }
+                    showDots(s);
+                },
+                onDrop: (s, t) => {
+                    clearHighlights();
+                    if (s === t) return;
+                    if (checkPromo(s, t)) {
+                        showPromoDialog(s, t, choice => {
+                            attemptMove(s, t, choice);
+                            state.board.position(state.game.fen());
+                            renderLastMoveHighlights();
+                        });
+                        return;
+                    }
+                    if (!attemptMove(s, t, 'q')) return 'snapback';
+                },
+                onSnapEnd: () => {
+                    state.board.position(state.game.fen());
+                    renderLastMoveHighlights();
+                }
+            });
+            applyBoardSize(state.boardSize);
+            renderLastMoveHighlights();
+        }
+
+        // --- Event Wiring (Called Once at Boot) ---
+        function initEvents() {
+            initBoard();
+
+            // Touch & Click interaction on #board
+            let tX = 0, tY = 0, moved = false;
+            els.board.addEventListener('touchstart', e => {
+                if (e.touches.length === 1) { tX = e.touches[0].clientX; tY = e.touches[0].clientY; moved = false; }
+            }, { passive: false });
+            els.board.addEventListener('touchmove', e => {
+                e.preventDefault();
+                if (e.touches.length === 1 && (Math.abs(e.touches[0].clientX - tX) > 6 || Math.abs(e.touches[0].clientY - tY) > 6)) moved = true;
+            }, { passive: false });
+            els.board.addEventListener('touchend', e => {
+                if (!moved && e.changedTouches.length) {
+                    const el = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY)?.closest('.square-55d63');
+                    if (el?.dataset?.square) {
+                        e.preventDefault();
+                        handleSquare(el.dataset.square);
+                    }
+                }
+            }, { passive: false });
+            els.board.addEventListener('click', e => {
+                const sq = e.target.closest('.square-55d63')?.dataset?.square;
+                if (sq) handleSquare(sq);
+            });
+
+            // Right-Click Canvas Drawing
+            els.board.addEventListener('contextmenu', e => e.preventDefault());
+            els.board.addEventListener('mousedown', e => {
+                if (e.button === 2 && state.activeMode !== 'drill') {
+                    state.arrowStartSquare = e.target.closest('.square-55d63')?.dataset?.square;
+                }
+            });
+            els.board.addEventListener('mouseup', e => {
+                if (e.button === 2 && state.arrowStartSquare && state.activeMode !== 'drill') {
+                    const to = e.target.closest('.square-55d63')?.dataset?.square;
+                    if (to) {
+                        let col = `rgba(20, 184, 166, ${state.arrowOpacity})`;
+                        if (e.shiftKey) col = `rgba(239, 68, 68, ${state.arrowOpacity})`;
+                        else if (e.altKey) col = `rgba(59, 130, 246, ${state.arrowOpacity})`;
+
+                        if (to === state.arrowStartSquare) {
+                            const existing = state.activeRings.findIndex(r => r.sq === to);
+                            if (existing !== -1) state.activeRings.splice(existing, 1);
+                            else state.activeRings.push({ sq: to, color: col });
+                        } else {
+                            state.activeArrows.push({ from: state.arrowStartSquare, to, color: col });
+                        }
+                        renderCanvasOverlays();
+                    }
+                    state.arrowStartSquare = null;
+                }
+            });
+
+            // Clickable PV lines & Engine Depth Input
+            els.engineLinesBox.addEventListener('click', e => {
+                const line = e.target.closest('.pv-line');
+                if (line && line.dataset.pvMove) {
+                    const u = line.dataset.pvMove;
+                    attemptMove(u.slice(0, 2), u.slice(2, 4), u[4] || 'q');
+                    state.board.position(state.game.fen());
+                    renderLastMoveHighlights();
+                }
+            });
+            els.engineDepthInput.onchange = () => evalBoard();
+
+            // Navigation Handlers
+            els.navHomeBtn.onclick = els.mobileNavHomeBtn.onclick = () => switchView('home');
+            els.breadcrumbRoot.onclick = () => switchView('folderHub');
+            els.homeGoDrillBtn.onclick = els.mobileNavDrillBtn.onclick = () => {
+                state.targetLaunchMode = 'drill';
+                state.activeRootCategory = null;
+                switchView('folderHub');
+            };
+            els.homeGoExploreBtn.onclick = els.mobileNavExploreBtn.onclick = () => {
+                state.targetLaunchMode = 'explore';
+                state.activeRootCategory = null;
+                switchView('folderHub');
+            };
+            els.homeGoSandboxBtn.onclick = () => {
+                state.activeMode = 'sandbox';
+                switchView('workspace');
+            };
+
+            els.homeDrillAllMistakesBtn.onclick = () => {
+                if (!state.mistakeQueue.size) return alert('Mistakes Queue is currently empty! Good job.');
+                state.activeQueueMode = 'mistakes';
+                els.queueSelect.value = 'mistakes';
+                state.activeSubfolder = 'all';
+                state.activeRootCategory = null;
+                state.targetLaunchMode = state.activeMode = 'drill';
+                updateAnalyticsUI();
+                switchView('workspace');
+            };
+
+            els.queueSelect.onchange = e => {
+                state.activeQueueMode = e.target.value;
+                updateAnalyticsUI();
+                loadGame();
+            };
+
+            // Folder Hub Navigation
+            els.folderHubBackBtn.onclick = () => {
+                if (state.activeRootCategory) {
+                    state.activeRootCategory = null;
+                    renderFolderHub();
+                } else {
+                    switchView('home');
+                }
+            };
+            els.rootFolderDeck.addEventListener('click', e => {
+                const card = e.target.closest('.root-category-card');
+                if (card) {
+                    state.activeRootCategory = card.dataset.root;
+                    renderFolderHub();
+                }
+            });
+            els.subfolderList.addEventListener('click', e => {
+                const b = e.target.closest('.select-subfolder-btn');
+                if (b) {
+                    state.activeSubfolder = b.dataset.folder;
+                    state.activeQueueMode = 'all';
+                    els.queueSelect.value = 'all';
+                    state.activeMode = state.targetLaunchMode;
+                    switchView('workspace');
+                }
+            });
+            els.cleanEmptyFoldersBtn.onclick = pruneEmptyFolders;
+            els.createSubfolderBtn.onclick = () => {
+                const name = prompt(`Enter new subfolder name under '${state.activeRootCategory}/':`);
+                if (!name || !name.trim()) return;
+                const fullPath = `${state.activeRootCategory}/${name.trim()}`;
+                if (state.availableFolders.includes(fullPath)) return alert('Folder exists.');
+                state.availableFolders.push(fullPath);
+                persist();
+                renderFolderHub();
+            };
+
+            // Back to folders button above chessboard
+            els.wsBackToFoldersBtn.onclick = () => {
+                if (oppMoveTimer) { clearTimeout(oppMoveTimer); oppMoveTimer = null; }
+                state.game.reset();
+                state.scratchGame.reset();
+                switchView('folderHub');
+            };
+
+            // Workspace Mode Switcher
+            els.toggleToDrillBtn.onclick = () => {
+                state.activeMode = 'drill';
+                applyWorkspaceModeUI();
+                loadGame();
+            };
+            els.toggleToExploreBtn.onclick = () => {
+                state.activeMode = 'explore';
+                state.explorePlyIndex = state.game.history().length;
+                applyWorkspaceModeUI();
+                renderHistory(state.explorePlyIndex);
+                evalBoard();
+                fetchOpeningBookStats(state.game.fen());
+            };
+
+            // Play as White/Black/Auto toggle event listeners
+            els.togglePlayWhiteBtn.onclick = () => setPlaySide('w');
+            els.togglePlayBlackBtn.onclick = () => setPlaySide('b');
+            els.togglePlayAutoBtn.onclick = () => setPlaySide('auto');
+
+            // Drill Mode Engine Show / Hide Toggle
+            els.drillToggleEngineBtn.onclick = () => {
+                state.drillShowEngine = !state.drillShowEngine;
+                els.drillToggleEngineBtn.textContent = state.drillShowEngine ? 'Engine: On' : 'Engine: Off';
+                els.drillToggleEngineBtn.className = `drill-only px-2.5 py-1 border text-[11px] font-semibold rounded ${state.drillShowEngine ? 'bg-teal-700 border-teal-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-300'}`;
+                els.engineSection.classList.toggle('hidden', !state.drillShowEngine);
+                els.evalBarWrapper.classList.toggle('hidden', !state.drillShowEngine);
+                if (state.drillShowEngine) evalBoard();
+            };
+
+            // Workspace Controls
+            els.wsFlipBtn.onclick = () => { state.board.flip(); resizeCanvas(); };
+            els.wsClearArrowsBtn.onclick = () => { state.activeArrows = []; state.activeRings = []; renderCanvasOverlays(); };
+            els.drillBackPrevBtn.onclick = backToPreviousDrill;
+            els.drillNextBtn.onclick = nextDrill;
+            els.drillRepeatBtn.onclick = () => loadGame(true);
+            els.drillHintBtn.onclick = () => {
+                if (state.currentMoveIndex >= state.expectedMoves.length) return;
+                clearHighlights();
+                els.board.querySelector(`.square-${state.expectedMoves[state.currentMoveIndex].from}`)?.classList.add('highlight-hint');
+                setStatus('Hint: Piece highlighted in yellow.');
+            };
+
+            els.drillRandomPlyBtn.onclick = () => {
+                state.randomStartActive = !state.randomStartActive;
+                els.drillRandomPlyBtn.className = `drill-only px-2 py-1 rounded font-semibold text-[11px] transition ${state.randomStartActive ? 'bg-indigo-600 text-white' : 'bg-indigo-950 border border-indigo-700 text-indigo-200'}`;
+                loadGame(true);
+                setStatus(state.randomStartActive ? 'Random mid-line tabiya drilling active.' : 'Full line drilling active.');
+            };
+
+            els.drillTargetPlyBtn.onclick = () => {
+                const p = prompt('Limit drill up to move number (e.g. 10 for moves 1-10, or 0 for full line):', state.targetMaxPly === 999 ? '10' : Math.ceil(state.targetMaxPly / 2));
+                if (p === null) return;
+                const val = parseInt(p, 10);
+                state.targetMaxPly = (!val || isNaN(val) || val <= 0) ? 999 : val * 2;
+                loadGame(true);
+                setStatus(state.targetMaxPly === 999 ? 'Full line depth restored.' : `Targeted depth limited to move ${val}.`);
+            };
+
+            els.quickInspectErrorBtn.onclick = () => {
+                els.toggleToExploreBtn.click();
+            };
+
+            // Explore Navigation Controls
+            els.expPrevBtn.onclick = () => {
+                state.game.undo();
+                if (state.activeBranchMoves.length > 0) {
+                    state.activeBranchMoves.pop();
+                    if (!state.activeBranchMoves.length) state.branchStartPly = -1;
+                }
+                const hist = state.game.history({ verbose: true });
+                state.lastMoveSquares = hist.length ? { from: hist[hist.length - 1].from, to: hist[hist.length - 1].to } : null;
+                state.board.position(state.game.fen());
+                state.explorePlyIndex = hist.length;
+                renderHistory(state.explorePlyIndex);
+                renderLastMoveHighlights();
+                updateCoachNote();
+                evalBoard();
+                checkSyzygy();
+                fetchOpeningBookStats(state.game.fen());
+                playSound('move');
+            };
+            els.expNextBtn.onclick = () => {
+                const idx = state.game.history().length;
+                if (idx < state.expectedMoves.length && !state.activeBranchMoves.length) {
+                    const m = state.expectedMoves[idx];
+                    state.game.move({ from: m.from, to: m.to, promotion: m.promotion || 'q' });
+                    state.lastMoveSquares = { from: m.from, to: m.to };
+                    state.board.position(state.game.fen());
+                    state.explorePlyIndex = state.game.history().length;
+                    renderHistory(state.explorePlyIndex);
+                    renderLastMoveHighlights();
+                    updateCoachNote();
+                    evalBoard();
+                    checkSyzygy();
+                    fetchOpeningBookStats(state.game.fen());
+                    playSound('move');
+                }
+            };
+            els.expStartBtn.onclick = () => jumpToPly(0);
+            els.expEndBtn.onclick = () => jumpToPly(state.expectedMoves.length);
+
+            els.expSparBtn.onclick = () => {
+                state.isSparring = !state.isSparring;
+                els.expSparBtn.textContent = state.isSparring ? '🛑 Stop Sparring' : '⚔️ Spar Engine';
+                setStatus(state.isSparring ? 'Sparring active! Make your move against Stockfish.' : 'Sparring stopped.');
+                if (state.isSparring) evalBoard();
+            };
+
+            els.expExtractBranchBtn.onclick = () => {
+                const pgn = state.game.pgn();
+                if (!pgn) return alert('Play some moves on the board first to extract a branch.');
+                const currentFolder = state.pgnFolders[state.currentIndex] || (state.activeSubfolder !== 'all' ? state.activeSubfolder : 'Openings');
+                const title = prompt('Title for extracted branch drill:', `Extracted Branch (${currentFolder.split('/').pop()})`);
+                if (!title) return;
+                const fenHeader = state.initialFen !== 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+                    ? `\n[SetUp "1"]\n[FEN "${state.initialFen}"]`
+                    : '';
+                const newIdx = state.pgnList.length;
+                state.pgnList.push(`[Event "${title.trim()}"]${fenHeader}\n\n${pgn}`);
+                state.pgnFolders[newIdx] = currentFolder;
+                persist();
+                updateDashboard();
+                els.subfolderGamesBadgeCount.textContent = getFilteredPool().length;
+                setStatus(`Branch saved as "${title.trim()}" in ${currentFolder}!`);
+            };
+
+            els.wsQuickExportBtn.onclick = () => {
+                const rawPgn = state.activeMode === 'sandbox'
+                    ? (`[Event "Sandbox Line"]\n\n${state.game.pgn() || '*'}`)
+                    : (state.pgnList[state.currentIndex] || state.game.pgn() || '*');
+                downloadTextFile(`line_${state.currentIndex + 1}.pgn`, rawPgn, 'application/x-chess-pgn');
+            };
+
+            // Compare Positions Modal
+            els.openComparePositionsBtn.onclick = openCompareModal;
+            els.closeCompareModalBtn.onclick = els.doneCompareModalBtn.onclick = () => els.compareModal.classList.add('hidden');
+
+            // Subfolder Manager Modal Handlers
+            els.openSubfolderManagerBtn.onclick = () => {
+                renderSubfolderManagerModal();
+                els.subfolderManagerModal.classList.remove('hidden');
+            };
+            els.closeSubfolderModalBtn.onclick = els.doneSubfolderModalBtn.onclick = () => els.subfolderManagerModal.classList.add('hidden');
+            els.sfSearchInput.oninput = renderSubfolderManagerModal;
+            els.sfDeduplicateBtn.onclick = deduplicateFolderLines;
+            els.sfExportAllBtn.onclick = () => {
+                const pool = getFilteredPool();
+                if (!pool.length) return alert('No games in this folder to export.');
+                const combined = pool.map(idx => state.pgnList[idx]).join('\n\n');
+                const folderSlug = (state.activeSubfolder === 'all' ? (state.activeRootCategory || 'repertoire') : state.activeSubfolder).replace(/[^a-z0-9_-]/gi, '_');
+                downloadTextFile(`${folderSlug}_lines.pgn`, combined, 'application/x-chess-pgn');
+            };
+            els.subfolderDrillsList.addEventListener('click', e => {
+                const sBtn = e.target.closest('.select-subfolder-game-btn');
+                const dBtn = e.target.closest('.delete-subfolder-game-btn');
+                if (sBtn) {
+                    state.currentIndex = parseInt(sBtn.dataset.idx, 10);
+                    loadGame();
+                    els.subfolderManagerModal.classList.add('hidden');
+                } else if (dBtn) {
+                    const idx = parseInt(dBtn.dataset.idx, 10);
+                    if (confirm('Delete this game from folder?')) {
+                        deleteGamesByIndices([idx]);
+                        renderSubfolderManagerModal();
+                        loadGame();
+                    }
+                }
+            });
+
+            // History delegated clicks (Ply Jumping & Note Editing)
+            els.moveHistory.addEventListener('click', e => {
+                const noteBtn = e.target.closest('.note-edit-btn');
+                if (noteBtn) {
+                    openNoteModal(parseInt(noteBtn.dataset.ply, 10), noteBtn.dataset.san || '');
+                    return;
+                }
+                const moveLink = e.target.closest('.move-link');
+                if (moveLink && (state.activeMode === 'explore' || state.activeMode === 'sandbox')) {
+                    jumpToPly(parseInt(moveLink.dataset.ply, 10));
+                }
+            });
+
+            // Sandbox Controls
+            els.sandboxResetBtn.onclick = initSandboxWorkspace;
+            els.sandboxUndoBtn.onclick = () => {
+                state.game.undo();
+                const hist = state.game.history({ verbose: true });
+                state.lastMoveSquares = hist.length ? { from: hist[hist.length - 1].from, to: hist[hist.length - 1].to } : null;
+                state.board.position(state.game.fen());
+                state.currentLineMoves = hist;
+                if (state.sandboxHistoryFenList.length > 1) state.sandboxHistoryFenList.pop();
+                renderHistory(state.currentLineMoves.length);
+                renderLastMoveHighlights();
+                evalBoard();
+                checkSyzygy();
+                fetchOpeningBookStats(state.game.fen());
+                playSound('move');
+            };
+            els.sandboxSaveDrillBtn.onclick = () => {
+                const pgn = state.game.pgn();
+                if (!pgn) return alert('No moves played.');
+                const title = prompt('Enter a title for this drill:', 'Custom Line');
+                if (!title) return;
+                const folder = prompt(`Enter category/folder: (${state.availableFolders.join(', ')})`, 'Openings');
+                if (!folder) return;
+                const cleanFolder = folder.trim();
+                if (!state.availableFolders.includes(cleanFolder)) {
+                    state.availableFolders.push(cleanFolder);
+                }
+                state.pgnList.push(`[Event "${title.trim()}"]\n\n${pgn}`);
+                state.pgnFolders[state.pgnList.length - 1] = cleanFolder;
+                persist();
+                updateDashboard();
+                setStatus(`Saved to ${cleanFolder}!`);
+            };
+
+            // Board Settings Modal
+            els.openBoardSettingsBtn.onclick = () => {
+                els.boardSettingInputMode.value = state.inputMode;
+                els.boardLightColorPicker.value = state.boardLightColor;
+                els.boardDarkColorPicker.value = state.boardDarkColor;
+                els.customPieceSetUrlInput.value = state.customPieceUrlPattern;
+                els.arrowOpacitySlider.value = Math.round(state.arrowOpacity * 100);
+                els.arrowOpacityValText.textContent = `${Math.round(state.arrowOpacity * 100)}%`;
+                els.clearArrowsOnMoveCheckbox.checked = state.clearArrowsOnMove;
+                els.boardSettingsModal.classList.remove('hidden');
+            };
+            els.closeBoardSettingsModalBtn.onclick = () => els.boardSettingsModal.classList.add('hidden');
+            els.arrowOpacitySlider.oninput = e => {
+                state.arrowOpacity = parseInt(e.target.value, 10) / 100;
+                els.arrowOpacityValText.textContent = `${e.target.value}%`;
+                renderCanvasOverlays();
+            };
+            els.saveBoardSettingsBtn.onclick = () => {
+                state.inputMode = els.boardSettingInputMode.value;
+                state.boardLightColor = els.boardLightColorPicker.value;
+                state.boardDarkColor = els.boardDarkColorPicker.value;
+                state.customPieceUrlPattern = els.customPieceSetUrlInput.value.trim();
+                state.clearArrowsOnMove = els.clearArrowsOnMoveCheckbox.checked;
+                applyBoardCustomColors();
+                persist();
+                
+                initBoard();
+                els.boardSettingsModal.classList.add('hidden');
+                setStatus(`Board settings applied! Input: ${state.inputMode === 'tap' ? 'Tap to Move' : 'Drag & Drop'}`);
+            };
+
+            document.querySelectorAll('.board-size-preset-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const sz = parseInt(btn.dataset.size, 10);
+                    state.boardSize = sz;
+                    applyBoardSize(sz);
+                    persist();
+                };
+            });
+
+            // Reset Mastery Levels
+            els.resetMasteryLevelsBtn.onclick = () => {
+                if (confirm('RESET CONFIRMATION: Reset all Bronze, Silver, and Gold mastery stars back to zero?')) {
+                    state.masteryStreaks = {};
+                    persist();
+                    updateDashboard();
+                    alert('Mastery stars reset.');
+                    if (state.currentView === 'workspace') loadGame(true);
+                }
+            };
+
+            // Global Settings Modal
+            els.openSettingsModalBtn.onclick = () => els.settingsModal.classList.remove('hidden');
+            els.closeSettingsModalBtn.onclick = els.doneSettingsModalBtn.onclick = () => els.settingsModal.classList.add('hidden');
+            els.settingPlayerSide.onchange = e => {
+                setPlaySide(e.target.value);
+            };
+            els.settingAtmosphereTheme.onchange = e => {
+                state.atmosphereTheme = e.target.value;
+                applyAtmosphereTheme();
+                persist();
+            };
+            els.settingSoundTheme.onchange = e => {
+                state.soundTheme = e.target.value;
+                persist();
+            };
+
+            // Sync Modal & JSON Offline Backup
+            els.openSyncModalBtn.onclick = els.mobileNavSyncBtn.onclick = () => {
+                els.syncPatInput.value = syncState.pat;
+                els.syncGistIdInput.value = syncState.gistId;
+                els.syncModal.classList.remove('hidden');
+            };
+            els.closeSyncModalBtn.onclick = () => els.syncModal.classList.add('hidden');
+            els.syncPushBtn.onclick = pushToGist;
+            els.syncPullBtn.onclick = pullFromGist;
+            els.toastPullBtn.onclick = () => { pullFromGist(); els.cloudUpdateToast.classList.add('hidden'); };
+            els.toastDismissBtn.onclick = () => els.cloudUpdateToast.classList.add('hidden');
+            els.exportLocalJsonBtn.onclick = exportLocalJson;
+            els.importLocalJsonInput.onchange = importLocalJson;
+
+            // Voice & Note Modal
+            els.voiceDictateBtn.onclick = toggleDictation;
+            els.closeNoteModalBtn.onclick = els.cancelNoteModalBtn.onclick = () => {
+                stopDictation();
+                els.noteModal.classList.add('hidden');
+                activeNotePly = null;
+            };
+            els.saveNoteModalBtn.onclick = () => {
+                stopDictation();
+                if (activeNotePly !== null) {
+                    const newComment = els.noteModalTextarea.value;
+                    if (newComment && newComment.trim()) state.moveAnnotations[activeNotePly] = newComment.trim();
+                    else delete state.moveAnnotations[activeNotePly];
+                    syncAnnotationsToCurrentPgn();
+                    updateCoachNote();
+                    renderHistory();
+                    persist();
+                }
+                els.noteModal.classList.add('hidden');
+                activeNotePly = null;
+            };
+
+            // Global PGN Database Modal
+            els.openPgnManagerBtn.onclick = () => {
+                renderPgnManagerList();
+                els.pgnManagerModal.classList.remove('hidden');
+            };
+            els.closePgnManagerBtn.onclick = els.donePgnManagerBtn.onclick = () => els.pgnManagerModal.classList.add('hidden');
+
+            function ingestRawPgnString(rawText) {
+                if (!rawText || !rawText.trim()) return 0;
+                const games = rawText
+                    .replace(/\r\n/g, '\n')
+                    .split(/(?:^|\n\n+)(?=\[(?:Event|Site|White|Black|FEN|SetUp)\s)/g)
+                    .map(x => x.trim())
+                    .filter(Boolean);
+
+                const targetFolder = state.activeSubfolder !== 'all'
+                    ? state.activeSubfolder
+                    : (state.activeRootCategory || 'Openings');
+
+                const startIdx = state.pgnList.length;
+                state.pgnList.push(...games);
+                for (let i = startIdx; i < state.pgnList.length; i++) {
+                    state.pgnFolders[i] = targetFolder;
+                }
+                persist();
+                updateDashboard();
+                renderPgnManagerList();
+                if (state.currentView === 'workspace' && state.activeMode !== 'sandbox') {
+                    loadGame();
+                }
+                return games.length;
+            }
+
+            els.loadPgnTextBtn.onclick = () => {
+                const raw = els.pastePgnInput.value;
+                if (!raw.trim()) return alert('Paste PGN text first.');
+                const count = ingestRawPgnString(raw);
+                els.pastePgnInput.value = '';
+                alert(`Appended ${count} PGN line(s)!`);
+            };
+
+            els.bulkPgnFileInput.onchange = e => {
+                const files = [...e.target.files];
+                if (!files.length) return;
+                let read = 0;
+                let totalImported = 0;
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = ev => {
+                        totalImported += ingestRawPgnString(ev.target.result);
+                        if (++read === files.length) {
+                            alert(`Imported ${totalImported} lines!`);
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+            };
+
+            window.addEventListener('keydown', handleGlobalKeydown);
+            window.addEventListener('resize', () => applyBoardSize(state.boardSize));
+
+            setTimeout(checkSilentGistUpdate, 1500);
+        }
+
+        function renderPgnManagerList() {
+            els.manageGamesCount.textContent = `${state.pgnList.length} games`;
+            const frag = document.createDocumentFragment();
+            state.pgnList.forEach((pgn, i) => {
+                const metaMatch = pgn.match(/\[Event\s+"([^"]+)"\]/i);
+                const title = metaMatch ? metaMatch[1] : `Drill #${i + 1}`;
+                const folder = state.pgnFolders[i] || 'Openings';
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between p-1.5 bg-gray-900 border border-gray-800 rounded';
+                row.innerHTML = `
+                    <div class="truncate text-gray-200">
+                        <span class="text-teal-400 font-mono text-[10px] mr-1">[${folder}]</span>
+                        <span class="font-semibold">${title}</span>
+                    </div>
+                    <button class="delete-single-drill-btn text-gray-500 hover:text-red-400 px-1" data-idx="${i}">🗑️</button>
+                `;
+                frag.appendChild(row);
+            });
+            els.pgnManagerList.innerHTML = '';
+            els.pgnManagerList.appendChild(frag);
+
+            els.pgnManagerList.onclick = e => {
+                const btn = e.target.closest('.delete-single-drill-btn');
+                if (btn) {
+                    const idx = parseInt(btn.dataset.idx, 10);
+                    deleteGamesByIndices([idx]);
+                    renderPgnManagerList();
+                    if (state.currentView === 'workspace' && state.activeMode !== 'sandbox') {
+                        loadGame();
+                    }
+                }
+            };
+        }
+
+        // Boot
+        restore();
+        initSpeechRecognition();
+        initStockfish();
+        initEvents();
+        switchView('home');
+    })();
+    </script>
+</body>
+</html>
