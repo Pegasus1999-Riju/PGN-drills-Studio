@@ -4,12 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>PGN Drills Pro — Studio</title>
-<script src="coi-serviceworker.js"></script>
-<script src="https://cdn.tailwindcss.com" crossorigin="anonymous"></script>
-<link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" crossorigin="anonymous">
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <style>
 .highlight-hint{box-shadow:inset 0 0 4px 4px #eab308!important}.highlight-selected{background-color:rgba(59,130,246,.45)!important}.highlight-last-from{background-color:rgba(234,179,8,.35)!important}.highlight-last-to{background-color:rgba(234,179,8,.5)!important}.highlight-check{background-color:rgba(239,68,68,.6)!important;box-shadow:inset 0 0 6px 6px #dc2626!important}
 .legal-dot::after,.legal-capture::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:5}.legal-dot::after{width:28%;height:28%;background-color:rgba(0,0,0,.35)}.legal-capture::after{width:78%;height:78%;border:4px solid rgba(0,0,0,.35)}
@@ -37,15 +36,15 @@
 </header>
 <main class="flex-1 max-w-6xl w-full mx-auto p-2.5 sm:p-5 flex flex-col justify-center">
   <section id="viewHome" class="space-y-6 max-w-4xl mx-auto w-full py-2">
-    <div class="text-center space-y-1"><h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Chess Repertoire Gym</h1><p class="text-xs sm:text-sm text-gray-400">Recall under pressure, explore Stockfish NNUE variations, and split full PGN studies automatically.</p></div>
+    <div class="text-center space-y-1"><h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Chess Repertoire Gym</h1><p class="text-xs sm:text-sm text-gray-400">Recall under pressure, explore Stockfish 19 NNUE variations, and split full PGN studies automatically.</p></div>
     <div id="homeResumeBanner" class="hidden bg-indigo-950/70 border border-indigo-600/80 p-3.5 rounded-xl flex items-center justify-between shadow-lg">
       <div class="space-y-0.5"><div class="text-xs font-bold text-indigo-200 flex items-center gap-1.5"><span>⏱️ Active Drill Session In Progress</span><span id="homeResumeBadge" class="bg-indigo-900 text-indigo-300 px-2 py-0.5 rounded font-mono text-[10px]"></span></div><p id="homeResumeStatsText" class="text-[11px] text-gray-300 font-mono"></p></div>
       <button data-act="resumeSession" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-xs shadow">Resume &rarr;</button>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <button data-act="launchDrill" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-indigo-950/40 border border-gray-800 hover:border-indigo-500/80 p-4 sm:p-5 rounded-xl text-left shadow-xl flex flex-col justify-between"><div class="space-y-2"><div class="flex items-center justify-between"><span class="text-3xl">🎯</span><span class="text-[10px] font-mono tracking-widest bg-indigo-900/60 border border-indigo-700/60 text-indigo-300 px-2 py-0.5 rounded uppercase">Recall</span></div><h2 class="text-base sm:text-lg font-bold text-white group-hover:text-indigo-400">Drill Mode</h2><p class="text-xs text-gray-400 leading-relaxed">Shuffled non-repeating subfolder sessions, live remaining counter, manual next control, and cloud save.</p></div><div class="mt-4 pt-3 border-t border-gray-800 text-xs font-semibold text-indigo-400">Select Category &rarr;</div></button>
-      <button data-act="launchExplore" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-teal-950/40 border border-gray-800 hover:border-teal-500/80 p-4 sm:p-5 rounded-xl text-left shadow-xl flex flex-col justify-between"><div class="space-y-2"><div class="flex items-center justify-between"><span class="text-3xl">🧭</span><span class="text-[10px] font-mono tracking-widest bg-teal-900/60 border border-teal-700/60 text-teal-300 px-2 py-0.5 rounded uppercase">Analysis</span></div><h2 class="text-base sm:text-lg font-bold text-white group-hover:text-teal-400">Explore Mode</h2><p class="text-xs text-gray-400 leading-relaxed">Stockfish NNUE, Syzygy 7-piece tablebases, Lichess Masters book stats, position compare, and move notes.</p></div><div class="mt-4 pt-3 border-t border-gray-800 text-xs font-semibold text-teal-400">Browse Repertoire &rarr;</div></button>
-      <button data-act="launchSandbox" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-amber-950/40 border border-gray-800 hover:border-amber-500/80 p-4 sm:p-5 rounded-xl text-left shadow-xl flex flex-col justify-between"><div class="space-y-2"><div class="flex items-center justify-between"><span class="text-3xl">♟️</span><span class="text-[10px] font-mono tracking-widest bg-amber-900/60 border border-amber-700/60 text-amber-300 px-2 py-0.5 rounded uppercase">Laboratory</span></div><h2 class="text-base sm:text-lg font-bold text-white group-hover:text-amber-400">Sandbox Lab</h2><p class="text-xs text-gray-400 leading-relaxed">Freeform position drafting, Stockfish testing, move commentary, and direct PGN drill export.</p></div><div class="mt-4 pt-3 border-t border-gray-800 text-xs font-semibold text-amber-400">Open Blank Lab &rarr;</div></button>
+      <button data-act="launchExplore" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-teal-950/40 border border-gray-800 hover:border-teal-500/80 p-4 sm:p-5 rounded-xl text-left shadow-xl flex flex-col justify-between"><div class="space-y-2"><div class="flex items-center justify-between"><span class="text-3xl">🧭</span><span class="text-[10px] font-mono tracking-widest bg-teal-900/60 border border-teal-700/60 text-teal-300 px-2 py-0.5 rounded uppercase">Analysis</span></div><h2 class="text-base sm:text-lg font-bold text-white group-hover:text-teal-400">Explore Mode</h2><p class="text-xs text-gray-400 leading-relaxed">Stockfish 19 NNUE, Syzygy 7-piece tablebases, Lichess Masters book stats, position compare, and move notes.</p></div><div class="mt-4 pt-3 border-t border-gray-800 text-xs font-semibold text-teal-400">Browse Repertoire &rarr;</div></button>
+      <button data-act="launchSandbox" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-amber-950/40 border border-gray-800 hover:border-amber-500/80 p-4 sm:p-5 rounded-xl text-left shadow-xl flex flex-col justify-between"><div class="space-y-2"><div class="flex items-center justify-between"><span class="text-3xl">♟️</span><span class="text-[10px] font-mono tracking-widest bg-amber-900/60 border border-amber-700/60 text-amber-300 px-2 py-0.5 rounded uppercase">Laboratory</span></div><h2 class="text-base sm:text-lg font-bold text-white group-hover:text-amber-400">Sandbox Lab</h2><p class="text-xs text-gray-400 leading-relaxed">Freeform position drafting, Stockfish 19 testing, move commentary, and direct PGN drill export.</p></div><div class="mt-4 pt-3 border-t border-gray-800 text-xs font-semibold text-amber-400">Open Blank Lab &rarr;</div></button>
     </div>
     <div class="bg-gray-900 border border-gray-800 p-4 sm:p-5 rounded-xl shadow-xl space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-3">
@@ -141,8 +140,8 @@
         </div>
       </div>
       <div id="engineSection" class="space-y-1">
-        <div class="flex justify-between items-center text-xs"><span class="text-gray-400 font-mono text-[11px] font-bold">Stockfish (<span id="engineVersionBadge" class="text-teal-400 font-bold">Loading...</span> MultiPV 3)</span><div class="flex items-center gap-2 text-[10px]"><span class="text-gray-400">WDL: <b id="wdlText" class="text-teal-400 font-mono">50/50</b></span><span class="text-gray-500">Depth:</span><input type="number" id="engineDepthInput" min="10" max="25" value="18" class="w-10 bg-gray-950 border border-gray-700 rounded px-1 py-0.5 text-center text-white text-[11px]"></div></div>
-        <div id="engineLinesBox" class="text-xs font-mono text-gray-300 bg-gray-950 p-2 rounded h-20 overflow-y-auto flex flex-col gap-1 border border-gray-800 cursor-pointer"><div class="pv-line truncate hover:text-teal-300" data-pv="1">1. <span class="text-gray-500">Booting Native WASM Worker...</span></div><div class="pv-line truncate hover:text-teal-300" data-pv="2">2. <span class="text-gray-500">Booting Native WASM Worker...</span></div><div class="pv-line truncate hover:text-teal-300" data-pv="3">3. <span class="text-gray-500">Booting Native WASM Worker...</span></div></div>
+        <div class="flex justify-between items-center text-xs"><span class="text-gray-400 font-mono text-[11px] font-bold">Stockfish (<span id="engineVersionBadge" class="text-teal-400 font-bold">NNUE 19</span> MultiPV 3)</span><div class="flex items-center gap-2 text-[10px]"><span class="text-gray-400">WDL: <b id="wdlText" class="text-teal-400 font-mono">50/50</b></span><span class="text-gray-500">Depth:</span><input type="number" id="engineDepthInput" min="10" max="25" value="18" class="w-10 bg-gray-950 border border-gray-700 rounded px-1 py-0.5 text-center text-white text-[11px]"></div></div>
+        <div id="engineLinesBox" class="text-xs font-mono text-gray-300 bg-gray-950 p-2 rounded h-20 overflow-y-auto flex flex-col gap-1 border border-gray-800 cursor-pointer"><div class="pv-line truncate hover:text-teal-300" data-pv="1">1. <span class="text-gray-500">Stockfish 19 ready...</span></div><div class="pv-line truncate hover:text-teal-300" data-pv="2">2. <span class="text-gray-500">Stockfish 19 ready...</span></div><div class="pv-line truncate hover:text-teal-300" data-pv="3">3. <span class="text-gray-500">Stockfish 19 ready...</span></div></div>
       </div>
       <div id="drillStatsSection" class="drill-only space-y-2 bg-gray-950/60 p-2.5 rounded-lg border border-gray-800">
         <div class="flex items-center justify-between text-xs font-mono"><span class="text-gray-400">Accuracy: <b id="statAccuracy" class="text-green-400">100%</b></span><span class="text-gray-400">Speed: <b id="statAvgTime" class="text-blue-400">0.0s</b></span><span class="text-gray-400">Level: <b id="statMasteryLevel" class="text-amber-400">Bronze</b></span></div>
@@ -179,12 +178,18 @@ const $=id=>document.getElementById(id),START_FEN='rnbqkbnr/pppppppp/8/8/8/8/PPP
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),normF=f=>String(f||'Openings').trim();
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
 const DEFAULT_FOLDERS=['Openings','Openings/Bird','Openings/E4 Vienna','Openings/E4 Sicilian','Openings/E4 others','Openings/Caro-Kann','Openings/Grunfeld','Openings/Budapest','Tactics','Endgames'];
-const SAMPLES=[{f:'Openings/E4 Vienna',p:'[Event "Vienna Gambit"]\n[White "Player"]\n[Black "Opponent"]\n\n1. e4 e5 2. Nc3 Nf6 3. f4 d5 4. fxe5 Nxe4 5. Qf3'},{f:'Openings/Bird',p:'[Event "Bird Opening"]\n[White "Player"]\n[Black "Opponent"]\n\n1. f4 d5 2. Nf3 Nf6 3. e3 g6 4. b3 Bg7 5. Bb2 O-O'},{f:'Openings/Caro-Kann',p:'[Event "Caro-Kann Advance"]\n[White "Opponent"]\n[Black "Player"]\n\n1. e4 c6 2. d4 d5 3. e5 Bf5 4. Nf3 e6 5. Be2 c5'},{f:'Tactics',p:'[Event "Greek Gift"]\n[SetUp "1"]\n[FEN "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/2NBPN2/PP3PPP/R1BQK2R w KQ - 0 7"]\n\n1. cxd5 exd5 2. Bd2 Re8 3. O-O'},{f:'Endgames',p:'[Event "Lucena Bridge"]\n[SetUp "1"]\n[FEN "1K1k4/1P6/8/8/8/8/r7/2R5 w - - 0 1"]\n\n1. Rd1+ Ke7 2. Rc1 Kd6 3. Rc4'}];
+const SAMPLES=[
+  {f:'Openings/E4 Vienna',p:'[Event "Vienna Gambit"]\n[White "Player"]\n[Black "Opponent"]\n\n1. e4 e5 2. Nc3 Nf6 3. f4 d5 4. fxe5 Nxe4 5. Qf3'},
+  {f:'Openings/Bird',p:'[Event "Bird Opening"]\n[White "Player"]\n[Black "Opponent"]\n\n1. f4 d5 2. Nf3 Nf6 3. e3 g6 4. b3 Bg7 5. Bb2 O-O'},
+  {f:'Openings/Caro-Kann',p:'[Event "Caro-Kann Advance"]\n[White "Opponent"]\n[Black "Player"]\n\n1. e4 c6 2. d4 d5 3. e5 Bf5 4. Nf3 e6 5. Be2 c5'},
+  {f:'Tactics',p:'[Event "Greek Gift"]\n[SetUp "1"]\n[FEN "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/2NBPN2/PP3PPP/R1BQK2R w KQ - 0 7"]\n\n1. cxd5 exd5 2. Bd2 Re8 3. O-O'},
+  {f:'Endgames',p:'[Event "Lucena Bridge"]\n[SetUp "1"]\n[FEN "1K1k4/1P6/8/8/8/8/r7/2R5 w - - 0 1"]\n\n1. Rd1+ Ke7 2. Rc1 Kd6 3. Rc4'}
+];
 const ECO_DB=[['B12','Caro-Kann: Advance Variation','e4 c6 d4 d5 e5'],['B10','Caro-Kann Defense','e4 c6'],['C25','Vienna Game','e4 e5 Nc3'],['C29','Vienna Gambit','e4 e5 Nc3 Nf6 f4'],['A02',"Bird's Opening",'f4'],['B20','Sicilian Defense','e4 c5'],['B90','Sicilian: Najdorf','e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6'],['C50','Italian Game','e4 e5 Nf3 Nc6 Bc4'],['C60','Ruy Lopez','e4 e5 Nf3 Nc6 Bb5'],['C00','French Defense','e4 e6'],['D80','Grünfeld Defense','d4 Nf6 c4 g6 Nc3 d5'],['A51','Budapest Gambit','d4 Nf6 c4 e5'],['E60',"King's Indian Defense",'d4 Nf6 c4 g6'],['D06',"Queen's Gambit",'d4 d5 c4'],['A10','English Opening','c4'],['A40',"Queen's Pawn Game",'d4'],['C20',"King's Pawn Game",'e4 e5']].map(([eco,name,s])=>({eco,name,seq:s.split(' ')}));
 
-const state={view:'home',mode:'drill',targetMode:'drill',rootCat:null,subfolder:'all',pgnList:[],pgnFolders:{},availableFolders:[...DEFAULT_FOLDERS],currentIndex:0,drillHistoryStack:[],completedGames:new Set(),mistakeQueue:new Set(),favorites:new Set(),activeQueueMode:'all',masteryStreaks:{},sessionActive:false,sessionDeck:[],sessionTotalCount:0,sessionCurrentDone:false,board:null,boardComp1:null,boardComp2:null,game:new Chess(),scratchGame:new Chess(),expectedMoves:[],currentLineMoves:[],activeBranchMoves:[],branchStartPly:-1,currentMoveIndex:0,explorePlyIndex:0,moveAnnotations:{},initialFen:START_FEN,sandboxHistoryFens:[],selectedSquare:null,targetMaxPly:999,randomStartActive:false,lastMoveSquares:null,drillShowEngine:false,activeArrows:[],activeRings:[],arrowStartSquare:null,arrowOpacity:.8,clearArrowsOnMove:true,boardSize:380,boardLightColor:'#f0d9b5',boardDarkColor:'#b58863',customPieceUrl:'',inputMode:'tap',playerSide:'auto',soundTheme:'synth',atmosphereTheme:'dark',isDirtySync:false,correctAttempts:0,totalAttempts:0,moveStartTime:Date.now(),totalMoveSeconds:0,timedMovesCount:0,hadMistake:false,isSparring:false,subfolderStats:{},selectedDrillIndices:new Set(),sfSearchQuery:'',lastSavedTs:0,_pendingEval:null};
+const state={view:'home',mode:'drill',targetMode:'drill',rootCat:null,subfolder:'all',pgnList:[],pgnFolders:{},availableFolders:[...DEFAULT_FOLDERS],currentIndex:0,drillHistoryStack:[],completedGames:new Set(),mistakeQueue:new Set(),favorites:new Set(),activeQueueMode:'all',masteryStreaks:{},sessionActive:false,sessionDeck:[],sessionTotalCount:0,sessionCurrentDone:false,board:null,boardComp1:null,boardComp2:null,game:new Chess(),scratchGame:new Chess(),expectedMoves:[],currentLineMoves:[],activeBranchMoves:[],branchStartPly:-1,currentMoveIndex:0,explorePlyIndex:0,moveAnnotations:{},initialFen:START_FEN,sandboxHistoryFens:[],selectedSquare:null,targetMaxPly:999,randomStartActive:false,lastMoveSquares:null,drillShowEngine:false,activeArrows:[],activeRings:[],arrowStartSquare:null,arrowOpacity:.8,clearArrowsOnMove:true,boardSize:380,boardLightColor:'#f0d9b5',boardDarkColor:'#b58863',customPieceUrl:'',inputMode:'tap',playerSide:'auto',soundTheme:'synth',atmosphereTheme:'dark',isDirtySync:false,correctAttempts:0,totalAttempts:0,moveStartTime:Date.now(),totalMoveSeconds:0,timedMovesCount:0,hadMistake:false,isSparring:false,subfolderStats:{},selectedDrillIndices:new Set(),sfSearchQuery:'',lastSavedTs:0};
 
-let audioCtx=null,evalTimer=null,tbTimer=null,oppTimer=null,engineWorker=null,idleTimer=null,activeNotePly=null,isRecording=false,rec=null,isEngineSearching=false;
+let audioCtx=null,evalTimer=null,tbTimer=null,oppTimer=null,engineWorker=null,idleTimer=null,activeNotePly=null,isRecording=false,rec=null;
 const arrowCtx=$('arrowCanvas').getContext('2d'),SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
 const clearTimers=()=>{if(oppTimer){clearTimeout(oppTimer);oppTimer=null;}};
 
@@ -645,32 +650,25 @@ function formatEnginePv(fen,pvStr){
 }
 
 function initStockfish(){
+  const src=`var q=[];self.onmessage=function(e){q.push(e.data);};function flush(){while(q.length&&typeof self.onmessage==='function')self.onmessage({data:q.shift()});}var urls=[['https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/stockfish-19-lite-single.js','NNUE 19'],['https://unpkg.com/stockfish@19.0.1/bin/stockfish-19-lite-single.js','NNUE 19'],['https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/stockfish-19-asm.js','SF 19 ASM'],['https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js','SF 10.0']];function tryLoad(idx){if(idx>=urls.length){self.postMessage('sf_err');return;}var u=urls[idx][0],label=urls[idx][1],base=u.substring(0,u.lastIndexOf('/')+1);self.Module={locateFile:function(p){return base+p;}};try{self.onmessage=null;importScripts(u);if(typeof self.onmessage==='function'){self.postMessage('sf_ver:'+label);setTimeout(flush,50);}else if(typeof Stockfish==='function'){Stockfish({locateFile:function(p){return base+p;}}).then(function(sf){sf.addMessageListener(function(l){self.postMessage(l);});self.onmessage=function(e){sf.postMessage(e.data);};self.postMessage('sf_ver:'+label);while(q.length)sf.postMessage(q.shift());}).catch(function(){tryLoad(idx+1);});}else{setTimeout(function(){if(typeof self.onmessage==='function'){self.postMessage('sf_ver:'+label);flush();}else tryLoad(idx+1);},250);}}catch(e){tryLoad(idx+1);}}tryLoad(0);`;
   try{
-    engineWorker=new Worker('stockfish.js');
-    engineWorker.postMessage('uci');
-    engineWorker.postMessage('setoption name MultiPV value 3');
-    engineWorker.postMessage('isready');
+    engineWorker=new Worker(URL.createObjectURL(new Blob([src],{type:'application/javascript'})));
+    engineWorker.postMessage('uci');engineWorker.postMessage('setoption name MultiPV value 3');engineWorker.postMessage('isready');
     engineWorker.onmessage=e=>{
       const l=String(e.data||'');
-      if(l.includes('Stockfish 19'))$('engineVersionBadge').textContent='NNUE 19';
-      if(l.startsWith('bestmove')){
-        isEngineSearching=false;
-        if(state._pendingEval){
-          const p=state._pendingEval;state._pendingEval=null;
-          engineWorker.postMessage('position fen '+p.fen);
-          engineWorker.postMessage(`go depth ${p.depth}`);
-          isEngineSearching=true;
-        }else if(state.isSparring&&state.mode==='explore'){
-          const u=l.split(' ')[1];
-          if(u&&u!=='(none)'&&state.game.turn()!==(state.board.orientation()==='black'?'b':'w')){
-            const curLen=state.game.history().length,res=state.game.move({from:u.slice(0,2),to:u.slice(2,4),promotion:u[4]||'q'});
-            if(res){
-              const exp=state.expectedMoves[curLen];
-              if(!exp||exp.from!==res.from||exp.to!==res.to||state.activeBranchMoves.length){if(state.branchStartPly===-1)state.branchStartPly=curLen;state.activeBranchMoves.push(res);}
-              state.explorePlyIndex=curLen+1;state.lastMoveSquares={from:res.from,to:res.to};state.board.position(state.game.fen());
-              renderHistory(state.game.history().length);renderHighlights();evalBoard();checkSyzygy();fetchBook(state.game.fen());
-              playSound(res.captured?'capture':(state.game.in_check()?'check':'move'));
-            }
+      if(l.startsWith('sf_ver:'))$('engineVersionBadge').textContent=l.slice(7);
+      else if(l.includes('Stockfish 19'))$('engineVersionBadge').textContent='NNUE 19';
+      else if(l.includes('Stockfish 10'))$('engineVersionBadge').textContent='SF 10.0';
+      if(state.isSparring&&state.mode==='explore'&&l.startsWith('bestmove')){
+        const u=l.split(' ')[1];
+        if(u&&u!=='(none)'&&state.game.turn()!==(state.board.orientation()==='black'?'b':'w')){
+          const curLen=state.game.history().length,res=state.game.move({from:u.slice(0,2),to:u.slice(2,4),promotion:u[4]||'q'});
+          if(res){
+            const exp=state.expectedMoves[curLen];
+            if(!exp||exp.from!==res.from||exp.to!==res.to||state.activeBranchMoves.length){if(state.branchStartPly===-1)state.branchStartPly=curLen;state.activeBranchMoves.push(res);}
+            state.explorePlyIndex=curLen+1;state.lastMoveSquares={from:res.from,to:res.to};state.board.position(state.game.fen());
+            renderHistory(state.game.history().length);renderHighlights();evalBoard();checkSyzygy();fetchBook(state.game.fen());
+            playSound(res.captured?'capture':(state.game.in_check()?'check':'move'));
           }
         }
       }
@@ -689,22 +687,12 @@ function initStockfish(){
         }
       }
     };
-  }catch(err){console.error('Engine boot error:',err);}
+  }catch(e){}
 }
 
 function triggerSparMove(){
   if(!engineWorker||!state.isSparring||state.game.game_over()||state.game.turn()===(state.board.orientation()==='black'?'b':'w'))return;
-  clearTimeout(evalTimer);
-  evalTimer=setTimeout(()=>{
-    if(isEngineSearching){
-      engineWorker.postMessage('stop');
-      state._pendingEval={fen:state.game.fen(),depth:10};
-    }else{
-      engineWorker.postMessage('position fen '+state.game.fen());
-      engineWorker.postMessage('go depth 10');
-      isEngineSearching=true;
-    }
-  },120);
+  clearTimeout(evalTimer);evalTimer=setTimeout(()=>{engineWorker.postMessage('stop');engineWorker.postMessage('position fen '+state.game.fen());engineWorker.postMessage('go depth 10');},120);
 }
 
 function evalBoard(){
@@ -712,17 +700,10 @@ function evalBoard(){
   if(state.mode==='explore'&&state.isSparring&&state.game.turn()!==(state.board.orientation()==='black'?'b':'w'))return triggerSparMove();
   clearTimeout(evalTimer);clearTimeout(idleTimer);[...$('engineLinesBox').children].forEach(el=>delete el.dataset.pvMove);
   evalTimer=setTimeout(()=>{
-    if(state.game.game_over()){if(isEngineSearching)engineWorker.postMessage('stop');return;}
+    if(state.game.game_over()){engineWorker.postMessage('stop');return;}
     const d=Math.max(10,Math.min(25,parseInt($('engineDepthInput').value,10)||18));
-    if(isEngineSearching){
-      engineWorker.postMessage('stop');
-      state._pendingEval={fen:state.game.fen(),depth:d};
-    }else{
-      engineWorker.postMessage('position fen '+state.game.fen());
-      engineWorker.postMessage(`go depth ${d}`);
-      isEngineSearching=true;
-    }
-    idleTimer=setTimeout(()=>{if(isEngineSearching)engineWorker.postMessage('stop');},60000);
+    engineWorker.postMessage('stop');engineWorker.postMessage('position fen '+state.game.fen());engineWorker.postMessage(`go depth ${d}`);
+    idleTimer=setTimeout(()=>engineWorker.postMessage('stop'),60000);
   },60);
 }
 
