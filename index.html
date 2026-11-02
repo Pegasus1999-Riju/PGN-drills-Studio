@@ -202,7 +202,7 @@
         <button data-act="switchExplore" id="toggleToExploreBtn" class="flex-1 py-1.5 rounded-md text-center flex items-center justify-center gap-1.5"><span>🧭</span><span>Explore</span></button>
       </div>
       <div id="sandboxVoiceBanner" class="sandbox-only hidden bg-teal-950/60 border border-teal-700/70 p-2 rounded-lg text-[11px] flex items-center justify-between">
-        <div class="truncate"><span class="text-teal-400 font-bold">🎙️ Voice:</span><span id="sandboxVoiceTranscript" class="text-gray-300 italic ml-1">Speak moves like "1. e4 e5" or "Nf3"...</span></div>
+        <div class="truncate"><span class="text-teal-400 font-bold">🎙️ Voice:</span><span id="sandboxVoiceTranscript" class="text-gray-300 italic ml-1">Speak moves like "delta 4" or "knight f3"...</span></div>
       </div>
       <div id="exploreToolbar" class="explore-only hidden space-y-2 bg-gray-950/60 p-2 rounded-lg border border-gray-800">
         <div class="flex items-center justify-between text-xs">
@@ -301,6 +301,13 @@ const ECO_DB=[
   ['A51','Budapest Gambit','d4 Nf6 c4 e5'],['E60',"King's Indian Defense",'d4 Nf6 c4 g6'],['D06',"Queen's Gambit",'d4 d5 c4'],
   ['A10','English Opening','c4'],['A40',"Queen's Pawn Game",'d4'],['C20',"King's Pawn Game",'e4 e5']
 ].map(([eco,name,s])=>({eco,name,seq:s.split(' ')}));
+
+const PHONETIC_MAP = {
+  'one':'1','won':'1','two':'2','to':'2','too':'2','three':'3','tree':'3','four':'4','for':'4','fore':'4','ford':'4','five':'5','six':'6','seven':'7','eight':'8','ate':'8',
+  'night':'N','knight':'N','knife':'N','bishop':'B','rook':'R','brook':'R','queen':'Q','king':'K','takes':'x','take':'x','captures':'x',
+  'default':'d4','deport':'d4','detour':'d4','before':'b4','see for':'c4','sea for':'c4',
+  'alpha':'a','bravo':'b','bee':'b','charlie':'c','see':'c','sea':'c','delta':'d','dee':'d','the':'d','echo':'e','foxtrot':'f','golf':'g','hotel':'h'
+};
 
 const state={
   view:'home',mode:'drill',targetMode:'drill',rootCat:null,subfolder:'all',pgnList:[],pgnFolders:{},availableFolders:[...DEFAULT_FOLDERS],
@@ -495,6 +502,23 @@ function syncCurrentPgn(){
     if(state.moveAnnotations[i+1])parts.push(`{${state.moveAnnotations[i+1].replace(/[{}]/g,'')}}`);
   });
   state.pgnList[state.currentIndex]=hdrs?`${hdrs}\n\n${parts.join(' ')}`:parts.join(' ');
+}
+
+function generateAnnotatedPgn(title){
+  const pgnMoves=state.game.history({verbose:true});
+  let headers=`[Event "${esc(title).replace(/"/g,"'")}"]`;
+  if(state.initialFen&&state.initialFen!==START_FEN)headers+=`\n[SetUp "1"]\n[FEN "${state.initialFen}"]`;
+  
+  const parts=[];
+  if(state.moveAnnotations[0])parts.push(`{${state.moveAnnotations[0].replace(/[{}]/g,'')}}`);
+  
+  pgnMoves.forEach((m,i)=>{
+    if(i%2===0)parts.push(`${Math.floor(i/2)+1}.`);
+    parts.push(m.san);
+    if(state.moveAnnotations[i+1])parts.push(`{${state.moveAnnotations[i+1].replace(/[{}]/g,'')}}`);
+  });
+  
+  return parts.length?`${headers}\n\n${parts.join(' ')}`:`${headers}\n\n*`;
 }
 
 function updateCoachNote(){
@@ -905,15 +929,24 @@ function initSpeech(){
 }
 
 function execVoiceTranscript(text){
-  const map={one:'1',two:'2',to:'2',three:'3',four:'4',for:'4',five:'5',six:'6',seven:'7',eight:'8',night:'N',knight:'N',bishop:'B',rook:'R',queen:'Q',king:'K',takes:'x',take:'x'};
-  const words=text.toLowerCase().replace(/\b(castles|castle)\b/g,' O-O ').replace(/\b\d+\.+/g,' ').split(/\s+/).map(w=>map[w]||w);
-  const tokens=words.join(' ').replace(/\b([NBRQK])\s+([a-h])\s*([1-8])\b/g,'$1$2$3').replace(/\b([a-h])\s+([1-8])\b/g,'$1$2').split(/\s+/).filter(Boolean);
+  let s=text.toLowerCase().replace(/\b(castles|castle)\b/g,' O-O ').replace(/\b\d+\.+/g,' ');
+  for(const [k,v] of Object.entries(PHONETIC_MAP)) s=s.replace(new RegExp(`\\b${k}\\b`,'gi'),v);
+  s=s.replace(/\b([NBRQK])\s+([a-h])\s*([1-8])\b/gi,'$1$2$3').replace(/\b([a-h])\s+([1-8])\b/gi,'$1$2').trim();
+
+  const tokens=s.split(/\s+/).filter(Boolean);
+  const legals=state.game.moves({verbose:true});
   const played=[];
-  tokens.forEach(t=>{
-    const legals=state.game.moves({verbose:true}),clean=t.replace(/[+#!?]/g,'').toLowerCase();
-    const m=legals.find(l=>l.san.toLowerCase().replace(/[+#!?]/g,'')===clean||l.from+l.to===clean);
-    if(m&&attemptMove(m.from,m.to,m.promotion||'q'))played.push(m.san);
+
+  tokens.forEach(tok=>{
+    const clean=tok.replace(/[+#!?]/g,'').toLowerCase();
+    let targetMove=legals.find(m=>m.san.toLowerCase().replace(/[+#!?]/g,'')===clean||(m.from+m.to).toLowerCase()===clean);
+    if(!targetMove&&(clean.startsWith('the')||clean.startsWith('t'))){
+      const alt=clean.replace(/^(the|t)/,'d');
+      targetMove=legals.find(m=>m.san.toLowerCase()===alt||(m.from+m.to).toLowerCase()===alt);
+    }
+    if(targetMove&&attemptMove(targetMove.from,targetMove.to,targetMove.promotion||'q'))played.push(targetMove.san);
   });
+
   $('sandboxVoiceTranscript').textContent=played.length?`Heard "${text}" → Played: ${played.join(' ')}`:`Heard "${text}" (no legal moves)`;
   if(played.length){state.board.position(state.game.fen());renderHighlights();}
 }
@@ -1289,12 +1322,11 @@ const actions={
     if(state.isSparring)triggerSparMove();else evalBoard();
   },
   extractBranch:()=>{
-    const pgn=state.game.pgn();if(!pgn)return alert('Play moves first.');
+    if(!state.game.history().length)return alert('Play moves first.');
     const t=prompt('Title for branch:');if(!t)return;
-    const fenHdr=state.initialFen!==START_FEN?`\n[SetUp "1"]\n[FEN "${state.initialFen}"]`:'';
-    state.pgnList.push(`[Event "${t.replace(/"/g,"'")}"]${fenHdr}\n\n${pgn}`);
+    state.pgnList.push(generateAnnotatedPgn(t));
     state.pgnFolders[state.pgnList.length-1]=state.subfolder!=='all'?state.subfolder:'Openings';
-    persist();updateDashboard();setStatus('Branch saved!');
+    persist();updateDashboard();setStatus('Branch saved with notes!');
   },
   openCompareModal:()=>{
     state.scratchGame.load(state.initialFen);
@@ -1313,14 +1345,19 @@ const actions={
     state.board.position(state.game.fen());renderHistory(state.currentLineMoves.length);renderHighlights();evalBoard();
   },
   saveSandboxDrill:()=>{
-    const pgn=state.game.pgn();if(!pgn)return alert('No moves.');
+    if(!state.game.history().length&&!state.moveAnnotations[0])return alert('No moves or notes.');
     const t=prompt('Title:');if(!t)return;
     const f=prompt('Folder:','Openings');if(!f)return;
     if(!state.availableFolders.includes(f))state.availableFolders.push(f);
-    state.pgnList.push(`[Event "${t.replace(/"/g,"'")}"]\n\n${pgn}`);state.pgnFolders[state.pgnList.length-1]=f;
-    persist();updateDashboard();setStatus('Saved to repertoire!');
+    state.pgnList.push(generateAnnotatedPgn(t));
+    state.pgnFolders[state.pgnList.length-1]=f;
+    persist();updateDashboard();setStatus('Saved to repertoire with notes!');
   },
-  quickExport:()=>downloadBlob(state.pgnList[state.currentIndex]||state.game.pgn()||'*',`drill_${state.currentIndex+1}.pgn`),
+  quickExport:()=>{
+    let content=state.pgnList[state.currentIndex];
+    if(!content)content=generateAnnotatedPgn(`Drill ${state.currentIndex+1}`);
+    downloadBlob(content,`drill_${state.currentIndex+1}.pgn`);
+  },
   jumpPly:e=>jumpToPly(parseInt(e.target.dataset.ply,10)),
   editNote:e=>{
     activeNotePly=parseInt(e.target.dataset.ply,10);
