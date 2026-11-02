@@ -50,8 +50,8 @@
 
     <!-- Auto-Sync Toast Banner -->
     <div id="cloudUpdateToast" class="hidden fixed top-2 left-1/2 -translate-x-1/2 z-50 bg-teal-900 border border-teal-500 text-teal-100 px-4 py-2 rounded-lg shadow-2xl text-xs flex items-center gap-3">
-        <span>☁️ Newer repertoire detected on GitHub Gist!</span>
-        <button id="toastPullBtn" class="bg-teal-600 hover:bg-teal-500 px-2.5 py-1 rounded font-bold text-white uppercase text-[10px]">Pull</button>
+        <span>☁️ Newer repertoire / session detected on GitHub Gist!</span>
+        <button id="toastPullBtn" class="bg-teal-600 hover:bg-teal-500 px-2.5 py-1 rounded font-bold text-white uppercase text-[10px]">Pull & Resume</button>
         <button id="toastDismissBtn" class="text-teal-300 hover:text-white font-bold ml-1">&times;</button>
     </div>
 
@@ -92,7 +92,21 @@
         <section id="viewHome" class="space-y-6 max-w-4xl mx-auto w-full py-2">
             <div class="text-center space-y-1">
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Chess Repertoire Gym</h1>
-                <p class="text-xs sm:text-sm text-gray-400">Recall under pressure, explore deep engine variations, or experiment freely.</p>
+                <p class="text-xs sm:text-sm text-gray-400">Recall under pressure, explore deep engine variations, or experiment hands-free with voice.</p>
+            </div>
+
+            <!-- Resume Active Session Banner (Appears if a mid-session deck is active) -->
+            <div id="homeResumeSessionBanner" class="hidden bg-indigo-950/70 border border-indigo-600/80 p-3.5 rounded-xl flex items-center justify-between shadow-lg">
+                <div class="space-y-0.5">
+                    <div class="text-xs font-bold text-indigo-200 flex items-center gap-1.5">
+                        <span>⏱️ Active Drill Session In Progress</span>
+                        <span id="homeResumeFolderBadge" class="bg-indigo-900 text-indigo-300 px-2 py-0.5 rounded font-mono text-[10px]"></span>
+                    </div>
+                    <p id="homeResumeStatsText" class="text-[11px] text-gray-300 font-mono"></p>
+                </div>
+                <button id="homeResumeSessionBtn" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-xs shadow transition">
+                    Resume Session &rarr;
+                </button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -104,7 +118,7 @@
                         </div>
                         <h2 class="text-base sm:text-lg font-bold text-white group-hover:text-indigo-400 transition">Drill Mode</h2>
                         <p class="text-xs text-gray-400 leading-relaxed">
-                            Strict line enforcement, auto-orientation, auto-advance, mistake rewind, and spaced repetition intervals.
+                            Shuffled non-repeating subfolder sessions, live remaining counter, auto-advance, and mid-session cloud save.
                         </p>
                     </div>
                     <div class="mt-4 pt-3 border-t border-gray-800 flex items-center text-xs font-semibold text-indigo-400">
@@ -136,7 +150,7 @@
                         </div>
                         <h2 class="text-base sm:text-lg font-bold text-white group-hover:text-amber-400 transition">Sandbox Lab</h2>
                         <p class="text-xs text-gray-400 leading-relaxed">
-                            Isolated scratchpad for FEN batch analysis, position drafting, side-by-side comparison, and direct PGN export.
+                            Hands-free continuous voice move input ("1. e4 e5", "Nf3"), position drafting, and direct PGN drill export.
                         </p>
                     </div>
                     <div class="mt-4 pt-3 border-t border-gray-800 flex items-center text-xs font-semibold text-amber-400">
@@ -226,13 +240,14 @@
                     <div class="flex items-center gap-1.5 truncate">
                         <button id="wsBackToFoldersBtn" class="text-teal-400 hover:text-teal-200 transition font-bold px-1.5 py-0.5 bg-gray-800 rounded border border-gray-700">&larr; Folders</button>
                         <span class="text-gray-600">|</span>
-                        <span id="wsScopeName" class="font-bold text-teal-300 truncate max-w-[190px]">All Games</span>
+                        <span id="wsScopeName" class="font-bold text-teal-300 truncate max-w-[150px] sm:max-w-[180px]">All Games</span>
                         <span id="wsMasteryStarBadge" class="hidden text-amber-400 text-xs font-bold" title="Mastery Level">⭐</span>
                     </div>
 
                     <div class="flex items-center gap-1.5 font-mono text-[11px]">
                         <span id="wsMistakeBadge" class="hidden bg-rose-950 border border-rose-700 text-rose-300 px-1.5 py-0.5 rounded text-[10px]">Mistakes Queue</span>
-                        <span id="wsCounter" class="bg-gray-800 border border-gray-700 px-2 py-0.5 rounded text-gray-300">0/0</span>
+                        <span id="wsSessionRemainingBadge" class="drill-only bg-teal-950 border border-teal-700 text-teal-300 px-2 py-0.5 rounded font-bold" title="Drills remaining in current non-repeating session">Left: 0</span>
+                        <span id="wsCounter" class="bg-gray-800 border border-gray-700 px-2 py-0.5 rounded text-gray-300" title="Session Progress">0/0</span>
                     </div>
                 </div>
 
@@ -291,6 +306,9 @@
 
                     <button id="wsClearArrowsBtn" class="explore-only sandbox-only px-2.5 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-200 font-semibold transition">Clear Arrows</button>
 
+                    <button id="sandboxVoiceBtn" class="sandbox-only hidden px-3 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-teal-300 font-semibold transition flex items-center gap-1.5" title="Toggle hands-free voice move input (e.g. '1. e4 e5', 'Nf3')">
+                        <span id="sandboxVoiceIcon">🎙️</span> <span id="sandboxVoiceLabel">Voice Input</span>
+                    </button>
                     <button id="sandboxUndoBtn" class="sandbox-only hidden px-3 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-white font-semibold transition">Undo &larr;</button>
                     <button id="sandboxResetBtn" class="sandbox-only hidden px-3 py-1 bg-amber-700 hover:bg-amber-600 rounded text-white font-semibold transition">Reset Pos</button>
                     <button id="sandboxSaveDrillBtn" class="sandbox-only hidden px-3 py-1 bg-emerald-700 hover:bg-emerald-600 rounded text-white font-bold transition">+ Save as Drill</button>
@@ -307,6 +325,14 @@
                     <button id="toggleToExploreBtn" class="flex-1 py-1.5 rounded-md transition text-center flex items-center justify-center gap-1.5">
                         <span>🧭</span> <span>Explore Mode</span>
                     </button>
+                </div>
+
+                <!-- Sandbox Voice Transcript Helper Banner -->
+                <div id="sandboxVoiceBanner" class="sandbox-only hidden bg-teal-950/60 border border-teal-700/70 p-2 rounded-lg text-[11px] flex items-center justify-between">
+                    <div class="truncate">
+                        <span class="text-teal-400 font-bold">🎙️ Voice Lab:</span>
+                        <span id="sandboxVoiceTranscript" class="text-gray-300 italic ml-1">Click "Voice Input" and speak moves like "1. e4 e5" or "Knight f3"...</span>
+                    </div>
                 </div>
 
                 <div id="exploreToolbar" class="explore-only hidden space-y-2 bg-gray-950/60 p-2 rounded-lg border border-gray-800">
@@ -365,10 +391,9 @@
                             <option value="all">Queue: All in Folder</option>
                             <option value="mistakes">Queue: Mistakes Only (0)</option>
                         </select>
-                        <label class="flex items-center gap-1.5 cursor-pointer text-gray-300 text-xs">
-                            <input type="checkbox" id="shuffleDrillCheckbox" class="w-3.5 h-3.5 accent-teal-600" checked>
-                            <span>Shuffle Order</span>
-                        </label>
+                        <button id="restartSessionDeckBtn" class="bg-indigo-950 hover:bg-indigo-900 border border-indigo-700 text-indigo-200 rounded px-2 py-1 font-semibold transition truncate" title="Reshuffle all PGNs in this subfolder and restart session">
+                            🔀 Reshuffle Session
+                        </button>
                     </div>
                 </div>
 
@@ -541,7 +566,7 @@
         <div class="bg-gray-900 border border-gray-800 rounded-xl max-w-sm w-full p-4 shadow-2xl flex flex-col gap-3 text-xs">
             <div class="flex justify-between items-center border-b border-gray-800 pb-2">
                 <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
-                    <span>☁️ GitHub Gist Cloud & Local Backup</span>
+                    <span>☁️ GitHub Gist Cloud & Mid-Session Sync</span>
                 </h3>
                 <button id="closeSyncModalBtn" class="text-gray-400 hover:text-white text-base font-bold">&times;</button>
             </div>
@@ -557,15 +582,19 @@
                 </div>
             </div>
 
+            <div id="syncSessionSummaryBox" class="bg-gray-950 border border-gray-800 rounded p-2 text-[11px] text-gray-300 font-mono">
+                Session State: Idle
+            </div>
+
             <div id="syncStatusMessage" class="text-[11px] min-h-[16px] text-gray-400 italic"></div>
 
             <div class="grid grid-cols-2 gap-2">
-                <button id="syncPullBtn" class="px-3 py-1.5 bg-teal-700 hover:bg-teal-600 rounded text-xs text-white font-bold transition">⬇ Pull (Load)</button>
-                <button id="syncPushBtn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-xs text-white font-bold transition">⬆ Push (Save)</button>
+                <button id="syncPullBtn" class="px-3 py-1.5 bg-teal-700 hover:bg-teal-600 rounded text-xs text-white font-bold transition">⬇ Pull (Load & Resume)</button>
+                <button id="syncPushBtn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-xs text-white font-bold transition">⬆ Push (Save State)</button>
             </div>
 
             <div class="pt-2 border-t border-gray-800 space-y-2">
-                <span class="text-gray-400 font-bold text-[11px] block">Offline JSON Backup</span>
+                <span class="text-gray-400 font-bold text-[11px] block">Offline JSON Backup (Includes Session Progress)</span>
                 <div class="grid grid-cols-2 gap-2">
                     <button id="exportLocalJsonBtn" class="px-2 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-300 font-semibold">💾 Export JSON</button>
                     <label class="px-2 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-300 font-semibold text-center cursor-pointer">
@@ -702,6 +731,10 @@
             homeGoDrillBtn: $id('homeGoDrillBtn'),
             homeGoExploreBtn: $id('homeGoExploreBtn'),
             homeGoSandboxBtn: $id('homeGoSandboxBtn'),
+            homeResumeSessionBanner: $id('homeResumeSessionBanner'),
+            homeResumeFolderBadge: $id('homeResumeFolderBadge'),
+            homeResumeStatsText: $id('homeResumeStatsText'),
+            homeResumeSessionBtn: $id('homeResumeSessionBtn'),
             homeDrillAllMistakesBtn: $id('homeDrillAllMistakesBtn'),
             homeMistakeCountBadge: $id('homeMistakeCountBadge'),
             subfolderAccuracyChartContainer: $id('subfolderAccuracyChartContainer'),
@@ -728,6 +761,7 @@
             wsBackToFoldersBtn: $id('wsBackToFoldersBtn'),
             wsScopeName: $id('wsScopeName'),
             wsCounter: $id('wsCounter'),
+            wsSessionRemainingBadge: $id('wsSessionRemainingBadge'),
             wsMistakeBadge: $id('wsMistakeBadge'),
             wsMasteryStarBadge: $id('wsMasteryStarBadge'),
             toggleToDrillBtn: $id('toggleToDrillBtn'),
@@ -750,7 +784,7 @@
             statAvgTime: $id('statAvgTime'),
             statMasteryLevel: $id('statMasteryLevel'),
             queueSelect: $id('queueSelect'),
-            shuffleDrillCheckbox: $id('shuffleDrillCheckbox'),
+            restartSessionDeckBtn: $id('restartSessionDeckBtn'),
             promotionModal: $id('promotionModal'),
             promotionChoices: $id('promotionChoices'),
 
@@ -769,6 +803,11 @@
             drillTargetPlyBtn: $id('drillTargetPlyBtn'),
             drillToggleEngineBtn: $id('drillToggleEngineBtn'),
             wsClearArrowsBtn: $id('wsClearArrowsBtn'),
+            sandboxVoiceBtn: $id('sandboxVoiceBtn'),
+            sandboxVoiceIcon: $id('sandboxVoiceIcon'),
+            sandboxVoiceLabel: $id('sandboxVoiceLabel'),
+            sandboxVoiceBanner: $id('sandboxVoiceBanner'),
+            sandboxVoiceTranscript: $id('sandboxVoiceTranscript'),
             sandboxUndoBtn: $id('sandboxUndoBtn'),
             sandboxResetBtn: $id('sandboxResetBtn'),
             sandboxSaveDrillBtn: $id('sandboxSaveDrillBtn'),
@@ -827,6 +866,7 @@
             closeSyncModalBtn: $id('closeSyncModalBtn'),
             syncPatInput: $id('syncPatInput'),
             syncGistIdInput: $id('syncGistIdInput'),
+            syncSessionSummaryBox: $id('syncSessionSummaryBox'),
             syncStatusMessage: $id('syncStatusMessage'),
             syncPushBtn: $id('syncPushBtn'),
             syncPullBtn: $id('syncPullBtn'),
@@ -919,6 +959,16 @@
             activeQueueMode: 'all',
             masteryStreaks: {},
 
+            // Non-Repeating Shuffled Drill Session Deck State
+            sessionActive: false,
+            sessionDeck: [],         // Remaining unvisited PGN indices in current session
+            sessionTotalCount: 0,    // Total drills when session started
+            sessionCurrentDone: false, // Tracks if the currently loaded drill has already been completed in this session
+
+            // Sandbox Continuous Voice Input State
+            sandboxVoiceActive: false,
+            sandboxRecognition: null,
+
             // Board & Chess Game
             board: null,
             boardCompare1: null,
@@ -990,7 +1040,17 @@
         let engineWorker = null;
         let idleWorkerTimer = null;
 
-        // --- Voice Dictation ---
+        // --- Fisher-Yates Array Shuffle ---
+        function shuffleArray(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // --- Voice Dictation (Note Modal) ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = null;
         let activeNotePly = null;
@@ -1063,6 +1123,191 @@
             els.voiceDictateBtn.classList.remove('bg-rose-700', 'text-white', 'animate-pulse');
         }
 
+        // --- Sandbox Hands-Free Voice Move Parser & Controller ---
+        function parseSpokenPhraseToMoveTokens(phrase) {
+            const wordMap = {
+                'one': '1', 'two': '2', 'to': '2', 'too': '2', 'three': '3',
+                'four': '4', 'for': '4', 'five': '5', 'six': '6', 'seven': '7', 'eight': '8',
+                'ate': '8', 'see': 'c', 'sea': 'c', 'bee': 'b', 'be': 'b', 'dee': 'd',
+                'gee': 'g', 'ay': 'a', 'eh': 'a', 'ef': 'f', 'aitch': 'h',
+                'night': 'N', 'knight': 'N', 'bishop': 'B', 'rook': 'R', 'queen': 'Q', 'king': 'K',
+                'takes': 'x', 'take': 'x', 'captures': 'x', 'capture': 'x', 'by': 'x'
+            };
+
+            let s = phrase.toLowerCase();
+            // Handle castling phrases first
+            s = s.replace(/\b(castle\s+queen\s*side|castles\s+queen\s*side|castle\s+long|long\s+castle|o-o-o|0-0-0|triple\s+zero)\b/g, ' O-O-O ');
+            s = s.replace(/\b(castle\s+king\s*side|castles\s+king\s*side|castle\s+short|short\s+castle|castles|castle|o-o|0-0|double\s+zero)\b/g, ' O-O ');
+            // Handle promotions
+            s = s.replace(/\b(promotes?\s+to|equals?)\s+(queen|rook|bishop|knight|q|r|b|n)\b/g, (_, __, p) => {
+                const map = { queen: '=Q', rook: '=R', bishop: '=B', knight: '=N', q: '=Q', r: '=R', b: '=B', n: '=N' };
+                return map[p.toLowerCase()] || '=Q';
+            });
+
+            // Remove move numbers like "1.", "2.", "1..."
+            s = s.replace(/\b\d+\s*\.\.+|\b\d+\s*\./g, ' ');
+            // Remove punctuation except '-', '=', '+'
+            s = s.replace(/[,;!?]/g, ' ');
+
+            const rawWords = s.split(/\s+/).filter(Boolean);
+            const mapped = [];
+
+            for (let i = 0; i < rawWords.length; i++) {
+                const w = rawWords[i];
+                if (w === 'O-O' || w === 'O-O-O') {
+                    mapped.push(w);
+                    continue;
+                }
+                // Ignore standalone move numbers if followed by another coordinate (e.g. "1 e4 e5")
+                if (/^\d+$/.test(w) && i + 1 < rawWords.length && /^[a-h][1-8]$/i.test(rawWords[i + 1])) {
+                    continue;
+                }
+                mapped.push(wordMap[w] !== undefined ? wordMap[w] : w);
+            }
+
+            // Reconstruct split tokens like ["N", "f", "3"] -> "Nf3" or ["e", "4"] -> "e4" or ["e", "x", "d", "5"] -> "exd5"
+            const joinedStr = mapped.join(' ');
+            const compacted = joinedStr
+                .replace(/\b([NBRQK])\s+([a-h1-8]?)\s*(x?)\s*([a-h])\s*([1-8])\b/g, '$1$2$3$4$5')
+                .replace(/\b([a-h])\s+(x)\s+([a-h])\s*([1-8])\b/g, '$1$2$3$4')
+                .replace(/\b([a-h])\s+([1-8])\b/g, '$1$2')
+                .replace(/\s*(=[QRBN])\b/g, '$1');
+
+            return compacted.split(/\s+/).filter(Boolean);
+        }
+
+        function matchSpokenTokenToLegalMove(token) {
+            const legalMoves = state.game.moves({ verbose: true });
+            if (!legalMoves.length) return null;
+
+            const norm = str => str.replace(/[+#!?]/g, '').trim();
+            const cleanTok = norm(token);
+
+            // 1. Exact case-sensitive SAN match
+            let found = legalMoves.find(m => norm(m.san) === cleanTok);
+            if (found) return found;
+
+            // 2. Case-insensitive SAN match (e.g., "nf3" -> "Nf3", "o-o" -> "O-O")
+            found = legalMoves.find(m => norm(m.san).toLowerCase() === cleanTok.toLowerCase());
+            if (found) return found;
+
+            // 3. Coordinate UCI match (e.g., "e2e4")
+            if (/^[a-h][1-8][a-h][1-8][qrbn]?$/i.test(cleanTok)) {
+                const from = cleanTok.slice(0, 2).toLowerCase();
+                const to = cleanTok.slice(2, 4).toLowerCase();
+                const promo = cleanTok[4] ? cleanTok[4].toLowerCase() : undefined;
+                found = legalMoves.find(m => m.from === from && m.to === to && (!promo || m.promotion === promo));
+                if (found) return found;
+            }
+
+            // 4. Shorthand capture or destination match (e.g. "ed5" for "exd5", or "f3" if only one piece/pawn can go to f3)
+            const noX = cleanTok.replace(/x/gi, '').toLowerCase();
+            found = legalMoves.find(m => norm(m.san).replace(/x/gi, '').toLowerCase() === noX);
+            if (found) return found;
+
+            return null;
+        }
+
+        function executeSandboxSpokenTranscript(transcript) {
+            const tokens = parseSpokenPhraseToMoveTokens(transcript);
+            const executedSans = [];
+
+            for (const tok of tokens) {
+                const moveObj = matchSpokenTokenToLegalMove(tok);
+                if (moveObj) {
+                    const ok = attemptMove(moveObj.from, moveObj.to, moveObj.promotion || 'q');
+                    if (ok) {
+                        executedSans.push(moveObj.san);
+                    }
+                }
+            }
+
+            if (executedSans.length > 0) {
+                state.board.position(state.game.fen());
+                renderLastMoveHighlights();
+                els.sandboxVoiceTranscript.textContent = `Heard "${transcript}" → Played: ${executedSans.join(' ')}`;
+                setStatus(`🎙️ Voice played: ${executedSans.join(' ')}`);
+            } else {
+                els.sandboxVoiceTranscript.textContent = `Heard "${transcript}" (no matching legal move found)`;
+            }
+        }
+
+        function stopSandboxVoice() {
+            state.sandboxVoiceActive = false;
+            if (state.sandboxRecognition) {
+                try { state.sandboxRecognition.stop(); } catch (e) {}
+            }
+            if (els.sandboxVoiceBtn) {
+                els.sandboxVoiceBtn.classList.remove('bg-rose-700', 'text-white', 'animate-pulse', 'border-rose-500');
+                els.sandboxVoiceBtn.classList.add('bg-gray-800', 'text-teal-300', 'border-gray-700');
+                els.sandboxVoiceIcon.textContent = '🎙️';
+                els.sandboxVoiceLabel.textContent = 'Voice Input';
+            }
+        }
+
+        function toggleSandboxVoice() {
+            if (!SpeechRecognition) {
+                alert('Web Speech API is not supported in this browser (try Chrome, Edge, or Safari).');
+                return;
+            }
+
+            if (state.sandboxVoiceActive) {
+                stopSandboxVoice();
+                setStatus('Sandbox voice input turned off.');
+                return;
+            }
+
+            try {
+                if (!state.sandboxRecognition) {
+                    const rec = new SpeechRecognition();
+                    rec.continuous = true;
+                    rec.interimResults = false;
+                    rec.lang = 'en-US';
+
+                    rec.onstart = () => {
+                        state.sandboxVoiceActive = true;
+                        els.sandboxVoiceBtn.classList.remove('bg-gray-800', 'text-teal-300', 'border-gray-700');
+                        els.sandboxVoiceBtn.classList.add('bg-rose-700', 'text-white', 'animate-pulse', 'border-rose-500');
+                        els.sandboxVoiceIcon.textContent = '🔴';
+                        els.sandboxVoiceLabel.textContent = 'Listening...';
+                        setStatus('🎙️ Voice Active! Say moves like "1. e4 e5", "Knight f3", or "castles".');
+                    };
+
+                    rec.onresult = event => {
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            if (event.results[i].isFinal) {
+                                const text = event.results[i][0].transcript.trim();
+                                if (text) executeSandboxSpokenTranscript(text);
+                            }
+                        }
+                    };
+
+                    rec.onerror = event => {
+                        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                            stopSandboxVoice();
+                            setStatus('Microphone permission denied.', true);
+                        }
+                    };
+
+                    rec.onend = () => {
+                        if (state.sandboxVoiceActive && state.activeMode === 'sandbox' && state.currentView === 'workspace') {
+                            try { rec.start(); } catch (e) {}
+                        } else {
+                            stopSandboxVoice();
+                        }
+                    };
+
+                    state.sandboxRecognition = rec;
+                }
+
+                state.sandboxVoiceActive = true;
+                state.sandboxRecognition.start();
+            } catch (e) {
+                stopSandboxVoice();
+                setStatus('Could not start voice recognition.', true);
+            }
+        }
+
         function openNoteModal(ply, sanLabel = '') {
             activeNotePly = ply;
             els.noteModalPlyBadge.textContent = ply === 0 ? 'Intro' : `Ply ${ply} (${sanLabel || 'Move'})`;
@@ -1130,7 +1375,7 @@
             }
         }
 
-        // --- Persistent Storage ---
+        // --- Persistent Storage (Includes Exact Session Progress) ---
         function persist() {
             try {
                 localStorage.setItem('pgn_pro_list', JSON.stringify(state.pgnList));
@@ -1151,6 +1396,19 @@
                 localStorage.setItem('pgn_pro_piece_url', state.customPieceUrlPattern);
                 localStorage.setItem('pgn_pro_correct', state.correctAttempts);
                 localStorage.setItem('pgn_pro_total', state.totalAttempts);
+
+                // Persist active drill session state
+                localStorage.setItem('pgn_pro_session_state', JSON.stringify({
+                    sessionActive: state.sessionActive,
+                    sessionDeck: state.sessionDeck,
+                    sessionTotalCount: state.sessionTotalCount,
+                    sessionCurrentDone: state.sessionCurrentDone,
+                    activeRootCategory: state.activeRootCategory,
+                    activeSubfolder: state.activeSubfolder,
+                    activeQueueMode: state.activeQueueMode,
+                    currentIndex: state.currentIndex
+                }));
+
                 markSyncDirty(true);
                 updateStorageUsage();
             } catch (e) {}
@@ -1192,12 +1450,30 @@
                     const savedIdx = parseInt(get('pgn_pro_index') || '0', 10);
                     state.currentIndex = Math.max(0, Math.min(savedIdx, Math.max(0, state.pgnList.length - 1)));
                 } else {
-                    // Seed default starter repertoire on first-time launch
                     STARTER_SAMPLE_PGNS.forEach((item, idx) => {
                         state.pgnList.push(item.pgn);
                         state.pgnFolders[idx] = item.folder;
                     });
                     persist();
+                }
+
+                // Restore mid-session progress
+                const savedSessionRaw = get('pgn_pro_session_state');
+                if (savedSessionRaw) {
+                    const sObj = JSON.parse(savedSessionRaw);
+                    state.sessionActive = Boolean(sObj.sessionActive);
+                    state.sessionDeck = Array.isArray(sObj.sessionDeck) ? sObj.sessionDeck.filter(idx => idx >= 0 && idx < state.pgnList.length) : [];
+                    state.sessionTotalCount = sObj.sessionTotalCount || 0;
+                    state.sessionCurrentDone = Boolean(sObj.sessionCurrentDone);
+                    if (sObj.activeRootCategory) state.activeRootCategory = sObj.activeRootCategory;
+                    if (sObj.activeSubfolder) state.activeSubfolder = sObj.activeSubfolder;
+                    if (sObj.activeQueueMode) {
+                        state.activeQueueMode = sObj.activeQueueMode;
+                        els.queueSelect.value = sObj.activeQueueMode;
+                    }
+                    if (typeof sObj.currentIndex === 'number' && sObj.currentIndex >= 0 && sObj.currentIndex < state.pgnList.length) {
+                        state.currentIndex = sObj.currentIndex;
+                    }
                 }
 
                 markSyncDirty(get('pgn_pro_dirty') === 'true');
@@ -1207,7 +1483,7 @@
             } catch (e) {}
         }
 
-        // Safely delete indices from state.pgnList and re-index all maps/sets
+        // Safely delete indices from state.pgnList and re-index all maps/sets/decks
         function deleteGamesByIndices(indicesToDelete) {
             const delSet = new Set(indicesToDelete);
             const newPgnList = [];
@@ -1215,10 +1491,12 @@
             const newMasteryStreaks = {};
             const newCompleted = new Set();
             const newMistakes = new Set();
+            const oldToNewMap = new Map();
 
             state.pgnList.forEach((pgn, oldIdx) => {
                 if (!delSet.has(oldIdx)) {
                     const newIdx = newPgnList.length;
+                    oldToNewMap.set(oldIdx, newIdx);
                     newPgnList.push(pgn);
                     newPgnFolders[newIdx] = state.pgnFolders[oldIdx] || 'Openings';
                     if (state.masteryStreaks[oldIdx]) newMasteryStreaks[newIdx] = state.masteryStreaks[oldIdx];
@@ -1232,8 +1510,14 @@
             state.masteryStreaks = newMasteryStreaks;
             state.completedGames = newCompleted;
             state.mistakeQueue = newMistakes;
+            state.sessionDeck = state.sessionDeck
+                .filter(oldIdx => oldToNewMap.has(oldIdx))
+                .map(oldIdx => oldToNewMap.get(oldIdx));
             state.drillHistoryIndexStack = [];
-            state.currentIndex = Math.max(0, Math.min(state.currentIndex, Math.max(0, state.pgnList.length - 1)));
+            state.currentIndex = oldToNewMap.has(state.currentIndex)
+                ? oldToNewMap.get(state.currentIndex)
+                : Math.max(0, Math.min(state.currentIndex, Math.max(0, state.pgnList.length - 1)));
+
             persist();
             updateDashboard();
             updateAnalyticsUI();
@@ -1326,7 +1610,6 @@
                             : comment;
                     }
                 } else if (match[2] !== undefined) {
-                    // Move number token (e.g. "1." or "1...")
                     continue;
                 } else if (match[3] !== undefined) {
                     const tok = match[3];
@@ -1436,7 +1719,6 @@
                 numSpan.textContent = `${moveNum}.`;
                 lineRow.appendChild(numSpan);
 
-                // White Move
                 if (wMove) {
                     const wSpan = document.createElement('span');
                     const isWActive = activePly === wPly && (!state.activeBranchMoves.length || state.branchStartPly >= wPly);
@@ -1456,7 +1738,6 @@
                     }
                 }
 
-                // Black Move
                 if (bMove) {
                     const bSpan = document.createElement('span');
                     const isBActive = activePly === bPly && (!state.activeBranchMoves.length || state.branchStartPly >= bPly);
@@ -1478,7 +1759,6 @@
 
                 row.appendChild(lineRow);
 
-                // Inline annotations for this move pair
                 [wPly, bPly].forEach(p => {
                     if (state.moveAnnotations[p]) {
                         const cDiv = document.createElement('div');
@@ -1488,7 +1768,6 @@
                     }
                 });
 
-                // Render sideline branch if it branched on this row
                 if (isExplore && state.activeBranchMoves.length > 0 && (state.branchStartPly === wPly - 1 || state.branchStartPly === bPly - 1)) {
                     const branchDiv = document.createElement('div');
                     branchDiv.className = 'pl-7 text-[11px] flex flex-wrap items-center gap-1 pt-0.5';
@@ -1542,10 +1821,61 @@
             playSound('move');
         }
 
+        // --- Shuffled Non-Repeating Drill Session Initializer ---
+        function startDrillSession(folderPath, queueMode = 'all') {
+            state.activeSubfolder = folderPath;
+            state.activeQueueMode = queueMode;
+            els.queueSelect.value = queueMode;
+            state.activeMode = 'drill';
+            state.targetLaunchMode = 'drill';
+
+            const pool = getFilteredPool();
+            if (!pool.length) {
+                alert('No PGN drills found in this subfolder/queue!');
+                return;
+            }
+
+            const shuffled = shuffleArray(pool);
+            state.sessionActive = true;
+            state.sessionTotalCount = shuffled.length;
+            state.currentIndex = shuffled.shift();
+            state.sessionDeck = shuffled;
+            state.sessionCurrentDone = false;
+            state.drillHistoryIndexStack = [];
+
+            persist();
+            switchView('workspace');
+        }
+
+        function updateSessionCountersUI() {
+            const pool = getFilteredPool();
+            els.subfolderGamesBadgeCount.textContent = pool.length;
+
+            if (state.activeMode === 'drill' && state.sessionActive && state.sessionTotalCount > 0) {
+                const remainingIncludingCurrent = state.sessionDeck.length + (state.sessionCurrentDone ? 0 : 1);
+                const currentNumber = Math.min(state.sessionTotalCount, state.sessionTotalCount - state.sessionDeck.length);
+                els.wsSessionRemainingBadge.textContent = `Left: ${remainingIncludingCurrent}`;
+                els.wsSessionRemainingBadge.classList.remove('hidden');
+                els.wsCounter.textContent = `${currentNumber}/${state.sessionTotalCount}`;
+            } else {
+                els.wsSessionRemainingBadge.classList.add('hidden');
+                if (pool.length > 0) {
+                    const pos = pool.indexOf(state.currentIndex);
+                    els.wsCounter.textContent = `${pos !== -1 ? pos + 1 : 1}/${pool.length}`;
+                } else {
+                    els.wsCounter.textContent = '0/0';
+                }
+            }
+        }
+
         // --- View Router ---
         function switchView(viewName) {
             state.currentView = viewName;
             if (oppMoveTimer) { clearTimeout(oppMoveTimer); oppMoveTimer = null; }
+            if (viewName !== 'workspace' || state.activeMode !== 'sandbox') {
+                stopSandboxVoice();
+            }
+
             els.viewHome.classList.add('hidden');
             els.viewFolderHub.classList.add('hidden');
             els.viewWorkspace.classList.add('hidden');
@@ -1577,7 +1907,7 @@
             }
         }
 
-        // --- Home Subfolder Accuracy Bar (Gold Medals / Total PGNs) ---
+        // --- Home Subfolder Accuracy Bar & Active Session Resume Banner ---
         function updateDashboard() {
             let op = 0, tac = 0, end = 0;
             state.pgnList.forEach((_, i) => {
@@ -1591,6 +1921,19 @@
             els.countEndgames.textContent = `${end} drills`;
             els.homeMistakeCountBadge.textContent = state.mistakeQueue.size;
             els.homeTotalDrillCount.textContent = state.pgnList.length;
+
+            // Update Resume Banner on Home screen if an incomplete session exists
+            if (state.sessionActive && state.sessionTotalCount > 0) {
+                const leftCount = state.sessionDeck.length + (state.sessionCurrentDone ? 0 : 1);
+                const doneCount = state.sessionTotalCount - leftCount;
+                els.homeResumeFolderBadge.textContent = state.activeSubfolder === 'all'
+                    ? `All ${state.activeRootCategory || 'Repertoire'}`
+                    : state.activeSubfolder;
+                els.homeResumeStatsText.textContent = `${doneCount} / ${state.sessionTotalCount} completed • ${leftCount} PGN drills remaining`;
+                els.homeResumeSessionBanner.classList.remove('hidden');
+            } else {
+                els.homeResumeSessionBanner.classList.add('hidden');
+            }
 
             const frag = document.createDocumentFragment();
             const subs = state.availableFolders.filter(f => f.includes('/'));
@@ -1745,11 +2088,13 @@
             els.targetModeBadge.className = `text-xs uppercase font-mono font-bold px-2 py-0.5 rounded ${mode === 'drill' ? 'bg-indigo-950 border border-indigo-700 text-indigo-300' : 'bg-teal-950 border border-teal-700 text-teal-300'}`;
 
             if (!state.activeRootCategory) {
-                els.folderHubTitle.textContent = `Choose Category to ${mode === 'drill' ? 'Drill' : 'Explore'}`;
+                els.folderHubTitle.textContent = `Choose Category to ${mode === 'drill' ? 'Start Drill Session' : 'Explore'}`;
                 els.rootFolderDeck.classList.remove('hidden');
                 els.subfolderDeckContainer.classList.add('hidden');
             } else {
-                els.folderHubTitle.textContent = `${state.activeRootCategory} Subfolders`;
+                els.folderHubTitle.textContent = mode === 'drill'
+                    ? `${state.activeRootCategory} — Click a Subfolder to Start Shuffled Session`
+                    : `${state.activeRootCategory} Subfolders`;
                 els.rootFolderDeck.classList.add('hidden');
                 els.subfolderDeckContainer.classList.remove('hidden');
                 els.currentRootName.textContent = state.activeRootCategory;
@@ -1766,15 +2111,26 @@
                 const frag = document.createDocumentFragment();
 
                 const allBtn = document.createElement('button');
-                allBtn.className = 'p-3 bg-gray-900 hover:bg-gray-850 border border-gray-800 hover:border-gray-600 rounded-lg text-left flex justify-between items-center transition';
+                allBtn.className = 'p-3 bg-gray-900 hover:bg-gray-850 border border-gray-800 hover:border-indigo-500/80 rounded-lg text-left flex justify-between items-center transition';
                 const totalInRoot = state.pgnList.filter((_, idx) => (state.pgnFolders[idx] || 'Openings').startsWith(root)).length;
-                allBtn.innerHTML = `<div><div class="font-bold text-white">📁 All ${root}</div><div class="text-[10px] text-gray-400">Drill everything in this category</div></div><span class="text-xs font-mono bg-gray-800 px-2 py-0.5 rounded text-gray-300">${totalInRoot} games</span>`;
+                const actionLabel = mode === 'drill' ? '🎯 Start Shuffled Session' : '🧭 Browse All';
+                allBtn.innerHTML = `
+                    <div>
+                        <div class="font-bold text-white">📁 All ${root}</div>
+                        <div class="text-[10px] text-indigo-300 font-semibold mt-0.5">${actionLabel} (No repeats until all ${totalInRoot} finished)</div>
+                    </div>
+                    <span class="text-xs font-mono bg-gray-800 px-2.5 py-1 rounded text-gray-200 font-bold">${totalInRoot} PGNs</span>
+                `;
                 allBtn.onclick = () => {
-                    state.activeSubfolder = 'all';
-                    state.activeQueueMode = 'all';
-                    els.queueSelect.value = 'all';
-                    state.activeMode = state.targetLaunchMode;
-                    switchView('workspace');
+                    if (state.targetLaunchMode === 'drill') {
+                        startDrillSession('all', 'all');
+                    } else {
+                        state.activeSubfolder = 'all';
+                        state.activeQueueMode = 'all';
+                        els.queueSelect.value = 'all';
+                        state.activeMode = 'explore';
+                        switchView('workspace');
+                    }
                 };
                 frag.appendChild(allBtn);
 
@@ -1782,12 +2138,21 @@
                     if (folderPath === root) return;
                     const folderName = folderPath.substring(root.length + 1);
                     const count = folderCounts[folderPath] || 0;
+                    const isSavedSessionFolder = state.sessionActive && state.activeSubfolder === folderPath;
+                    const leftInSaved = isSavedSessionFolder ? (state.sessionDeck.length + (state.sessionCurrentDone ? 0 : 1)) : 0;
+
                     const card = document.createElement('div');
-                    card.className = 'p-3 bg-gray-900 border border-gray-800 rounded-lg flex items-center justify-between transition hover:border-teal-700/60';
+                    card.className = `p-3 bg-gray-900 border ${isSavedSessionFolder ? 'border-indigo-500 ring-1 ring-indigo-500/50' : 'border-gray-800'} rounded-lg flex items-center justify-between transition hover:border-teal-500`;
                     card.innerHTML = `
-                        <button class="flex-1 text-left select-subfolder-btn" data-folder="${folderPath}">
-                            <div class="font-bold text-teal-300 truncate">${folderName}</div>
-                            <div class="text-[10px] text-gray-400">${count} games</div>
+                        <button class="flex-1 text-left select-subfolder-btn flex items-center justify-between pr-2" data-folder="${folderPath}">
+                            <div>
+                                <div class="font-bold text-teal-300 truncate">${folderName}</div>
+                                <div class="text-[10px] text-gray-400 mt-0.5">
+                                    ${mode === 'drill' ? `🎯 Start Drill Session (${count} PGNs)` : `🧭 Explore ${count} PGNs`}
+                                    ${isSavedSessionFolder ? `<span class="text-indigo-300 font-bold ml-1">• (${leftInSaved} left in active session)</span>` : ''}
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 rounded bg-gray-800 text-gray-200 font-mono font-bold text-[11px]">${mode === 'drill' ? '▶ Start' : 'Open'}</span>
                         </button>
                     `;
                     frag.appendChild(card);
@@ -1835,6 +2200,10 @@
             const isExp = state.activeMode === 'explore';
             const isSand = state.activeMode === 'sandbox';
 
+            if (!isSand) {
+                stopSandboxVoice();
+            }
+
             if (isSand) {
                 els.modeSwitcherRow.classList.add('hidden');
                 els.wsScopeName.textContent = 'Sandbox Lab';
@@ -1855,7 +2224,7 @@
                 els.evalBarWrapper.classList.remove('hidden');
                 evalBoard();
                 fetchOpeningBookStats(state.game.fen());
-                setStatus(isSand ? 'Sandbox Active: Experiment freely.' : 'Explore Mode: Engine, Book, and Notes active.');
+                setStatus(isSand ? 'Sandbox Active: Play on board or click 🎙️ Voice Input to speak moves.' : 'Explore Mode: Engine, Book, and Notes active.');
             } else if (isDrill) {
                 state.activeArrows = [];
                 state.activeRings = [];
@@ -1866,6 +2235,7 @@
                 if (state.drillShowEngine) evalBoard();
                 setStatus('Drill Mode: Recall your moves under pressure.');
             }
+            updateSessionCountersUI();
         }
 
         function setStatus(msg, isErr = false) {
@@ -1928,6 +2298,7 @@
             state.expectedMoves = [];
             state.currentLineMoves = [];
             state.hadMistake = false;
+            if (!isRepeat) state.sessionCurrentDone = false;
             state.moveStartTime = Date.now();
             state.lastMoveSquares = null;
 
@@ -1937,15 +2308,29 @@
             if (!pool.length) {
                 state.board.position(state.game.fen());
                 els.wsCounter.textContent = '0/0';
+                els.wsSessionRemainingBadge.classList.add('hidden');
                 els.coachNote.classList.add('hidden');
                 renderHistory();
                 setStatus('No drills found in this queue. Import PGNs or switch queue.');
                 return;
             }
 
-            if (!pool.includes(state.currentIndex)) {
+            // Ensure an active shuffled session deck exists when in Drill Mode
+            if (state.activeMode === 'drill' && !state.sessionActive) {
+                const shuffled = shuffleArray(pool);
+                state.sessionActive = true;
+                state.sessionTotalCount = shuffled.length;
+                if (pool.includes(state.currentIndex)) {
+                    state.sessionDeck = shuffled.filter(i => i !== state.currentIndex);
+                } else {
+                    state.currentIndex = shuffled.shift();
+                    state.sessionDeck = shuffled;
+                }
+            } else if (!pool.includes(state.currentIndex)) {
                 state.currentIndex = pool[0];
             }
+
+            updateSessionCountersUI();
 
             const rawPgn = state.pgnList[state.currentIndex].replace(/\r\n/g, '\n');
             parseComments(rawPgn);
@@ -1964,14 +2349,13 @@
             }
 
             const fenMatch = rawPgn.match(/\[FEN\s+"([^"]+)"\]/i);
-            state.initialFen = fenMatch ? fenMatch[1] : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+            state.initialFen = fenMatch ? fenMatch[1].trim() : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
             const cleanPgn = stripAllCommentsAndVariations(rawPgn);
             state.scratchGame.reset();
             if (state.scratchGame.load_pgn(cleanPgn)) {
                 state.expectedMoves = state.scratchGame.history({ verbose: true });
                 state.currentLineMoves = [...state.expectedMoves];
-                els.wsCounter.textContent = `${pool.indexOf(state.currentIndex) + 1}/${pool.length}`;
 
                 state.game.load(state.initialFen);
 
@@ -1994,7 +2378,8 @@
                 persist();
 
                 if (state.activeMode === 'drill') {
-                    setStatus(isRepeat ? 'Drill reset. Make your move!' : 'Play the required repertoire move.');
+                    const leftCount = state.sessionDeck.length + 1;
+                    setStatus(isRepeat ? 'Drill reset. Make your move!' : `Session Active (${leftCount} left): Play the repertoire move.`);
                     const currentTurnColor = state.game.turn();
                     const activePlayerSide = state.board.orientation() === 'black' ? 'b' : 'w';
 
@@ -2037,52 +2422,75 @@
 
         function completeDrill() {
             state.completedGames.add(state.currentIndex);
+            state.sessionCurrentDone = true;
             state.drillHistoryIndexStack.push(state.currentIndex);
 
             const sub = state.pgnFolders[state.currentIndex] || 'Openings';
             if (!state.subfolderStats[sub]) state.subfolderStats[sub] = { correct: 0, total: 0 };
             state.subfolderStats[sub].total++;
 
+            const remainingAfterThis = state.sessionDeck.length;
+
             if (!state.hadMistake) {
                 state.mistakeQueue.delete(state.currentIndex);
                 state.subfolderStats[sub].correct++;
                 state.masteryStreaks[state.currentIndex] = (state.masteryStreaks[state.currentIndex] || 0) + 1;
                 playSound('check');
-                setStatus('Drill completed cleanly! Auto-advancing...');
-
-                setTimeout(() => {
-                    if (state.activeMode === 'drill' && state.currentView === 'workspace') nextDrill();
-                }, 1300);
+                setStatus(remainingAfterThis > 0
+                    ? `Drill passed! (${remainingAfterThis} left in session). Advancing...`
+                    : `Final drill passed! Completing session...`);
             } else {
                 state.masteryStreaks[state.currentIndex] = 0;
-                setStatus('Line completed with errors. Logged to Mistakes.');
+                setStatus(remainingAfterThis > 0
+                    ? `Line finished with mistake (${remainingAfterThis} left in session). Advancing...`
+                    : `Final drill finished with mistake. Completing session...`, true);
             }
 
+            updateSessionCountersUI();
             updateAnalyticsUI();
             persist();
+
+            setTimeout(() => {
+                if (state.activeMode === 'drill' && state.currentView === 'workspace') {
+                    nextDrill();
+                }
+            }, 1250);
         }
 
         function nextDrill() {
             const pool = getFilteredPool();
-            if (!pool.length) return setStatus('All drills in queue completed!');
+            if (!pool.length) return setStatus('No drills in this folder.');
 
-            let nextIdx = -1;
-            if (els.shuffleDrillCheckbox.checked) {
-                const sub = pool.filter(i => i !== state.currentIndex);
-                const candidates = sub.length ? sub : pool;
-                nextIdx = candidates[Math.floor(Math.random() * candidates.length)];
+            if (state.sessionActive) {
+                if (state.sessionDeck.length > 0) {
+                    state.drillHistoryIndexStack.push(state.currentIndex);
+                    state.currentIndex = state.sessionDeck.shift();
+                    state.sessionCurrentDone = false;
+                    loadGame();
+                } else {
+                    // All PGNs in the subfolder have been completed once without any repeats!
+                    state.sessionActive = false;
+                    state.sessionCurrentDone = true;
+                    updateSessionCountersUI();
+                    persist();
+                    setStatus(`🎉 Session Complete! All ${state.sessionTotalCount} drills finished without repeats.`);
+                    setTimeout(() => {
+                        if (confirm(`🎉 Subfolder Session Complete!\n\nYou finished all ${state.sessionTotalCount} PGN drills with zero repeats.\n\nStart a fresh shuffled session now?`)) {
+                            startDrillSession(state.activeSubfolder, state.activeQueueMode);
+                        }
+                    }, 200);
+                }
             } else {
-                nextIdx = pool.find(i => i > state.currentIndex) ?? pool[0];
-            }
-
-            if (nextIdx !== -1) {
-                state.currentIndex = nextIdx;
-                loadGame();
+                startDrillSession(state.activeSubfolder, state.activeQueueMode);
             }
         }
 
         function backToPreviousDrill() {
             if (state.drillHistoryIndexStack.length > 0) {
+                // Put current drill back at the front of the session deck so it isn't lost
+                if (state.sessionActive && !state.sessionDeck.includes(state.currentIndex)) {
+                    state.sessionDeck.unshift(state.currentIndex);
+                }
                 state.currentIndex = state.drillHistoryIndexStack.pop();
                 loadGame();
                 setStatus('Restored previous drill.');
@@ -2608,7 +3016,6 @@
             els.compareModal.classList.remove('hidden');
             const fen1 = state.game.fen();
 
-            // Reference position: final tabiya of current mainline
             state.scratchGame.load(state.initialFen);
             for (const m of state.expectedMoves) {
                 state.scratchGame.move({ from: m.from, to: m.to, promotion: m.promotion || 'q' });
@@ -2647,7 +3054,65 @@
             evalBoard();
             checkSyzygy();
             fetchOpeningBookStats(state.game.fen());
-            setStatus('Sandbox reset to starting position.');
+            setStatus('Sandbox ready: Play moves or toggle 🎙️ Voice Input to speak moves.');
+        }
+
+        // --- Cloud Sync & JSON Serialization (Includes Exact Mid-Session State) ---
+        function updateSyncModalSummary() {
+            if (state.sessionActive && state.sessionTotalCount > 0) {
+                const leftCount = state.sessionDeck.length + (state.sessionCurrentDone ? 0 : 1);
+                const doneCount = state.sessionTotalCount - leftCount;
+                els.syncSessionSummaryBox.textContent = `Active Session: ${state.activeSubfolder} (${doneCount}/${state.sessionTotalCount} done, ${leftCount} left)`;
+            } else {
+                els.syncSessionSummaryBox.textContent = `Session State: No active mid-session queue (${state.pgnList.length} total lines)`;
+            }
+        }
+
+        function buildFullSyncPayload() {
+            return {
+                timestamp: Date.now(),
+                pgnList: state.pgnList,
+                pgnFolders: state.pgnFolders,
+                availableFolders: state.availableFolders,
+                completedGames: [...state.completedGames],
+                mistakeQueue: [...state.mistakeQueue],
+                masteryStreaks: state.masteryStreaks,
+                subfolderStats: state.subfolderStats,
+                currentIndex: state.currentIndex,
+                // Exact Mid-Session Cloud State
+                sessionActive: state.sessionActive,
+                sessionDeck: state.sessionDeck,
+                sessionTotalCount: state.sessionTotalCount,
+                sessionCurrentDone: state.sessionCurrentDone,
+                activeRootCategory: state.activeRootCategory,
+                activeSubfolder: state.activeSubfolder,
+                activeQueueMode: state.activeQueueMode
+            };
+        }
+
+        function applyParsedSyncState(parsed) {
+            state.pgnList = parsed.pgnList || [];
+            state.pgnFolders = parsed.pgnFolders || {};
+            state.availableFolders = parsed.availableFolders || [...DEFAULT_FOLDERS];
+            state.completedGames = new Set(parsed.completedGames || []);
+            state.mistakeQueue = new Set(parsed.mistakeQueue || []);
+            state.masteryStreaks = parsed.masteryStreaks || {};
+            state.subfolderStats = parsed.subfolderStats || {};
+            state.currentIndex = Math.max(0, Math.min(parsed.currentIndex || 0, Math.max(0, state.pgnList.length - 1)));
+
+            // Restore Mid-Session State
+            state.sessionActive = Boolean(parsed.sessionActive);
+            state.sessionDeck = Array.isArray(parsed.sessionDeck)
+                ? parsed.sessionDeck.filter(idx => idx >= 0 && idx < state.pgnList.length)
+                : [];
+            state.sessionTotalCount = parsed.sessionTotalCount || 0;
+            state.sessionCurrentDone = Boolean(parsed.sessionCurrentDone);
+            if (parsed.activeRootCategory !== undefined) state.activeRootCategory = parsed.activeRootCategory;
+            if (parsed.activeSubfolder !== undefined) state.activeSubfolder = parsed.activeSubfolder;
+            if (parsed.activeQueueMode !== undefined) {
+                state.activeQueueMode = parsed.activeQueueMode;
+                els.queueSelect.value = parsed.activeQueueMode;
+            }
         }
 
         async function pushToGist() {
@@ -2657,21 +3122,10 @@
             localStorage.setItem('pgn_pro_sync_gist', syncState.gistId);
 
             if (!syncState.pat || !syncState.gistId) return alert('Enter GitHub Token & Gist ID.');
-            els.syncStatusMessage.textContent = 'Uploading to Gist...';
+            els.syncStatusMessage.textContent = 'Uploading repertoire & mid-session progress to Gist...';
 
             try {
-                const nowTs = Date.now();
-                const payload = JSON.stringify({
-                    timestamp: nowTs,
-                    pgnList: state.pgnList,
-                    pgnFolders: state.pgnFolders,
-                    availableFolders: state.availableFolders,
-                    completedGames: [...state.completedGames],
-                    mistakeQueue: [...state.mistakeQueue],
-                    masteryStreaks: state.masteryStreaks,
-                    subfolderStats: state.subfolderStats,
-                    currentIndex: state.currentIndex
-                }, null, 2);
+                const payload = JSON.stringify(buildFullSyncPayload(), null, 2);
 
                 const res = await fetch(`https://api.github.com/gists/${syncState.gistId}`, {
                     method: 'PATCH',
@@ -2684,9 +3138,10 @@
                 const remoteUpdated = data.updated_at ? new Date(data.updated_at).getTime() : Date.now();
                 localStorage.setItem('pgn_pro_last_sync', String(remoteUpdated));
 
-                els.syncStatusMessage.textContent = 'Uploaded successfully! ✅';
+                els.syncStatusMessage.textContent = 'Uploaded repertoire & exact session state! ✅';
                 markSyncDirty(false);
-                setStatus('Cloud Sync complete.');
+                updateSyncModalSummary();
+                setStatus('Cloud Sync complete (exact session state saved).');
             } catch (err) {
                 els.syncStatusMessage.textContent = `Upload failed: ${err.message}`;
             }
@@ -2699,7 +3154,7 @@
             localStorage.setItem('pgn_pro_sync_gist', syncState.gistId);
 
             if (!syncState.pat || !syncState.gistId) return alert('Enter GitHub Token & Gist ID.');
-            els.syncStatusMessage.textContent = 'Pulling latest state...';
+            els.syncStatusMessage.textContent = 'Pulling latest state from Gist...';
 
             try {
                 const res = await fetch(`https://api.github.com/gists/${syncState.gistId}`, {
@@ -2712,24 +3167,33 @@
                 if (!content) throw new Error('State file not found in Gist.');
 
                 const parsed = JSON.parse(content);
-                state.pgnList = parsed.pgnList || [];
-                state.pgnFolders = parsed.pgnFolders || {};
-                state.availableFolders = parsed.availableFolders || [...DEFAULT_FOLDERS];
-                state.completedGames = new Set(parsed.completedGames || []);
-                state.mistakeQueue = new Set(parsed.mistakeQueue || []);
-                state.masteryStreaks = parsed.masteryStreaks || {};
-                state.subfolderStats = parsed.subfolderStats || {};
-                state.currentIndex = Math.max(0, Math.min(parsed.currentIndex || 0, Math.max(0, state.pgnList.length - 1)));
+                applyParsedSyncState(parsed);
 
                 const remoteUpdated = data.updated_at ? new Date(data.updated_at).getTime() : Date.now();
                 localStorage.setItem('pgn_pro_last_sync', String(remoteUpdated));
 
                 persist();
                 markSyncDirty(false);
-                els.syncStatusMessage.textContent = 'Restored successfully! ✅';
+                updateSyncModalSummary();
+                els.syncStatusMessage.textContent = 'Restored repertoire & session progress! ✅';
                 els.cloudUpdateToast.classList.add('hidden');
                 updateDashboard();
-                if (state.currentView === 'workspace') loadGame();
+                updateAnalyticsUI();
+
+                if (state.sessionActive && state.sessionTotalCount > 0) {
+                    // If current drill was already completed before upload, advance to the next remaining one
+                    if (state.sessionCurrentDone && state.sessionDeck.length > 0) {
+                        state.currentIndex = state.sessionDeck.shift();
+                        state.sessionCurrentDone = false;
+                        persist();
+                    }
+                    state.activeMode = 'drill';
+                    switchView('workspace');
+                    const leftCount = state.sessionDeck.length + 1;
+                    setStatus(`☁️ Resumed cloud session! ${leftCount}/${state.sessionTotalCount} drills remaining.`);
+                } else if (state.currentView === 'workspace') {
+                    loadGame();
+                }
             } catch (err) {
                 els.syncStatusMessage.textContent = `Pull failed: ${err.message}`;
             }
@@ -2762,19 +3226,9 @@
         }
 
         function exportLocalJson() {
-            const data = {
-                timestamp: Date.now(),
-                pgnList: state.pgnList,
-                pgnFolders: state.pgnFolders,
-                availableFolders: state.availableFolders,
-                completedGames: [...state.completedGames],
-                mistakeQueue: [...state.mistakeQueue],
-                masteryStreaks: state.masteryStreaks,
-                subfolderStats: state.subfolderStats
-            };
             downloadTextFile(
                 `pgn_drills_backup_${new Date().toISOString().slice(0, 10)}.json`,
-                JSON.stringify(data, null, 2),
+                JSON.stringify(buildFullSyncPayload(), null, 2),
                 'application/json'
             );
         }
@@ -2786,15 +3240,9 @@
             r.onload = ev => {
                 try {
                     const d = JSON.parse(ev.target.result);
-                    state.pgnList = d.pgnList || [];
-                    state.pgnFolders = d.pgnFolders || {};
-                    state.availableFolders = d.availableFolders || [...DEFAULT_FOLDERS];
-                    state.completedGames = new Set(d.completedGames || []);
-                    state.mistakeQueue = new Set(d.mistakeQueue || []);
-                    state.masteryStreaks = d.masteryStreaks || {};
-                    state.subfolderStats = d.subfolderStats || {};
+                    applyParsedSyncState(d);
                     persist();
-                    alert('Backup restored successfully!');
+                    alert('Backup (including session progress) restored successfully!');
                     location.reload();
                 } catch (err) {
                     alert('Invalid JSON file format.');
@@ -2839,7 +3287,7 @@
             }
         }
 
-        // --- Chessboard Instance Initializer (Safe to call multiple times) ---
+        // --- Chessboard Instance Initializer ---
         function initBoard() {
             const prevOrientation = state.board ? state.board.orientation() : 'white';
             if (state.board) {
@@ -2882,11 +3330,10 @@
             renderLastMoveHighlights();
         }
 
-        // --- Event Wiring (Called Once at Boot) ---
+        // --- Event Wiring ---
         function initEvents() {
             initBoard();
 
-            // Touch & Click interaction on #board
             let tX = 0, tY = 0, moved = false;
             els.board.addEventListener('touchstart', e => {
                 if (e.touches.length === 1) { tX = e.touches[0].clientX; tY = e.touches[0].clientY; moved = false; }
@@ -2967,21 +3414,31 @@
                 switchView('workspace');
             };
 
+            els.homeResumeSessionBtn.onclick = () => {
+                if (state.sessionActive) {
+                    if (state.sessionCurrentDone && state.sessionDeck.length > 0) {
+                        state.currentIndex = state.sessionDeck.shift();
+                        state.sessionCurrentDone = false;
+                        persist();
+                    }
+                    state.activeMode = 'drill';
+                    switchView('workspace');
+                }
+            };
+
             els.homeDrillAllMistakesBtn.onclick = () => {
                 if (!state.mistakeQueue.size) return alert('Mistakes Queue is currently empty! Good job.');
-                state.activeQueueMode = 'mistakes';
-                els.queueSelect.value = 'mistakes';
-                state.activeSubfolder = 'all';
                 state.activeRootCategory = null;
-                state.targetLaunchMode = state.activeMode = 'drill';
-                updateAnalyticsUI();
-                switchView('workspace');
+                startDrillSession('all', 'mistakes');
             };
 
             els.queueSelect.onchange = e => {
-                state.activeQueueMode = e.target.value;
-                updateAnalyticsUI();
-                loadGame();
+                startDrillSession(state.activeSubfolder, e.target.value);
+            };
+
+            els.restartSessionDeckBtn.onclick = () => {
+                startDrillSession(state.activeSubfolder, state.activeQueueMode);
+                setStatus('🔀 Session reshuffled! All drills in subfolder queued.');
             };
 
             // Folder Hub Navigation
@@ -3000,16 +3457,37 @@
                     renderFolderHub();
                 }
             });
+
+            // Subfolder Click: Starts Shuffled Non-Repeating Drill Session when in Drill Mode
             els.subfolderList.addEventListener('click', e => {
                 const b = e.target.closest('.select-subfolder-btn');
                 if (b) {
-                    state.activeSubfolder = b.dataset.folder;
-                    state.activeQueueMode = 'all';
-                    els.queueSelect.value = 'all';
-                    state.activeMode = state.targetLaunchMode;
-                    switchView('workspace');
+                    const chosenFolder = b.dataset.folder;
+                    if (state.targetLaunchMode === 'drill') {
+                        // If an incomplete session already exists for this exact subfolder, ask whether to resume or start fresh
+                        if (state.sessionActive && state.activeSubfolder === chosenFolder && state.sessionDeck.length > 0) {
+                            const leftCount = state.sessionDeck.length + (state.sessionCurrentDone ? 0 : 1);
+                            if (confirm(`You have an active session in "${chosenFolder.split('/').pop()}" with ${leftCount}/${state.sessionTotalCount} drills remaining.\n\nClick OK to Resume where you left off, or Cancel to start a brand-new shuffled session.`)) {
+                                if (state.sessionCurrentDone && state.sessionDeck.length > 0) {
+                                    state.currentIndex = state.sessionDeck.shift();
+                                    state.sessionCurrentDone = false;
+                                }
+                                state.activeMode = 'drill';
+                                switchView('workspace');
+                                return;
+                            }
+                        }
+                        startDrillSession(chosenFolder, 'all');
+                    } else {
+                        state.activeSubfolder = chosenFolder;
+                        state.activeQueueMode = 'all';
+                        els.queueSelect.value = 'all';
+                        state.activeMode = 'explore';
+                        switchView('workspace');
+                    }
                 }
             });
+
             els.cleanEmptyFoldersBtn.onclick = pruneEmptyFolders;
             els.createSubfolderBtn.onclick = () => {
                 const name = prompt(`Enter new subfolder name under '${state.activeRootCategory}/':`);
@@ -3021,7 +3499,6 @@
                 renderFolderHub();
             };
 
-            // Back to folders button above chessboard
             els.wsBackToFoldersBtn.onclick = () => {
                 if (oppMoveTimer) { clearTimeout(oppMoveTimer); oppMoveTimer = null; }
                 state.game.reset();
@@ -3044,12 +3521,10 @@
                 fetchOpeningBookStats(state.game.fen());
             };
 
-            // Play as White/Black/Auto toggle event listeners
             els.togglePlayWhiteBtn.onclick = () => setPlaySide('w');
             els.togglePlayBlackBtn.onclick = () => setPlaySide('b');
             els.togglePlayAutoBtn.onclick = () => setPlaySide('auto');
 
-            // Drill Mode Engine Show / Hide Toggle
             els.drillToggleEngineBtn.onclick = () => {
                 state.drillShowEngine = !state.drillShowEngine;
                 els.drillToggleEngineBtn.textContent = state.drillShowEngine ? 'Engine: On' : 'Engine: Off';
@@ -3212,7 +3687,8 @@
                 }
             });
 
-            // Sandbox Controls
+            // Sandbox Controls (Including Continuous Voice Input)
+            els.sandboxVoiceBtn.onclick = toggleSandboxVoice;
             els.sandboxResetBtn.onclick = initSandboxWorkspace;
             els.sandboxUndoBtn.onclick = () => {
                 state.game.undo();
@@ -3317,6 +3793,7 @@
             els.openSyncModalBtn.onclick = els.mobileNavSyncBtn.onclick = () => {
                 els.syncPatInput.value = syncState.pat;
                 els.syncGistIdInput.value = syncState.gistId;
+                updateSyncModalSummary();
                 els.syncModal.classList.remove('hidden');
             };
             els.closeSyncModalBtn.onclick = () => els.syncModal.classList.add('hidden');
@@ -3372,6 +3849,10 @@
                 state.pgnList.push(...games);
                 for (let i = startIdx; i < state.pgnList.length; i++) {
                     state.pgnFolders[i] = targetFolder;
+                    if (state.sessionActive && (state.activeSubfolder === 'all' || state.activeSubfolder === targetFolder)) {
+                        state.sessionDeck.push(i);
+                        state.sessionTotalCount++;
+                    }
                 }
                 persist();
                 updateDashboard();
