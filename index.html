@@ -141,7 +141,7 @@
       </div>
       <div id="engineSection" class="space-y-1">
         <div class="flex justify-between items-center text-xs"><span class="text-gray-400 font-mono text-[11px] font-bold">Stockfish (<span id="engineVersionBadge" class="text-teal-400 font-bold">Loading...</span> MultiPV 3)</span><div class="flex items-center gap-2 text-[10px]"><span class="text-gray-400">WDL: <b id="wdlText" class="text-teal-400 font-mono">50/50</b></span><span class="text-gray-500">Depth:</span><input type="number" id="engineDepthInput" min="10" max="25" value="18" class="w-10 bg-gray-950 border border-gray-700 rounded px-1 py-0.5 text-center text-white text-[11px]"></div></div>
-        <div id="engineLinesBox" class="text-xs font-mono text-gray-300 bg-gray-950 p-2 rounded h-20 overflow-y-auto flex flex-col gap-1 border border-gray-800 cursor-pointer"><div class="pv-line truncate hover:text-teal-300" data-pv="1">1. <span class="text-gray-500">Booting Stockfish WASM...</span></div><div class="pv-line truncate hover:text-teal-300" data-pv="2">2. <span class="text-gray-500">Booting Stockfish WASM...</span></div><div class="pv-line truncate hover:text-teal-300" data-pv="3">3. <span class="text-gray-500">Booting Stockfish WASM...</span></div></div>
+        <div id="engineLinesBox" class="text-xs font-mono text-gray-300 bg-gray-950 p-2 rounded h-20 overflow-y-auto flex flex-col gap-1 border border-gray-800 cursor-pointer"><div class="pv-line truncate hover:text-teal-300" data-pv="1">1. <span class="text-gray-500">Booting Native WASM Worker...</span></div><div class="pv-line truncate hover:text-teal-300" data-pv="2">2. <span class="text-gray-500">Booting Native WASM Worker...</span></div><div class="pv-line truncate hover:text-teal-300" data-pv="3">3. <span class="text-gray-500">Booting Native WASM Worker...</span></div></div>
       </div>
       <div id="drillStatsSection" class="drill-only space-y-2 bg-gray-950/60 p-2.5 rounded-lg border border-gray-800">
         <div class="flex items-center justify-between text-xs font-mono"><span class="text-gray-400">Accuracy: <b id="statAccuracy" class="text-green-400">100%</b></span><span class="text-gray-400">Speed: <b id="statAvgTime" class="text-blue-400">0.0s</b></span><span class="text-gray-400">Level: <b id="statMasteryLevel" class="text-amber-400">Bronze</b></span></div>
@@ -644,15 +644,14 @@ function formatEnginePv(fen,pvStr){
 }
 
 function initStockfish(){
-  const src=`var q=[];self.onmessage=function(e){q.push(e.data);};function flush(){while(q.length&&typeof self.onmessage==='function')self.onmessage({data:q.shift()});}var urls=[['https://unpkg.com/stockfish@19.0.1/bin/stockfish-19-lite-single.js','NNUE 19'],['https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/stockfish-19-lite-single.js','NNUE 19'],['https://unpkg.com/stockfish@16.0.0/src/stockfish-nnue-16-single.js','NNUE 16'],['https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/stockfish-nnue-16-single.js','NNUE 16'],['https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js','SF 10.0']];function tryLoad(idx){if(idx>=urls.length){self.postMessage('sf_err');return;}var u=urls[idx][0],label=urls[idx][1],base=u.substring(0,u.lastIndexOf('/')+1);self.Module={locateFile:function(p){return base+p;}};try{self.onmessage=null;importScripts(u);if(typeof self.onmessage==='function'){self.postMessage('sf_ver:'+label);var oldP=self.postMessage,fl=false;self.postMessage=function(m){if(!fl){fl=true;setTimeout(flush,10);}oldP.apply(self,arguments);};setTimeout(function(){if(!fl){fl=true;flush();}},1500);}else if(typeof Stockfish==='function'){Stockfish({locateFile:function(p){return base+p;}}).then(function(sf){sf.addMessageListener(function(l){self.postMessage(l);});self.onmessage=function(e){sf.postMessage(e.data);};self.postMessage('sf_ver:'+label);while(q.length)sf.postMessage(q.shift());}).catch(function(){tryLoad(idx+1);});}else{setTimeout(function(){if(typeof self.onmessage==='function'){self.postMessage('sf_ver:'+label);flush();}else tryLoad(idx+1);},250);}}catch(e){tryLoad(idx+1);}}tryLoad(0);`;
   try{
-    engineWorker=new Worker(URL.createObjectURL(new Blob([src],{type:'application/javascript'})));
-    engineWorker.postMessage('uci');engineWorker.postMessage('setoption name MultiPV value 3');engineWorker.postMessage('isready');
+    engineWorker=new Worker('stockfish.js');
+    engineWorker.postMessage('uci');
+    engineWorker.postMessage('setoption name MultiPV value 3');
+    engineWorker.postMessage('isready');
     engineWorker.onmessage=e=>{
       const l=String(e.data||'');
-      if(l.startsWith('sf_ver:'))$('engineVersionBadge').textContent=l.slice(7);
-      else if(l.includes('Stockfish 19'))$('engineVersionBadge').textContent='NNUE 19';
-      else if(l.includes('Stockfish 10'))$('engineVersionBadge').textContent='SF 10.0';
+      if(l.includes('Stockfish 19'))$('engineVersionBadge').textContent='NNUE 19';
       if(l.startsWith('bestmove')){
         isEngineSearching=false;
         if(state._pendingEval){
@@ -689,7 +688,7 @@ function initStockfish(){
         }
       }
     };
-  }catch(e){}
+  }catch(err){console.error('Engine boot error:',err);}
 }
 
 function triggerSparMove(){
