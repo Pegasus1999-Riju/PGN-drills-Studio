@@ -10,22 +10,11 @@
 <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <style>
-.highlight-hint{box-shadow:inset 0 0 4px 4px #eab308!important}
-.highlight-selected{background-color:rgba(59,130,246,.45)!important}
-.highlight-last-from{background-color:rgba(234,179,8,.35)!important}
-.highlight-last-to{background-color:rgba(234,179,8,.5)!important}
-.highlight-check{background-color:rgba(239,68,68,.6)!important;box-shadow:inset 0 0 6px 6px #dc2626!important}
-.legal-dot::after,.legal-capture::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:5}
-.legal-dot::after{width:28%;height:28%;background-color:rgba(0,0,0,.35)}
-.legal-capture::after{width:78%;height:78%;border:4px solid rgba(0,0,0,.35)}
-.theme-brown .white-1e1d7{background-color:var(--board-light,#f0d9b5)!important;color:var(--board-dark,#b58863)}
-.theme-brown .black-3c85d{background-color:var(--board-dark,#b58863)!important;color:var(--board-light,#f0d9b5)}
-.theme-oled,.theme-oled header,.theme-oled main,.theme-oled section{background-color:#000!important;color:#e5e7eb!important}
-.theme-oled .bg-gray-900,.theme-oled .bg-gray-950{background-color:#050505!important;border-color:#1f2937!important}
-#board-wrapper,#board,#board-comp-1,#board-comp-2{touch-action:none!important;user-select:none!important}
-#board img,#board-comp-1 img,#board-comp-2 img{-webkit-user-drag:none}
-#arrowCanvas{pointer-events:none;position:absolute;top:0;left:0;z-index:20}
-.branch-move{color:#38bdf8;font-style:italic;cursor:pointer;padding:1px 3px;border-radius:3px}
+.highlight-hint{box-shadow:inset 0 0 4px 4px #eab308!important}.highlight-selected{background-color:rgba(59,130,246,.45)!important}.highlight-last-from{background-color:rgba(234,179,8,.35)!important}.highlight-last-to{background-color:rgba(234,179,8,.5)!important}.highlight-check{background-color:rgba(239,68,68,.6)!important;box-shadow:inset 0 0 6px 6px #dc2626!important}
+.legal-dot::after,.legal-capture::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:5}.legal-dot::after{width:28%;height:28%;background-color:rgba(0,0,0,.35)}.legal-capture::after{width:78%;height:78%;border:4px solid rgba(0,0,0,.35)}
+.theme-brown .white-1e1d7{background-color:var(--board-light,#f0d9b5)!important;color:var(--board-dark,#b58863)}.theme-brown .black-3c85d{background-color:var(--board-dark,#b58863)!important;color:var(--board-light,#f0d9b5)}
+.theme-oled,.theme-oled header,.theme-oled main,.theme-oled section{background-color:#000!important;color:#e5e7eb!important}.theme-oled .bg-gray-900,.theme-oled .bg-gray-950{background-color:#050505!important;border-color:#1f2937!important}
+#board-wrapper,#board,#board-comp-1,#board-comp-2{touch-action:none!important;user-select:none!important}#board img,#board-comp-1 img,#board-comp-2 img{-webkit-user-drag:none}#arrowCanvas{pointer-events:none;position:absolute;top:0;left:0;z-index:20}.branch-move{color:#38bdf8;font-style:italic;cursor:pointer;padding:1px 3px;border-radius:3px}
 </style>
 </head>
 <body id="appBody" class="bg-gray-950 text-gray-100 min-h-screen font-sans select-none flex flex-col pb-14 sm:pb-0">
@@ -36,78 +25,33 @@
 </div>
 <header class="bg-gray-900 border-b border-gray-800 px-3 sm:px-5 py-2.5 flex items-center justify-between sticky top-0 z-30 shadow-md">
   <div class="flex items-center gap-2 sm:gap-3">
-    <button data-act="navHome" class="flex items-center gap-1.5 text-white font-bold hover:opacity-90">
-      <span class="text-xl">♟️</span>
-      <span class="text-sm sm:text-lg">PGN Drills <span class="text-teal-400 font-mono text-[10px] uppercase px-1.5 py-0.5 bg-teal-950 border border-teal-800 rounded">Pro</span></span>
-    </button>
-    <div id="breadcrumbBar" class="hidden text-xs text-gray-400 items-center gap-1.5 pl-2 sm:pl-3 border-l border-gray-800">
-      <span data-act="openCategories" class="hover:text-white cursor-pointer">Categories</span><span>/</span>
-      <span id="breadcrumbSub" class="text-teal-300 font-semibold truncate max-w-[140px] sm:max-w-[200px]"></span>
-    </div>
+    <button data-act="navHome" class="flex items-center gap-1.5 text-white font-bold hover:opacity-90"><span class="text-xl">♟️</span><span class="text-sm sm:text-lg">PGN Drills <span class="text-teal-400 font-mono text-[10px] uppercase px-1.5 py-0.5 bg-teal-950 border border-teal-800 rounded">Pro</span></span></button>
+    <div id="breadcrumbBar" class="hidden text-xs text-gray-400 items-center gap-1.5 pl-2 sm:pl-3 border-l border-gray-800"><span data-act="openCategories" class="hover:text-white cursor-pointer">Categories</span><span>/</span><span id="breadcrumbSub" class="text-teal-300 font-semibold truncate max-w-[140px] sm:max-w-[200px]"></span></div>
   </div>
   <div class="flex items-center gap-1.5 sm:gap-2">
     <button data-act="openBoardSettings" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2 py-1 rounded text-xs text-amber-300 font-medium">🎨 <span class="hidden md:inline">Board</span></button>
-    <button data-act="openSyncModal" class="relative bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2.5 py-1 rounded text-xs text-teal-300 font-medium flex items-center gap-1.5">
-      <span id="syncDirtyDot" class="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-gray-900"></span><span>☁️</span><span class="hidden sm:inline">Sync</span>
-    </button>
+    <button data-act="openSyncModal" class="relative bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2.5 py-1 rounded text-xs text-teal-300 font-medium flex items-center gap-1.5"><span id="syncDirtyDot" class="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-gray-900"></span><span>☁️</span><span class="hidden sm:inline">Sync</span></button>
     <button data-act="openSettingsModal" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2.5 py-1 rounded text-xs text-gray-300">⚙️</button>
   </div>
 </header>
 <main class="flex-1 max-w-6xl w-full mx-auto p-2.5 sm:p-5 flex flex-col justify-center">
   <section id="viewHome" class="space-y-6 max-w-4xl mx-auto w-full py-2">
-    <div class="text-center space-y-1">
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Chess Repertoire Gym</h1>
-      <p class="text-xs sm:text-sm text-gray-400">Recall under pressure, explore deep engine variations, and annotate your lines.</p>
-    </div>
+    <div class="text-center space-y-1"><h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Chess Repertoire Gym</h1><p class="text-xs sm:text-sm text-gray-400">Recall under pressure, explore Stockfish 19 NNUE variations, and split full PGN studies automatically.</p></div>
     <div id="homeResumeBanner" class="hidden bg-indigo-950/70 border border-indigo-600/80 p-3.5 rounded-xl flex items-center justify-between shadow-lg">
-      <div class="space-y-0.5">
-        <div class="text-xs font-bold text-indigo-200 flex items-center gap-1.5">
-          <span>⏱️ Active Drill Session In Progress</span>
-          <span id="homeResumeBadge" class="bg-indigo-900 text-indigo-300 px-2 py-0.5 rounded font-mono text-[10px]"></span>
-        </div>
-        <p id="homeResumeStatsText" class="text-[11px] text-gray-300 font-mono"></p>
-      </div>
+      <div class="space-y-0.5"><div class="text-xs font-bold text-indigo-200 flex items-center gap-1.5"><span>⏱️ Active Drill Session In Progress</span><span id="homeResumeBadge" class="bg-indigo-900 text-indigo-300 px-2 py-0.5 rounded font-mono text-[10px]"></span></div><p id="homeResumeStatsText" class="text-[11px] text-gray-300 font-mono"></p></div>
       <button data-act="resumeSession" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-xs shadow">Resume &rarr;</button>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <button data-act="launchDrill" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-indigo-950/40 border border-gray-800 hover:border-indigo-500/80 p-4 sm:p-5 rounded-xl text-left shadow-xl flex flex-col justify-between">
-        <div class="space-y-2">
-          <div class="flex items-center justify-between"><span class="text-3xl">🎯</span><span class="text-[10px] font-mono tracking-widest bg-indigo-900/60 border border-indigo-700/60 text-indigo-300 px-2 py-0.5 rounded uppercase">Recall</span></div>
-          <h2 class="text-base sm:text-lg font-bold text-white group-hover:text-indigo-400">Drill Mode</h2>
-          <p class="text-xs text-gray-400 leading-relaxed">Shuffled non-repeating subfolder sessions, live remaining counter, manual next control, and cloud save.</p>
-        </div>
-        <div class="mt-4 pt-3 border-t border-gray-800 text-xs font-semibold text-indigo-400">Select Category &rarr;</div>
-      </button>
-      <button data-act="launchExplore" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-teal-950/40 border border-gray-800 hover:border-teal-500/80 p-4 sm:p-5 rounded-xl text-left shadow-xl flex flex-col justify-between">
-        <div class="space-y-2">
-          <div class="flex items-center justify-between"><span class="text-3xl">🧭</span><span class="text-[10px] font-mono tracking-widest bg-teal-900/60 border border-teal-700/60 text-teal-300 px-2 py-0.5 rounded uppercase">Analysis</span></div>
-          <h2 class="text-base sm:text-lg font-bold text-white group-hover:text-teal-400">Explore Mode</h2>
-          <p class="text-xs text-gray-400 leading-relaxed">Stockfish NNUE, Syzygy 7-piece tablebases, Lichess Masters book stats, position compare, and move notes.</p>
-        </div>
-        <div class="mt-4 pt-3 border-t border-gray-800 text-xs font-semibold text-teal-400">Browse Repertoire &rarr;</div>
-      </button>
-      <button data-act="launchSandbox" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-amber-950/40 border border-gray-800 hover:border-amber-500/80 p-4 sm:p-5 rounded-xl text-left shadow-xl flex flex-col justify-between">
-        <div class="space-y-2">
-          <div class="flex items-center justify-between"><span class="text-3xl">♟️</span><span class="text-[10px] font-mono tracking-widest bg-amber-900/60 border border-amber-700/60 text-amber-300 px-2 py-0.5 rounded uppercase">Laboratory</span></div>
-          <h2 class="text-base sm:text-lg font-bold text-white group-hover:text-amber-400">Sandbox Lab</h2>
-          <p class="text-xs text-gray-400 leading-relaxed">Freeform position drafting, engine testing, move commentary, and direct PGN drill export.</p>
-        </div>
-        <div class="mt-4 pt-3 border-t border-gray-800 text-xs font-semibold text-amber-400">Open Blank Lab &rarr;</div>
-      </button>
+      <button data-act="launchDrill" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-indigo-950/40 border border-gray-800 hover:border-indigo-500/80 p-4 sm:p-5 rounded-xl text-left shadow-xl flex flex-col justify-between"><div class="space-y-2"><div class="flex items-center justify-between"><span class="text-3xl">🎯</span><span class="text-[10px] font-mono tracking-widest bg-indigo-900/60 border border-indigo-700/60 text-indigo-300 px-2 py-0.5 rounded uppercase">Recall</span></div><h2 class="text-base sm:text-lg font-bold text-white group-hover:text-indigo-400">Drill Mode</h2><p class="text-xs text-gray-400 leading-relaxed">Shuffled non-repeating subfolder sessions, live remaining counter, manual next control, and cloud save.</p></div><div class="mt-4 pt-3 border-t border-gray-800 text-xs font-semibold text-indigo-400">Select Category &rarr;</div></button>
+      <button data-act="launchExplore" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-teal-950/40 border border-gray-800 hover:border-teal-500/80 p-4 sm:p-5 rounded-xl text-left shadow-xl flex flex-col justify-between"><div class="space-y-2"><div class="flex items-center justify-between"><span class="text-3xl">🧭</span><span class="text-[10px] font-mono tracking-widest bg-teal-900/60 border border-teal-700/60 text-teal-300 px-2 py-0.5 rounded uppercase">Analysis</span></div><h2 class="text-base sm:text-lg font-bold text-white group-hover:text-teal-400">Explore Mode</h2><p class="text-xs text-gray-400 leading-relaxed">Stockfish 19 NNUE, Syzygy 7-piece tablebases, Lichess Masters book stats, position compare, and move notes.</p></div><div class="mt-4 pt-3 border-t border-gray-800 text-xs font-semibold text-teal-400">Browse Repertoire &rarr;</div></button>
+      <button data-act="launchSandbox" class="group bg-gradient-to-b from-gray-900 to-gray-900/90 hover:from-amber-950/40 border border-gray-800 hover:border-amber-500/80 p-4 sm:p-5 rounded-xl text-left shadow-xl flex flex-col justify-between"><div class="space-y-2"><div class="flex items-center justify-between"><span class="text-3xl">♟️</span><span class="text-[10px] font-mono tracking-widest bg-amber-900/60 border border-amber-700/60 text-amber-300 px-2 py-0.5 rounded uppercase">Laboratory</span></div><h2 class="text-base sm:text-lg font-bold text-white group-hover:text-amber-400">Sandbox Lab</h2><p class="text-xs text-gray-400 leading-relaxed">Freeform position drafting, Stockfish 19 testing, move commentary, and direct PGN drill export.</p></div><div class="mt-4 pt-3 border-t border-gray-800 text-xs font-semibold text-amber-400">Open Blank Lab &rarr;</div></button>
     </div>
     <div class="bg-gray-900 border border-gray-800 p-4 sm:p-5 rounded-xl shadow-xl space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-3">
-        <div>
-          <h3 class="text-sm font-bold text-white flex items-center gap-2">📊 Subfolder Gold Medal Mastery Bar Chart</h3>
-          <p class="text-[11px] text-gray-400">Calculated as: (Gold Medals Acquired ⭐ / Total Lines in Subfolder) × 100%.</p>
-        </div>
+        <div><h3 class="text-sm font-bold text-white flex items-center gap-2">📊 Subfolder Gold Medal Mastery Bar Chart</h3><p class="text-[11px] text-gray-400">Calculated as: (Gold Medals Acquired ⭐ / Total Lines in Subfolder) × 100%.</p></div>
         <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-          <button data-act="drillFavorites" class="px-3 py-1 bg-pink-700 hover:bg-pink-600 text-white rounded font-bold text-xs shadow flex items-center gap-1">
-            ❤️ Test Favourites (<span id="homeFavCountBadge">0</span>)
-          </button>
-          <button data-act="drillMistakes" class="px-3 py-1 bg-rose-700 hover:bg-rose-600 text-white rounded font-bold text-xs shadow flex items-center gap-1">
-            🔥 Test Mistakes (<span id="homeMistakeCountBadge">0</span>)
-          </button>
+          <button data-act="drillFavorites" class="px-3 py-1 bg-pink-700 hover:bg-pink-600 text-white rounded font-bold text-xs shadow flex items-center gap-1">❤️ Test Favourites (<span id="homeFavCountBadge">0</span>)</button>
+          <button data-act="drillMistakes" class="px-3 py-1 bg-rose-700 hover:bg-rose-600 text-white rounded font-bold text-xs shadow flex items-center gap-1">🔥 Test Mistakes (<span id="homeMistakeCountBadge">0</span>)</button>
         </div>
       </div>
       <div id="subfolderAccuracyChartContainer" class="space-y-2.5 max-h-56 overflow-y-auto pr-1"></div>
@@ -117,13 +61,9 @@
       </div>
     </div>
   </section>
-
   <section id="viewFolderHub" class="hidden space-y-4 max-w-4xl mx-auto w-full py-2">
     <div class="flex items-center justify-between border-b border-gray-800 pb-3">
-      <div class="flex items-center gap-2">
-        <button data-act="folderBack" class="text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2.5 py-1 rounded text-gray-300 font-semibold">&larr; Back</button>
-        <h2 id="folderHubTitle" class="text-sm sm:text-base font-bold text-white">Select a Category</h2>
-      </div>
+      <div class="flex items-center gap-2"><button data-act="folderBack" class="text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2.5 py-1 rounded text-gray-300 font-semibold">&larr; Back</button><h2 id="folderHubTitle" class="text-sm sm:text-base font-bold text-white">Select a Category</h2></div>
       <div id="targetModeBadge" class="text-xs uppercase font-mono font-bold px-2 py-0.5 rounded"></div>
     </div>
     <div id="rootFolderDeck" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -132,22 +72,15 @@
       <button class="root-cat group bg-gray-900 hover:bg-gray-850 border border-gray-800 p-4 rounded-lg text-left shadow" data-root="Endgames"><div class="text-2xl mb-1">👑</div><h3 class="text-sm font-bold text-white group-hover:text-teal-400">Endgames</h3><p class="text-[11px] text-gray-400 mt-1" id="countEndgames">0 drills</p></button>
     </div>
     <div id="subfolderDeckContainer" class="hidden space-y-3">
-      <div class="flex items-center justify-between">
-        <span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Subfolders in <span id="currentRootName" class="text-teal-300"></span></span>
-        <div class="flex items-center gap-2">
-          <button data-act="newSubfolder" class="text-xs bg-teal-800 hover:bg-teal-700 text-teal-100 px-2.5 py-1 rounded font-semibold">+ New Subfolder</button>
-        </div>
-      </div>
+      <div class="flex items-center justify-between"><span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Subfolders in <span id="currentRootName" class="text-teal-300"></span></span><button data-act="newSubfolder" class="text-xs bg-teal-800 hover:bg-teal-700 text-teal-100 px-2.5 py-1 rounded font-semibold">+ New Subfolder</button></div>
       <div id="subfolderList" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs"></div>
     </div>
   </section>
-
   <section id="viewWorkspace" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-5 w-full">
     <div class="lg:col-span-7 flex flex-col items-center relative">
       <div class="w-full max-w-[440px] flex justify-between items-center mb-1.5 px-1 text-xs">
         <div class="flex items-center gap-1.5 truncate">
-          <button data-act="openCategories" class="text-teal-400 font-bold px-1.5 py-0.5 bg-gray-800 rounded border border-gray-700">&larr; Folders</button>
-          <span class="text-gray-600">|</span>
+          <button data-act="openCategories" class="text-teal-400 font-bold px-1.5 py-0.5 bg-gray-800 rounded border border-gray-700">&larr; Folders</button><span class="text-gray-600">|</span>
           <span id="wsScopeName" class="font-bold text-teal-300 truncate max-w-[130px] sm:max-w-[170px]">All Games</span>
           <span id="wsMasteryStarBadge" class="hidden text-amber-400 text-xs font-bold" title="Mastery Streak">⭐</span>
           <button data-act="toggleCurrentFav" id="wsFavBtn" class="px-1 text-sm hover:scale-110 transition-transform" title="Toggle Favourite">🤍</button>
@@ -160,23 +93,14 @@
         </div>
       </div>
       <div id="syzygyBanner" class="hidden w-full max-w-[440px] mb-1 bg-purple-950/80 border border-purple-600/50 text-purple-200 text-xs px-2.5 py-1 rounded-lg text-center shadow font-mono"></div>
-      
-      <!-- High Contrast Tactical Coach Note Banner -->
       <div id="coachNote" class="hidden w-full max-w-[440px] mb-2 bg-gradient-to-r from-amber-950/80 via-amber-900/40 to-gray-900/90 border-l-4 border-l-amber-400 border-y border-r border-amber-500/30 text-amber-100 text-xs px-3 py-2 rounded-r-lg shadow-[0_0_15px_rgba(251,191,36,0.15)] flex items-start gap-2 text-left"></div>
-      
       <div id="masterBookBanner" class="hidden w-full max-w-[440px] mb-1.5 bg-gray-900 border border-gray-800 text-gray-300 text-[11px] px-2.5 py-1 rounded text-center font-mono"></div>
       <div id="board-wrapper" class="relative flex items-center justify-center gap-2 w-full max-w-[470px]">
-        <div id="evalBarWrapper" class="w-4 h-[320px] sm:h-[380px] bg-gray-800 rounded-full overflow-hidden flex flex-col justify-end border border-gray-700 shadow relative">
-          <div id="evalBarWhite" class="w-full bg-gray-100 transition-all duration-300" style="height:50%"></div>
-          <span id="evalBarScoreText" class="absolute inset-x-0 bottom-1 text-[9px] font-mono font-bold text-center text-gray-900 pointer-events-none">+0.0</span>
-        </div>
+        <div id="evalBarWrapper" class="w-4 h-[320px] sm:h-[380px] bg-gray-800 rounded-full overflow-hidden flex flex-col justify-end border border-gray-700 shadow relative"><div id="evalBarWhite" class="w-full bg-gray-100 transition-all duration-300" style="height:50%"></div><span id="evalBarScoreText" class="absolute inset-x-0 bottom-1 text-[9px] font-mono font-bold text-center text-gray-900 pointer-events-none">+0.0</span></div>
         <div class="relative theme-brown" id="boardThemeContainer">
           <div id="board" class="w-[320px] sm:w-[380px] aspect-square rounded shadow-2xl relative"></div>
           <canvas id="arrowCanvas" class="w-[320px] sm:w-[380px] h-[320px] sm:h-[380px] rounded"></canvas>
-          <div id="promoModal" class="hidden absolute inset-0 bg-black/85 rounded flex flex-col items-center justify-center z-50">
-            <span class="text-xs font-bold text-white mb-3 uppercase tracking-wider">Choose Promotion Piece</span>
-            <div id="promoChoices" class="flex gap-2 bg-gray-900 p-3 rounded-lg border border-gray-700"></div>
-          </div>
+          <div id="promoModal" class="hidden absolute inset-0 bg-black/85 rounded flex flex-col items-center justify-center z-50"><span class="text-xs font-bold text-white mb-3 uppercase tracking-wider">Choose Promotion Piece</span><div id="promoChoices" class="flex gap-2 bg-gray-900 p-3 rounded-lg border border-gray-700"></div></div>
         </div>
       </div>
       <div class="mt-2 w-full max-w-[440px] flex items-center justify-center gap-2 bg-gray-900 p-1.5 rounded-lg border border-gray-800 text-xs">
@@ -185,10 +109,7 @@
         <button data-act="setSide" data-side="b" id="sideBBtn" class="px-3 py-1 rounded font-bold border border-gray-700 bg-gray-800 text-gray-300">⚫ Black</button>
         <button data-act="setSide" data-side="auto" id="sideAutoBtn" class="px-2.5 py-1 rounded font-bold border border-teal-600 bg-teal-800 text-teal-200">Auto</button>
       </div>
-      <div class="mt-1.5 flex items-center justify-center gap-2 min-h-[22px]">
-        <p id="statusMsg" class="text-xs sm:text-sm font-medium text-teal-400 text-center"></p>
-        <button data-act="switchExplore" id="quickInspectErrorBtn" class="hidden px-2 py-0.5 bg-teal-800 text-teal-100 rounded text-[11px] font-bold">🧭 Explore</button>
-      </div>
+      <div class="mt-1.5 flex items-center justify-center gap-2 min-h-[22px]"><p id="statusMsg" class="text-xs sm:text-sm font-medium text-teal-400 text-center"></p><button data-act="switchExplore" id="quickInspectErrorBtn" class="hidden px-2 py-0.5 bg-teal-800 text-teal-100 rounded text-[11px] font-bold">🧭 Explore</button></div>
       <div class="mt-1.5 w-full max-w-[440px] flex flex-wrap justify-center gap-1.5 text-xs">
         <button data-act="flipBoard" class="px-2.5 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-200 font-semibold">Flip (F)</button>
         <button data-act="prevDrill" class="drill-only px-2.5 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-200 font-semibold">&larr; Prev</button>
@@ -210,15 +131,7 @@
         <button data-act="switchExplore" id="toggleToExploreBtn" class="flex-1 py-1.5 rounded-md text-center flex items-center justify-center gap-1.5"><span>🧭</span><span>Explore</span></button>
       </div>
       <div id="exploreToolbar" class="explore-only hidden space-y-2 bg-gray-950/60 p-2 rounded-lg border border-gray-800">
-        <div class="flex items-center justify-between text-xs">
-          <span class="text-gray-400 font-mono text-[11px]">Timeline</span>
-          <div class="flex gap-1">
-            <button data-act="expNav" data-step="start" class="px-2 py-0.5 bg-gray-800 rounded font-bold">&laquo;</button>
-            <button data-act="expNav" data-step="prev" class="px-2 py-0.5 bg-gray-800 rounded font-bold">&larr;</button>
-            <button data-act="expNav" data-step="next" class="px-2 py-0.5 bg-gray-800 rounded font-bold">&rarr;</button>
-            <button data-act="expNav" data-step="end" class="px-2 py-0.5 bg-gray-800 rounded font-bold">&raquo;</button>
-          </div>
-        </div>
+        <div class="flex items-center justify-between text-xs"><span class="text-gray-400 font-mono text-[11px]">Timeline</span><div class="flex gap-1"><button data-act="expNav" data-step="start" class="px-2 py-0.5 bg-gray-800 rounded font-bold">&laquo;</button><button data-act="expNav" data-step="prev" class="px-2 py-0.5 bg-gray-800 rounded font-bold">&larr;</button><button data-act="expNav" data-step="next" class="px-2 py-0.5 bg-gray-800 rounded font-bold">&rarr;</button><button data-act="expNav" data-step="end" class="px-2 py-0.5 bg-gray-800 rounded font-bold">&raquo;</button></div></div>
         <div class="grid grid-cols-2 gap-1.5 text-xs">
           <button data-act="toggleSpar" id="expSparBtn" class="px-2 py-1 bg-amber-700 hover:bg-amber-600 rounded text-white font-bold">⚔️ Spar Engine</button>
           <button data-act="extractBranch" class="px-2 py-1 bg-teal-700 hover:bg-teal-600 rounded text-white font-bold">🌿 Extract Branch</button>
@@ -227,45 +140,21 @@
         </div>
       </div>
       <div id="engineSection" class="space-y-1">
-        <div class="flex justify-between items-center text-xs">
-          <span class="text-gray-400 font-mono text-[11px] font-bold">Stockfish (<span id="engineVersionBadge" class="text-teal-400 font-bold">NNUE 16</span> MultiPV 3)</span>
-          <div class="flex items-center gap-2 text-[10px]">
-            <span class="text-gray-400">WDL: <b id="wdlText" class="text-teal-400 font-mono">50/50</b></span>
-            <span class="text-gray-500">Depth:</span>
-            <input type="number" id="engineDepthInput" min="10" max="25" value="18" class="w-10 bg-gray-950 border border-gray-700 rounded px-1 py-0.5 text-center text-white text-[11px]">
-          </div>
-        </div>
-        <div id="engineLinesBox" class="text-xs font-mono text-gray-300 bg-gray-950 p-2 rounded h-20 overflow-y-auto flex flex-col gap-1 border border-gray-800 cursor-pointer">
-          <div class="pv-line truncate hover:text-teal-300" data-pv="1">1. <span class="text-gray-500">Stockfish ready...</span></div>
-          <div class="pv-line truncate hover:text-teal-300" data-pv="2">2. <span class="text-gray-500">Stockfish ready...</span></div>
-          <div class="pv-line truncate hover:text-teal-300" data-pv="3">3. <span class="text-gray-500">Stockfish ready...</span></div>
-        </div>
+        <div class="flex justify-between items-center text-xs"><span class="text-gray-400 font-mono text-[11px] font-bold">Stockfish (<span id="engineVersionBadge" class="text-teal-400 font-bold">NNUE 19</span> MultiPV 3)</span><div class="flex items-center gap-2 text-[10px]"><span class="text-gray-400">WDL: <b id="wdlText" class="text-teal-400 font-mono">50/50</b></span><span class="text-gray-500">Depth:</span><input type="number" id="engineDepthInput" min="10" max="25" value="18" class="w-10 bg-gray-950 border border-gray-700 rounded px-1 py-0.5 text-center text-white text-[11px]"></div></div>
+        <div id="engineLinesBox" class="text-xs font-mono text-gray-300 bg-gray-950 p-2 rounded h-20 overflow-y-auto flex flex-col gap-1 border border-gray-800 cursor-pointer"><div class="pv-line truncate hover:text-teal-300" data-pv="1">1. <span class="text-gray-500">Stockfish 19 ready...</span></div><div class="pv-line truncate hover:text-teal-300" data-pv="2">2. <span class="text-gray-500">Stockfish 19 ready...</span></div><div class="pv-line truncate hover:text-teal-300" data-pv="3">3. <span class="text-gray-500">Stockfish 19 ready...</span></div></div>
       </div>
       <div id="drillStatsSection" class="drill-only space-y-2 bg-gray-950/60 p-2.5 rounded-lg border border-gray-800">
-        <div class="flex items-center justify-between text-xs font-mono">
-          <span class="text-gray-400">Accuracy: <b id="statAccuracy" class="text-green-400">100%</b></span>
-          <span class="text-gray-400">Speed: <b id="statAvgTime" class="text-blue-400">0.0s</b></span>
-          <span class="text-gray-400">Level: <b id="statMasteryLevel" class="text-amber-400">Bronze</b></span>
-        </div>
+        <div class="flex items-center justify-between text-xs font-mono"><span class="text-gray-400">Accuracy: <b id="statAccuracy" class="text-green-400">100%</b></span><span class="text-gray-400">Speed: <b id="statAvgTime" class="text-blue-400">0.0s</b></span><span class="text-gray-400">Level: <b id="statMasteryLevel" class="text-amber-400">Bronze</b></span></div>
         <div class="grid grid-cols-2 gap-2 text-xs">
-          <select id="queueSelect" class="bg-gray-800 border border-gray-700 text-white rounded p-1 outline-none">
-            <option value="all">Queue: All in Folder</option>
-            <option value="mistakes">Queue: Mistakes Only (0)</option>
-            <option value="favorites">Queue: Favourites Only (0)</option>
-          </select>
+          <select id="queueSelect" class="bg-gray-800 border border-gray-700 text-white rounded p-1 outline-none"><option value="all">Queue: All in Folder</option><option value="mistakes">Queue: Mistakes Only (0)</option><option value="favorites">Queue: Favourites Only (0)</option></select>
           <button data-act="reshuffleSession" class="bg-indigo-950 border border-indigo-700 text-indigo-200 rounded px-2 py-1 font-semibold truncate">🔀 Reshuffle</button>
         </div>
       </div>
       <div class="flex-1 flex flex-col min-h-[170px]">
-        <div class="flex justify-between items-center mb-1 text-xs text-gray-400">
-          <span class="font-bold uppercase tracking-wider text-[11px]">Move History</span>
-          <span id="historyProgressMeta" class="font-mono text-[11px]"></span>
-        </div>
+        <div class="flex justify-between items-center mb-1 text-xs text-gray-400"><span class="font-bold uppercase tracking-wider text-[11px]">Move History</span><span id="historyProgressMeta" class="font-mono text-[11px]"></span></div>
         <div id="moveHistory" class="flex-1 bg-gray-950 rounded p-2.5 h-44 overflow-y-auto text-xs leading-relaxed space-y-1 border border-gray-800 font-mono"></div>
       </div>
-      <div class="pt-2 border-t border-gray-800 flex justify-end items-center text-xs">
-        <button data-act="quickExport" class="text-gray-400 hover:text-white underline">&#x2B07; Export Line PGN</button>
-      </div>
+      <div class="pt-2 border-t border-gray-800 flex justify-end items-center text-xs"><button data-act="quickExport" class="text-gray-400 hover:text-white underline">&#x2B07; Export Line PGN</button></div>
     </div>
   </section>
 </main>
@@ -277,10 +166,7 @@
 </nav>
 <div id="appModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-3 sm:p-5 z-50">
   <div id="appModalBox" class="bg-gray-900 border border-gray-800 rounded-xl max-w-sm w-full p-4 shadow-2xl flex flex-col gap-3 text-xs max-h-[90vh]">
-    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-      <h3 id="appModalTitle" class="text-sm font-bold text-white">Modal</h3>
-      <button data-act="closeModal" class="text-gray-400 hover:text-white text-base font-bold">&times;</button>
-    </div>
+    <div class="flex justify-between items-center border-b border-gray-800 pb-2"><h3 id="appModalTitle" class="text-sm font-bold text-white">Modal</h3><button data-act="closeModal" class="text-gray-400 hover:text-white text-base font-bold">&times;</button></div>
     <div id="appModalBody" class="flex-1 overflow-y-auto space-y-3"></div>
     <div id="appModalFoot" class="flex justify-end gap-2 pt-2 border-t border-gray-800"></div>
   </div>
@@ -289,8 +175,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id),START_FEN='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const normF=f=>String(f||'Openings').trim();
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),normF=f=>String(f||'Openings').trim();
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
 const DEFAULT_FOLDERS=['Openings','Openings/Bird','Openings/E4 Vienna','Openings/E4 Sicilian','Openings/E4 others','Openings/Caro-Kann','Openings/Grunfeld','Openings/Budapest','Tactics','Endgames'];
 const SAMPLES=[
@@ -300,34 +185,13 @@ const SAMPLES=[
   {f:'Tactics',p:'[Event "Greek Gift"]\n[SetUp "1"]\n[FEN "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/2NBPN2/PP3PPP/R1BQK2R w KQ - 0 7"]\n\n1. cxd5 exd5 2. Bd2 Re8 3. O-O'},
   {f:'Endgames',p:'[Event "Lucena Bridge"]\n[SetUp "1"]\n[FEN "1K1k4/1P6/8/8/8/8/r7/2R5 w - - 0 1"]\n\n1. Rd1+ Ke7 2. Rc1 Kd6 3. Rc4'}
 ];
-const ECO_DB=[
-  ['B12','Caro-Kann: Advance Variation','e4 c6 d4 d5 e5'],['B10','Caro-Kann Defense','e4 c6'],['C25','Vienna Game','e4 e5 Nc3'],
-  ['C29','Vienna Gambit','e4 e5 Nc3 Nf6 f4'],['A02',"Bird's Opening",'f4'],['B20','Sicilian Defense','e4 c5'],
-  ['B90','Sicilian: Najdorf','e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6'],['C50','Italian Game','e4 e5 Nf3 Nc6 Bc4'],
-  ['C60','Ruy Lopez','e4 e5 Nf3 Nc6 Bb5'],['C00','French Defense','e4 e6'],['D80','Grünfeld Defense','d4 Nf6 c4 g6 Nc3 d5'],
-  ['A51','Budapest Gambit','d4 Nf6 c4 e5'],['E60',"King's Indian Defense",'d4 Nf6 c4 g6'],['D06',"Queen's Gambit",'d4 d5 c4'],
-  ['A10','English Opening','c4'],['A40',"Queen's Pawn Game",'d4'],['C20',"King's Pawn Game",'e4 e5']
-].map(([eco,name,s])=>({eco,name,seq:s.split(' ')}));
+const ECO_DB=[['B12','Caro-Kann: Advance Variation','e4 c6 d4 d5 e5'],['B10','Caro-Kann Defense','e4 c6'],['C25','Vienna Game','e4 e5 Nc3'],['C29','Vienna Gambit','e4 e5 Nc3 Nf6 f4'],['A02',"Bird's Opening",'f4'],['B20','Sicilian Defense','e4 c5'],['B90','Sicilian: Najdorf','e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6'],['C50','Italian Game','e4 e5 Nf3 Nc6 Bc4'],['C60','Ruy Lopez','e4 e5 Nf3 Nc6 Bb5'],['C00','French Defense','e4 e6'],['D80','Grünfeld Defense','d4 Nf6 c4 g6 Nc3 d5'],['A51','Budapest Gambit','d4 Nf6 c4 e5'],['E60',"King's Indian Defense",'d4 Nf6 c4 g6'],['D06',"Queen's Gambit",'d4 d5 c4'],['A10','English Opening','c4'],['A40',"Queen's Pawn Game",'d4'],['C20',"King's Pawn Game",'e4 e5']].map(([eco,name,s])=>({eco,name,seq:s.split(' ')}));
 
-const state={
-  view:'home',mode:'drill',targetMode:'drill',rootCat:null,subfolder:'all',pgnList:[],pgnFolders:{},availableFolders:[...DEFAULT_FOLDERS],
-  currentIndex:0,drillHistoryStack:[],completedGames:new Set(),mistakeQueue:new Set(),favorites:new Set(),activeQueueMode:'all',masteryStreaks:{},
-  sessionActive:false,sessionDeck:[],sessionTotalCount:0,sessionCurrentDone:false,board:null,boardComp1:null,boardComp2:null,
-  game:new Chess(),scratchGame:new Chess(),expectedMoves:[],currentLineMoves:[],activeBranchMoves:[],branchStartPly:-1,
-  currentMoveIndex:0,explorePlyIndex:0,moveAnnotations:{},initialFen:START_FEN,sandboxHistoryFens:[],selectedSquare:null,
-  targetMaxPly:999,randomStartActive:false,lastMoveSquares:null,drillShowEngine:false,activeArrows:[],activeRings:[],
-  arrowStartSquare:null,arrowOpacity:.8,clearArrowsOnMove:true,boardSize:380,boardLightColor:'#f0d9b5',boardDarkColor:'#b58863',
-  customPieceUrl:'',inputMode:'tap',playerSide:'auto',soundTheme:'synth',atmosphereTheme:'dark',isDirtySync:false,
-  correctAttempts:0,totalAttempts:0,moveStartTime:Date.now(),totalMoveSeconds:0,timedMovesCount:0,hadMistake:false,
-  isSparring:false,subfolderStats:{},selectedDrillIndices:new Set(),sfSearchQuery:'',lastSavedTs:0
-};
+const state={view:'home',mode:'drill',targetMode:'drill',rootCat:null,subfolder:'all',pgnList:[],pgnFolders:{},availableFolders:[...DEFAULT_FOLDERS],currentIndex:0,drillHistoryStack:[],completedGames:new Set(),mistakeQueue:new Set(),favorites:new Set(),activeQueueMode:'all',masteryStreaks:{},sessionActive:false,sessionDeck:[],sessionTotalCount:0,sessionCurrentDone:false,board:null,boardComp1:null,boardComp2:null,game:new Chess(),scratchGame:new Chess(),expectedMoves:[],currentLineMoves:[],activeBranchMoves:[],branchStartPly:-1,currentMoveIndex:0,explorePlyIndex:0,moveAnnotations:{},initialFen:START_FEN,sandboxHistoryFens:[],selectedSquare:null,targetMaxPly:999,randomStartActive:false,lastMoveSquares:null,drillShowEngine:false,activeArrows:[],activeRings:[],arrowStartSquare:null,arrowOpacity:.8,clearArrowsOnMove:true,boardSize:380,boardLightColor:'#f0d9b5',boardDarkColor:'#b58863',customPieceUrl:'',inputMode:'tap',playerSide:'auto',soundTheme:'synth',atmosphereTheme:'dark',isDirtySync:false,correctAttempts:0,totalAttempts:0,moveStartTime:Date.now(),totalMoveSeconds:0,timedMovesCount:0,hadMistake:false,isSparring:false,subfolderStats:{},selectedDrillIndices:new Set(),sfSearchQuery:'',lastSavedTs:0};
 
 let audioCtx=null,evalTimer=null,tbTimer=null,oppTimer=null,engineWorker=null,idleTimer=null,activeNotePly=null,isRecording=false,rec=null;
 const arrowCtx=$('arrowCanvas').getContext('2d'),SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
-
-function clearTimers(){
-  if(oppTimer){clearTimeout(oppTimer);oppTimer=null;}
-}
+const clearTimers=()=>{if(oppTimer){clearTimeout(oppTimer);oppTimer=null;}};
 
 function beep(f1,f2,type='triangle',dur=.08){
   if(state.soundTheme==='silent')return;
@@ -339,66 +203,36 @@ function beep(f1,f2,type='triangle',dur=.08){
     if(state.soundTheme==='wood'){osc.type='triangle';osc.frequency.setValueAtTime(f1<200?120:180,t);dur=.05;}
     else if(state.soundTheme==='beep'){osc.type='sine';osc.frequency.setValueAtTime(f1<200?440:880,t);}
     else{osc.type=type;osc.frequency.setValueAtTime(f1,t);if(f2)osc.frequency.exponentialRampToValueAtTime(f2,t+dur);}
-    g.gain.setValueAtTime(.25,t);g.gain.linearRampToValueAtTime(.01,t+dur);
-    osc.start(t);osc.stop(t+dur);
+    g.gain.setValueAtTime(.25,t);g.gain.linearRampToValueAtTime(.01,t+dur);osc.start(t);osc.stop(t+dur);
   }catch(e){}
 }
 const playSound=t=>({move:()=>beep(320,140,'triangle',.08),capture:()=>beep(180,80,'square',.12),check:()=>beep(600,900,'sine',.18),error:()=>beep(130,110,'sawtooth',.2)}[t]||(()=>beep(320,140)))();
 
-const getSyncPayload=()=>({
-  timestamp:state.lastSavedTs||Date.now(),pgnList:state.pgnList,pgnFolders:state.pgnFolders,availableFolders:state.availableFolders,
-  completedGames:[...state.completedGames],mistakeQueue:[...state.mistakeQueue],favorites:[...state.favorites],masteryStreaks:state.masteryStreaks,
-  subfolderStats:state.subfolderStats,currentIndex:state.currentIndex,sessionActive:state.sessionActive,
-  sessionDeck:state.sessionDeck,sessionTotalCount:state.sessionTotalCount,sessionCurrentDone:state.sessionCurrentDone,
-  activeRootCategory:state.rootCat,activeSubfolder:state.subfolder,activeQueueMode:state.activeQueueMode
-});
+const getSyncPayload=()=>({timestamp:state.lastSavedTs||Date.now(),pgnList:state.pgnList,pgnFolders:state.pgnFolders,availableFolders:state.availableFolders,completedGames:[...state.completedGames],mistakeQueue:[...state.mistakeQueue],favorites:[...state.favorites],masteryStreaks:state.masteryStreaks,subfolderStats:state.subfolderStats,currentIndex:state.currentIndex,sessionActive:state.sessionActive,sessionDeck:state.sessionDeck,sessionTotalCount:state.sessionTotalCount,sessionCurrentDone:state.sessionCurrentDone,activeRootCategory:state.rootCat,activeSubfolder:state.subfolder,activeQueueMode:state.activeQueueMode});
 
 function applySyncState(d){
   if(!d||typeof d!=='object')return;
-  const rawFolders=Array.isArray(d.availableFolders)?d.availableFolders.map(normF):[...DEFAULT_FOLDERS];
-  const foldersFromGames=Object.values(d.pgnFolders||{}).map(normF);
-  const mergedFolders=[...new Set(['Openings','Tactics','Endgames',...rawFolders,...foldersFromGames])];
-  const normPgnFolders={};
-  if(d.pgnFolders){Object.keys(d.pgnFolders).forEach(k=>{normPgnFolders[k]=normF(d.pgnFolders[k]);});}
-
-  Object.assign(state,{
-    lastSavedTs:d.timestamp||Date.now(),
-    pgnList:Array.isArray(d.pgnList)?d.pgnList:[],pgnFolders:normPgnFolders,availableFolders:mergedFolders,
-    completedGames:new Set(Array.isArray(d.completedGames)?d.completedGames:[]),
-    mistakeQueue:new Set(Array.isArray(d.mistakeQueue)?d.mistakeQueue:[]),
-    favorites:new Set(Array.isArray(d.favorites)?d.favorites:[]),
-    masteryStreaks:d.masteryStreaks||{},subfolderStats:d.subfolderStats||{},
-    sessionActive:Boolean(d.sessionActive),sessionDeck:Array.isArray(d.sessionDeck)?d.sessionDeck:[],
-    sessionTotalCount:d.sessionTotalCount||0,sessionCurrentDone:Boolean(d.sessionCurrentDone),
-    currentIndex:Math.max(0,Math.min(d.currentIndex||0,(d.pgnList?.length||1)-1))
-  });
+  const rawF=Array.isArray(d.availableFolders)?d.availableFolders.map(normF):[...DEFAULT_FOLDERS],gameF=Object.values(d.pgnFolders||{}).map(normF),normPF={};
+  if(d.pgnFolders)Object.keys(d.pgnFolders).forEach(k=>normPF[k]=normF(d.pgnFolders[k]));
+  Object.assign(state,{lastSavedTs:d.timestamp||Date.now(),pgnList:Array.isArray(d.pgnList)?d.pgnList:[],pgnFolders:normPF,availableFolders:[...new Set(['Openings','Tactics','Endgames',...rawF,...gameF])],completedGames:new Set(Array.isArray(d.completedGames)?d.completedGames:[]),mistakeQueue:new Set(Array.isArray(d.mistakeQueue)?d.mistakeQueue:[]),favorites:new Set(Array.isArray(d.favorites)?d.favorites:[]),masteryStreaks:d.masteryStreaks||{},subfolderStats:d.subfolderStats||{},sessionActive:Boolean(d.sessionActive),sessionDeck:Array.isArray(d.sessionDeck)?d.sessionDeck:[],sessionTotalCount:d.sessionTotalCount||0,sessionCurrentDone:Boolean(d.sessionCurrentDone),currentIndex:Math.max(0,Math.min(d.currentIndex||0,(d.pgnList?.length||1)-1))});
   if(d.activeRootCategory!==undefined)state.rootCat=d.activeRootCategory;
   if(d.activeSubfolder!==undefined)state.subfolder=d.activeSubfolder==='all'?'all':normF(d.activeSubfolder);
-  if(d.activeQueueMode!==undefined){state.activeQueueMode=d.activeQueueMode;$('queueSelect').value=d.activeQueueMode;}
+  if(d.activeQueueMode!==undefined)$('queueSelect').value=state.activeQueueMode=d.activeQueueMode;
 }
 
 function persist(){
   try{
     state.lastSavedTs=Date.now();
     localStorage.setItem('pgn_core_state',JSON.stringify(getSyncPayload()));
-    localStorage.setItem('pgn_config',JSON.stringify({
-      side:state.playerSide,mode:state.inputMode,sound:state.soundTheme,atmo:state.atmosphereTheme,
-      light:state.boardLightColor,dark:state.boardDarkColor,sz:state.boardSize,url:state.customPieceUrl,
-      cor:state.correctAttempts,tot:state.totalAttempts
-    }));
-    $('syncDirtyDot').className='w-2 h-2 rounded-full ring-2 ring-gray-900 bg-amber-400 animate-pulse';
-    state.isDirtySync=true;
+    localStorage.setItem('pgn_config',JSON.stringify({side:state.playerSide,mode:state.inputMode,sound:state.soundTheme,atmo:state.atmosphereTheme,light:state.boardLightColor,dark:state.boardDarkColor,sz:state.boardSize,url:state.customPieceUrl,cor:state.correctAttempts,tot:state.totalAttempts}));
+    $('syncDirtyDot').className='w-2 h-2 rounded-full ring-2 ring-gray-900 bg-amber-400 animate-pulse';state.isDirtySync=true;
   }catch(e){}
 }
 
 function restore(){
   try{
     const cfg=JSON.parse(localStorage.getItem('pgn_config')||'{}');
-    Object.assign(state,{
-      playerSide:cfg.side||'auto',inputMode:cfg.mode||'tap',soundTheme:cfg.sound||'synth',
-      atmosphereTheme:cfg.atmo||'dark',boardLightColor:cfg.light||'#f0d9b5',boardDarkColor:cfg.dark||'#b58863',
-      boardSize:cfg.sz||380,customPieceUrl:cfg.url||'',correctAttempts:cfg.cor||0,totalAttempts:cfg.tot||0
-    });
+    Object.assign(state,{playerSide:cfg.side||'auto',inputMode:cfg.mode||'tap',soundTheme:cfg.sound||'synth',atmosphereTheme:cfg.atmo||'dark',boardLightColor:cfg.light||'#f0d9b5',boardDarkColor:cfg.dark||'#b58863',boardSize:cfg.sz||380,customPieceUrl:cfg.url||'',correctAttempts:cfg.cor||0,totalAttempts:cfg.tot||0});
     applyTheme();applyCustomColors();syncPlaySideButtons();
     const saved=localStorage.getItem('pgn_core_state');
     if(saved)applySyncState(JSON.parse(saved));
@@ -408,43 +242,27 @@ function restore(){
 }
 
 async function checkCloudUpdate(){
-  const pat=localStorage.getItem('pgn_pat'),gist=localStorage.getItem('pgn_gist');
-  if(!pat||!gist)return;
+  const pat=localStorage.getItem('pgn_pat'),gist=localStorage.getItem('pgn_gist');if(!pat||!gist)return;
   try{
-    const r=await fetch(`https://api.github.com/gists/${gist}`,{headers:{Authorization:`Bearer ${pat}`}});
-    if(!r.ok)return;
+    const r=await fetch(`https://api.github.com/gists/${gist}`,{headers:{Authorization:`Bearer ${pat}`}});if(!r.ok)return;
     const d=await r.json(),c=d.files?.['pgn_drills_state.json']?.content;
-    if(c){
-      const rem=JSON.parse(c);
-      if(rem.timestamp&&rem.timestamp>(state.lastSavedTs||0)+5000)$('cloudToast').classList.remove('hidden');
-    }
+    if(c){const rem=JSON.parse(c);if(rem.timestamp&&rem.timestamp>(state.lastSavedTs||0)+5000)$('cloudToast').classList.remove('hidden');}
   }catch(e){}
 }
 
 const applyTheme=()=>$('appBody').classList.toggle('theme-oled',state.atmosphereTheme==='oled');
-const applyCustomColors=()=>{
-  document.documentElement.style.setProperty('--board-light',state.boardLightColor);
-  document.documentElement.style.setProperty('--board-dark',state.boardDarkColor);
-};
+const applyCustomColors=()=>{document.documentElement.style.setProperty('--board-light',state.boardLightColor);document.documentElement.style.setProperty('--board-dark',state.boardDarkColor);};
 const getPieceUrl=p=>(state.customPieceUrl&&state.customPieceUrl.includes('{piece}'))?state.customPieceUrl.replace('{piece}',p):`https://chessboardjs.com/img/chesspieces/wikipedia/${p}.png`;
-
-function applyBoardSize(sz){
-  const max=Math.max(260,Math.min(sz,window.innerWidth-48));
-  $('board').style.width=$('board').style.height=$('evalBarWrapper').style.height=`${max}px`;
-  if(state.board)state.board.resize();
-  resizeCanvas();
-}
+function applyBoardSize(sz){const max=Math.max(260,Math.min(sz,window.innerWidth-48));$('board').style.width=$('board').style.height=$('evalBarWrapper').style.height=`${max}px`;state.board?.resize();resizeCanvas();}
 
 function openModal(title,body,btns=[],maxW='max-w-sm'){
-  $('appModalTitle').textContent=title;
-  $('appModalBody').innerHTML=body;
+  $('appModalTitle').textContent=title;$('appModalBody').innerHTML=body;
   $('appModalBox').className=`bg-gray-900 border border-gray-800 rounded-xl ${maxW} w-full p-4 shadow-2xl flex flex-col gap-3 text-xs max-h-[90vh]`;
   $('appModalFoot').innerHTML=btns.map((b,i)=>`<button data-modal-btn="${i}" class="px-3 py-1.5 rounded font-bold text-xs ${b.cls||'bg-teal-600 text-white'}">${b.text}</button>`).join('');
   $('appModalFoot').querySelectorAll('button').forEach((b,i)=>b.onclick=()=>btns[i].onClick?.());
   $('appModal').classList.remove('hidden');
 }
-const closeModal=()=>$('appModal').classList.add('hidden');
-window.closeModal=closeModal;
+const closeModal=()=>$('appModal').classList.add('hidden');window.closeModal=closeModal;
 
 function stripMainline(txt){
   let out='',com=false,d=0;
@@ -452,187 +270,178 @@ function stripMainline(txt){
     const c=txt[i];
     if(com){out+=c;if(c==='}')com=false;}
     else if(c==='{'){if(!d){com=true;out+=c;}else while(i<txt.length&&txt[i]!=='}')i++;}
-    else if(c==='(')d++;
-    else if(c===')'){if(d>0)d--;}
-    else if(!d)out+=c;
+    else if(c==='(')d++;else if(c===')'){if(d>0)d--;}else if(!d)out+=c;
   }
   return out;
 }
 const stripAll=txt=>stripMainline(txt).replace(/\{[^}]*\}/g,' ');
 
+function splitPgnVariations(rawPgn){
+  const hdrMatches=rawPgn.match(/\[[^\]]+\]/g)||[],body=rawPgn.replace(/\[[^\]]*\]\s*/g,' ').trim();
+  if(!body)return[rawPgn];
+  const tokens=[];let i=0;
+  while(i<body.length){
+    const c=body[i];if(/\s/.test(c)){i++;continue;}
+    if(c==='{'){let end=body.indexOf('}',i+1);if(end===-1)end=body.length-1;tokens.push({type:'comment',text:body.slice(i+1,end).trim()});i=end+1;}
+    else if(c==='('||c===')'){tokens.push({type:c});i++;}
+    else{
+      let j=i;while(j<body.length&&!/[\s{}()]/.test(body[j]))j++;
+      const w=body.slice(i,j);
+      if(!/^\d+\.+$/.test(w)&&!['1-0','0-1','1/2-1/2','*'].includes(w)&&!w.startsWith('$')){const cl=w.replace(/^\d+\.+/,'').replace(/[!?]+/g,'');if(cl)tokens.push({type:'move',san:cl});}
+      i=j;
+    }
+  }
+  let pos=0;
+  function parseSeq(){
+    const seq=[];let preComment='',lastNode=null;
+    while(pos<tokens.length){
+      const t=tokens[pos++];
+      if(t.type===')')break;
+      if(t.type==='('){const v=parseSeq();if(lastNode&&v.moves.length)lastNode.vars.push(v);}
+      else if(t.type==='comment'){if(lastNode)lastNode.comment=lastNode.comment?`${lastNode.comment} ${t.text}`:t.text;else preComment=preComment?`${preComment} ${t.text}`:t.text;}
+      else if(t.type==='move')seq.push(lastNode={san:t.san,comment:'',vars:[]});
+    }
+    return{preComment,moves:seq};
+  }
+  const rootSeq=parseSeq();if(!rootSeq.moves.length)return[rawPgn];
+  const fm=rawPgn.match(/\[FEN\s+"([^"]+)"\]/i),startParts=(fm?fm[1].trim():START_FEN).split(' ');
+  const startOffset=((parseInt(startParts[5],10)||1)-1)*2+((startParts[1]||'w')==='b'?1:0),leaves=[];
+  function expand(seqObj,prefix,initCom,divLabel){
+    const cur=[...prefix],effInit=prefix.length===0?seqObj.preComment:initCom;
+    for(const node of seqObj.moves){
+      for(const vSeq of node.vars||[]){
+        const plyIdx=startOffset+cur.length,mNum=(plyIdx/2|0)+1,mStr=plyIdx%2===0?`${mNum}. ${vSeq.moves[0].san}`:`${mNum}... ${vSeq.moves[0].san}`,copy=cur.map(m=>({...m}));
+        if(vSeq.preComment&&copy.length)copy[copy.length-1].comment=copy[copy.length-1].comment?`${copy[copy.length-1].comment} ${vSeq.preComment}`:vSeq.preComment;
+        expand(vSeq,copy,effInit,divLabel||mStr);
+      }
+      cur.push({san:node.san,comment:node.comment});
+    }
+    leaves.push({initCom:effInit,moves:cur,label:divLabel});
+  }
+  expand(rootSeq,[],rootSeq.preComment,'');
+  if(leaves.length<=1&&!rawPgn.includes('('))return[rawPgn];
+  const baseEvent=rawPgn.match(/\[Event\s+"([^"]+)"\]/i)?.[1]||'Study Line',outPgns=[];
+  leaves.forEach((leaf,idx)=>{
+    if(!leaf.moves.length)return;
+    const newEvent=`${baseEvent}${leaves.length>1?(idx===0?' (Mainline)':` (Var ${idx+1}: ${leaf.label})`):''}`.replace(/"/g,"'");
+    let hasEv=false;const newHdrs=hdrMatches.map(h=>/^\[Event\s+/i.test(h)?(hasEv=true,`[Event "${newEvent}"]`):h);
+    if(!hasEv)newHdrs.unshift(`[Event "${newEvent}"]`);
+    const parts=leaf.initCom?[`{${leaf.initCom.replace(/[{}]/g,'')}}`]:[];
+    leaf.moves.forEach((m,mIdx)=>{
+      const plyIdx=startOffset+mIdx,mNum=(plyIdx/2|0)+1;
+      if(plyIdx%2===0)parts.push(`${mNum}.`);else if(mIdx===0)parts.push(`${mNum}...`);
+      parts.push(m.san);if(m.comment)parts.push(`{${m.comment.replace(/[{}]/g,'')}}`);
+    });
+    outPgns.push(`${newHdrs.join('\n')}\n\n${parts.join(' ')}`);
+  });
+  return outPgns.length?outPgns:[rawPgn];
+}
+
 function loadPgnSafe(chessInstance,rawPgn){
-  chessInstance.reset();
-  const clean=stripAll(rawPgn||'');
+  chessInstance.reset();const clean=stripAll(rawPgn||'');
   if(chessInstance.load_pgn(clean))return true;
-  const fm=clean.match(/\[FEN\s+"([^"]+)"\]/i);
-  if(fm&&!chessInstance.load(fm[1].trim()))return false;
-  const body=clean.replace(/\[[^\]]*\]\s*/g,' ').trim();
-  if(!body)return true;
-  const tokens=body.split(/\s+/);
-  for(const tok of tokens){
+  const fm=clean.match(/\[FEN\s+"([^"]+)"\]/i);if(fm&&!chessInstance.load(fm[1].trim()))return false;
+  const body=clean.replace(/\[[^\]]*\]\s*/g,' ').trim();if(!body)return true;
+  for(const tok of body.split(/\s+/)){
     if(/^\d+\.+$/.test(tok)||['1-0','0-1','1/2-1/2','*'].includes(tok)||tok.startsWith('$'))continue;
-    if(!chessInstance.move(tok.replace(/[!?]+/g,'')))return false;
+    if(!chessInstance.move(tok.replace(/^\d+\.+/,'').replace(/[!?]+/g,'')))return false;
   }
   return true;
 }
 
 function detectEcoAndTitle(pgn){
-  const c=new Chess();
-  if(!loadPgnSafe(c,pgn))return null;
+  const c=new Chess();if(!loadPgnSafe(c,pgn))return null;
   const m=c.history();let best=null,max=0;
   ECO_DB.forEach(e=>{if(e.seq.length<=m.length&&e.seq.every((x,i)=>x.toLowerCase()===m[i].toLowerCase())&&e.seq.length>max){max=e.seq.length;best=e;}});
   return best?`${best.eco} — ${best.name}`:null;
 }
 
 function parseComments(pgn){
-  state.moveAnnotations={};
-  const tokens=stripMainline((pgn||'').replace(/\[[^\]]*\]\s*/g,'')).match(/\{([^}]*)\}|(\d+\.+)|([^\s{}]+)/g)||[];
-  let ply=0;
-  tokens.forEach(t=>{
-    if(t.startsWith('{')){
-      const c=t.slice(1,-1).trim();
-      if(c)state.moveAnnotations[ply]=state.moveAnnotations[ply]?`${state.moveAnnotations[ply]} ${c}`:c;
-    }else if(!/^\d+\.+$/.test(t)&&!['1-0','0-1','1/2-1/2','*'].includes(t)&&!t.startsWith('$'))ply++;
+  state.moveAnnotations={};let ply=0;
+  (stripMainline((pgn||'').replace(/\[[^\]]*\]\s*/g,'')).match(/\{([^}]*)\}|(\d+\.+)|([^\s{}]+)/g)||[]).forEach(t=>{
+    if(t.startsWith('{')){const c=t.slice(1,-1).trim();if(c)state.moveAnnotations[ply]=state.moveAnnotations[ply]?`${state.moveAnnotations[ply]} ${c}`:c;}
+    else if(!/^\d+\.+$/.test(t)&&!['1-0','0-1','1/2-1/2','*'].includes(t)&&!t.startsWith('$'))ply++;
   });
 }
 
 function syncCurrentPgn(){
   if(state.mode==='sandbox'||!state.pgnList[state.currentIndex])return;
-  const hdrs=(state.pgnList[state.currentIndex].match(/\[[^\]]+\]/g)||[]).join('\n'),parts=[];
-  if(state.moveAnnotations[0])parts.push(`{${state.moveAnnotations[0].replace(/[{}]/g,'')}}`);
-  state.expectedMoves.forEach((m,i)=>{
-    if(i%2===0)parts.push(`${(i/2|0)+1}.`);
-    parts.push(m.san);
-    if(state.moveAnnotations[i+1])parts.push(`{${state.moveAnnotations[i+1].replace(/[{}]/g,'')}}`);
-  });
+  const hdrs=(state.pgnList[state.currentIndex].match(/\[[^\]]+\]/g)||[]).join('\n'),parts=state.moveAnnotations[0]?[`{${state.moveAnnotations[0].replace(/[{}]/g,'')}}`]:[];
+  state.expectedMoves.forEach((m,i)=>{if(i%2===0)parts.push(`${(i/2|0)+1}.`);parts.push(m.san);if(state.moveAnnotations[i+1])parts.push(`{${state.moveAnnotations[i+1].replace(/[{}]/g,'')}}`);});
   state.pgnList[state.currentIndex]=hdrs?`${hdrs}\n\n${parts.join(' ')}`:parts.join(' ');
 }
 
 function generateAnnotatedPgn(title){
-  const pgnMoves=state.game.history({verbose:true});
-  let headers=`[Event "${esc(title).replace(/"/g,"'")}"]`;
-  if(state.initialFen&&state.initialFen!==START_FEN)headers+=`\n[SetUp "1"]\n[FEN "${state.initialFen}"]`;
-  const parts=[];
-  if(state.moveAnnotations[0])parts.push(`{${state.moveAnnotations[0].replace(/[{}]/g,'')}}`);
-  pgnMoves.forEach((m,i)=>{
-    if(i%2===0)parts.push(`${Math.floor(i/2)+1}.`);
-    parts.push(m.san);
-    if(state.moveAnnotations[i+1])parts.push(`{${state.moveAnnotations[i+1].replace(/[{}]/g,'')}}`);
-  });
+  const pgnMoves=state.game.history({verbose:true}),parts=state.moveAnnotations[0]?[`{${state.moveAnnotations[0].replace(/[{}]/g,'')}}`]:[];
+  let headers=`[Event "${esc(title).replace(/"/g,"'")}"]`+(state.initialFen&&state.initialFen!==START_FEN?`\n[SetUp "1"]\n[FEN "${state.initialFen}"]`:'');
+  pgnMoves.forEach((m,i)=>{if(i%2===0)parts.push(`${(i/2|0)+1}.`);parts.push(m.san);if(state.moveAnnotations[i+1])parts.push(`{${state.moveAnnotations[i+1].replace(/[{}]/g,'')}}`);});
   return parts.length?`${headers}\n\n${parts.join(' ')}`:`${headers}\n\n*`;
 }
 
 function updateCoachNote(){
-  const note=state.moveAnnotations[state.mode==='drill'?state.currentMoveIndex:state.game.history().length];
-  const el=$('coachNote');
-  if(note){
-    el.innerHTML=`<span class="bg-amber-500/20 text-amber-300 font-mono font-bold text-[10px] uppercase px-1.5 py-0.5 rounded border border-amber-400/40 shrink-0">💡 Idea</span><span class="leading-relaxed font-medium text-amber-100/95">${esc(note)}</span>`;
-    el.classList.remove('hidden','animate-pulse');
-    void el.offsetWidth;
-    el.classList.add('animate-pulse');
-  }else{
-    el.classList.add('hidden');
-  }
+  const note=state.moveAnnotations[state.mode==='drill'?state.currentMoveIndex:state.game.history().length],el=$('coachNote');
+  if(note){el.innerHTML=`<span class="bg-amber-500/20 text-amber-300 font-mono font-bold text-[10px] uppercase px-1.5 py-0.5 rounded border border-amber-400/40 shrink-0">💡 Idea</span><span class="leading-relaxed font-medium text-amber-100/95">${esc(note)}</span>`;el.classList.remove('hidden','animate-pulse');void el.offsetWidth;el.classList.add('animate-pulse');}
+  else el.classList.add('hidden');
 }
 
 function renderHistory(plyOverride){
-  const isDrill=state.mode==='drill',isExp=state.mode==='explore',played=state.game.history({verbose:true});
-  const base=isDrill?played:(isExp?state.expectedMoves:state.currentLineMoves),active=plyOverride??played.length;
+  const isDrill=state.mode==='drill',isExp=state.mode==='explore',played=state.game.history({verbose:true}),base=isDrill?played:(isExp?state.expectedMoves:state.currentLineMoves),active=plyOverride??played.length;
   $('historyProgressMeta').textContent=isDrill?`${played.length} / ${Math.min(state.expectedMoves.length,state.targetMaxPly)} plies`:`Ply ${active} / ${base.length}`;
   let html=state.moveAnnotations[0]?`<div class="text-[11px] text-blue-300 italic bg-blue-950/40 px-2 py-1 rounded border border-blue-800/40 mb-1 flex justify-between"><span>💬 ${esc(state.moveAnnotations[0])}</span>${!isDrill?'<button data-act="editNote" data-ply="0" class="text-gray-400">📝</button>':''}</div>`:'';
   if(!base.length){$('moveHistory').innerHTML=html+`<div class="text-gray-500 italic text-center py-4">${isDrill?'Awaiting move...':'No moves played.'}</div>`;return;}
   for(let i=0;i<base.length;i+=2){
     html+=`<div class="flex flex-col py-0.5 border-b border-gray-900/80"><div class="flex items-center gap-1.5 flex-wrap"><span class="text-gray-500 w-7 select-none">${(i/2|0)+1}.</span>`;
     [base[i],base[i+1]].forEach((m,idx)=>{
-      if(!m)return;
-      const ply=i+idx+1;
+      if(!m)return;const ply=i+idx+1;
       html+=`<span class="move-link px-1.5 py-0.5 rounded cursor-pointer ${active===ply?'bg-teal-700 text-white font-bold':'text-gray-200'}" data-act="jumpPly" data-ply="${ply}">${esc(m.san)}</span>`;
       if(!isDrill)html+=`<button data-act="editNote" data-ply="${ply}" data-san="${esc(m.san)}" class="text-[10px] ${state.moveAnnotations[ply]?'text-amber-400':'text-gray-600'}">📝</button>`;
     });
     html+='</div>';
     [i+1,i+2].forEach(p=>{if(state.moveAnnotations[p])html+=`<div class="text-[10px] text-teal-300 italic pl-7">↳ ${esc(state.moveAnnotations[p])}</div>`;});
-    if(isExp&&state.activeBranchMoves.length&&(state.branchStartPly===i||state.branchStartPly===i+1)){
+    if(isExp&&state.activeBranchMoves.length&&(state.branchStartPly===i||state.branchStartPly===i+1))
       html+=`<div class="pl-7 text-[11px] flex flex-wrap items-center gap-1 pt-0.5"><span class="text-sky-400 font-semibold">🌿 Sideline:</span>${state.activeBranchMoves.map(bm=>`<span class="branch-move">${esc(bm.san)}</span>`).join(' ')}</div>`;
-    }
     html+='</div>';
   }
-  $('moveHistory').innerHTML=html;
-  $('moveHistory').scrollTop=$('moveHistory').scrollHeight;
+  $('moveHistory').innerHTML=html;$('moveHistory').scrollTop=$('moveHistory').scrollHeight;
 }
 
 function jumpToPly(ply){
-  clearTimers();
-  const src=state.mode==='explore'?state.expectedMoves:state.currentLineMoves,target=Math.max(0,Math.min(ply,src.length));
+  clearTimers();const src=state.mode==='explore'?state.expectedMoves:state.currentLineMoves,target=Math.max(0,Math.min(ply,src.length));
   state.activeBranchMoves=[];state.branchStartPly=-1;state.game.load(state.initialFen);state.lastMoveSquares=null;
-  for(let i=0;i<target;i++){
-    state.game.move({from:src[i].from,to:src[i].to,promotion:src[i].promotion||'q'});
-    if(i===target-1)state.lastMoveSquares={from:src[i].from,to:src[i].to};
-  }
-  state.explorePlyIndex=target;state.board.position(state.game.fen());
-  renderHistory(target);renderHighlights();updateCoachNote();evalBoard();checkSyzygy();fetchBook(state.game.fen());playSound('move');
+  for(let i=0;i<target;i++){state.game.move({from:src[i].from,to:src[i].to,promotion:src[i].promotion||'q'});if(i===target-1)state.lastMoveSquares={from:src[i].from,to:src[i].to};}
+  state.explorePlyIndex=target;state.board.position(state.game.fen());renderHistory(target);renderHighlights();updateCoachNote();evalBoard();checkSyzygy();fetchBook(state.game.fen());playSound('move');
 }
 
-// Folder Pool (ignores Mistake/Favourite queue filter so Folder Manager always displays all PGNs in the folder)
-const getFolderPool=()=>state.pgnList.map((_,i)=>i).filter(i=>{
-  const f=normF(state.pgnFolders[i]);
-  if(state.subfolder&&state.subfolder!=='all')return f===normF(state.subfolder);
-  if(state.rootCat)return f===state.rootCat||f.startsWith(state.rootCat+'/');
-  return true;
-});
-
-// Active Queue Pool (respects Mistake/Favourite queue filter in Drill mode)
-const getPool=()=>getFolderPool().filter(i=>{
-  if(state.mode!=='drill')return true;
-  if(state.activeQueueMode==='mistakes')return state.mistakeQueue.has(i);
-  if(state.activeQueueMode==='favorites')return state.favorites.has(i);
-  return true;
-});
+const getFolderPool=()=>state.pgnList.map((_,i)=>i).filter(i=>{const f=normF(state.pgnFolders[i]);return state.subfolder&&state.subfolder!=='all'?f===normF(state.subfolder):state.rootCat?f===state.rootCat||f.startsWith(state.rootCat+'/'):true;});
+const getPool=()=>getFolderPool().filter(i=>state.mode!=='drill'||(state.activeQueueMode==='mistakes'?state.mistakeQueue.has(i):state.activeQueueMode==='favorites'?state.favorites.has(i):true));
 
 function startSession(folder,queue='all'){
-  clearTimers();
-  state.subfolder=folder==='all'?'all':normF(folder);
-  state.activeQueueMode=queue;$('queueSelect').value=queue;state.mode=state.targetMode='drill';
+  clearTimers();state.subfolder=folder==='all'?'all':normF(folder);state.activeQueueMode=$('queueSelect').value=queue;state.mode=state.targetMode='drill';
   const pool=getPool();if(!pool.length)return alert('No PGN drills available in this selection.');
-  const sh=shuffle(pool);
-  Object.assign(state,{sessionActive:true,sessionTotalCount:sh.length,currentIndex:sh.shift(),sessionDeck:sh,sessionCurrentDone:false,drillHistoryStack:[]});
+  const sh=shuffle(pool);Object.assign(state,{sessionActive:true,sessionTotalCount:sh.length,currentIndex:sh.shift(),sessionDeck:sh,sessionCurrentDone:false,drillHistoryStack:[]});
   persist();switchView('workspace');
 }
 
 function updateSessionUI(){
   const fPool=getFolderPool(),pool=getPool();
-  $('subfolderGamesBadgeCount').textContent=fPool.length;
-  $('wsFavBtn').textContent=state.favorites.has(state.currentIndex)?'❤️':'🤍';
-  $('wsFavBtn').classList.toggle('hidden',state.mode==='sandbox');
+  $('subfolderGamesBadgeCount').textContent=fPool.length;$('wsFavBtn').textContent=state.favorites.has(state.currentIndex)?'❤️':'🤍';$('wsFavBtn').classList.toggle('hidden',state.mode==='sandbox');
   if(state.mode==='drill'&&state.sessionActive&&state.sessionTotalCount){
     const left=state.sessionDeck.length+(state.sessionCurrentDone?0:1);
-    $('wsSessionRemainingBadge').textContent=`Left: ${left}`;
-    $('wsSessionRemainingBadge').classList.remove('hidden');
+    $('wsSessionRemainingBadge').textContent=`Left: ${left}`;$('wsSessionRemainingBadge').classList.remove('hidden');
     $('wsCounter').textContent=`${Math.min(state.sessionTotalCount,state.sessionTotalCount-state.sessionDeck.length)}/${state.sessionTotalCount}`;
-  }else{
-    $('wsSessionRemainingBadge').classList.add('hidden');
-    $('wsCounter').textContent=pool.length?`${Math.max(1,pool.indexOf(state.currentIndex)+1)}/${pool.length}`:'0/0';
-  }
+  }else{$('wsSessionRemainingBadge').classList.add('hidden');$('wsCounter').textContent=pool.length?`${Math.max(1,pool.indexOf(state.currentIndex)+1)}/${pool.length}`:'0/0';}
 }
 
 function switchView(v){
-  state.view=v;
-  clearTimers();
+  state.view=v;clearTimers();
   ['viewHome','viewFolderHub','viewWorkspace'].forEach(id=>$(id).classList.toggle('hidden',id!==(v==='home'?'viewHome':v==='folderHub'?'viewFolderHub':'viewWorkspace')));
-  $('breadcrumbBar').classList.toggle('hidden',v==='home');
-  $('breadcrumbBar').classList.toggle('flex',v!=='home');
-  if(v==='home')updateDashboard();
-  else if(v==='folderHub')renderFolderHub();
-  else if(v==='workspace'){
-    $('breadcrumbSub').textContent=state.mode==='sandbox'?'Draft Lab':(state.subfolder==='all'?(state.rootCat||'All'):state.subfolder);
-    applyWorkspaceMode();
-    state.mode==='sandbox'?initSandbox():loadGame();
-    setTimeout(()=>applyBoardSize(state.boardSize),100);
-  }
+  $('breadcrumbBar').classList.toggle('hidden',v==='home');$('breadcrumbBar').classList.toggle('flex',v!=='home');
+  if(v==='home')updateDashboard();else if(v==='folderHub')renderFolderHub();
+  else{$('breadcrumbSub').textContent=state.mode==='sandbox'?'Draft Lab':(state.subfolder==='all'?(state.rootCat||'All'):state.subfolder);applyWorkspaceMode();state.mode==='sandbox'?initSandbox():loadGame();setTimeout(()=>applyBoardSize(state.boardSize),100);}
 }
 
 function applyWorkspaceMode(){
-  clearTimers();
-  const isDrill=state.mode==='drill',isExp=state.mode==='explore',isSand=state.mode==='sandbox';
+  clearTimers();const isDrill=state.mode==='drill',isExp=state.mode==='explore',isSand=state.mode==='sandbox';
   if(!isExp&&state.isSparring){state.isSparring=false;$('expSparBtn').textContent='⚔️ Spar Engine';}
   $('modeSwitcherRow').classList.toggle('hidden',isSand);
   $('wsScopeName').textContent=isSand?'Sandbox Lab':(state.subfolder==='all'?`📁 All ${state.rootCat||'Repertoire'}`:`📁 ${state.subfolder.split('/').pop()}`);
@@ -641,136 +450,84 @@ function applyWorkspaceMode(){
   document.querySelectorAll('.drill-only').forEach(e=>e.classList.toggle('hidden',!isDrill));
   document.querySelectorAll('.explore-only').forEach(e=>e.classList.toggle('hidden',!isExp));
   document.querySelectorAll('.sandbox-only').forEach(e=>e.classList.toggle('hidden',!isSand));
-  $('engineSection').classList.toggle('hidden',isDrill&&!state.drillShowEngine);
-  $('evalBarWrapper').classList.toggle('hidden',isDrill&&!state.drillShowEngine);
-  if(isExp||isSand){evalBoard();fetchBook(state.game.fen());setStatus(isSand?'Sandbox: Draft moves and notes freely.':'Explore Mode: Engine & tablebases active.');}
+  $('engineSection').classList.toggle('hidden',isDrill&&!state.drillShowEngine);$('evalBarWrapper').classList.toggle('hidden',isDrill&&!state.drillShowEngine);
+  if(isExp||isSand){evalBoard();fetchBook(state.game.fen());setStatus(isSand?'Sandbox: Draft moves and notes freely.':'Explore Mode: Stockfish 19 & tablebases active.');}
   else{state.activeArrows=[];state.activeRings=[];renderCanvasOverlays();$('masterBookBanner').classList.add('hidden');if(state.drillShowEngine)evalBoard();setStatus('Drill Mode: Recall your repertoire moves.');}
   updateSessionUI();
 }
 
-function setStatus(msg,err=false){
-  $('statusMsg').textContent=msg;
-  $('statusMsg').className=`text-xs sm:text-sm font-medium text-center ${err?'text-rose-400':'text-teal-400'}`;
-}
+const setStatus=(msg,err=false)=>{$('statusMsg').textContent=msg;$('statusMsg').className=`text-xs sm:text-sm font-medium text-center ${err?'text-rose-400':'text-teal-400'}`;};
 
 function updateDashboard(){
   const c={Openings:0,Tactics:0,Endgames:0};
   state.pgnList.forEach((_,i)=>{const f=normF(state.pgnFolders[i]);Object.keys(c).forEach(k=>{if(f===k||f.startsWith(k+'/'))c[k]++;});});
   $('countOpenings').textContent=`${c.Openings} drills`;$('countTactics').textContent=`${c.Tactics} drills`;$('countEndgames').textContent=`${c.Endgames} drills`;
-  $('homeMistakeCountBadge').textContent=state.mistakeQueue.size;
-  $('homeFavCountBadge').textContent=state.favorites.size;
-  $('homeTotalDrillCount').textContent=state.pgnList.length;
+  $('homeMistakeCountBadge').textContent=state.mistakeQueue.size;$('homeFavCountBadge').textContent=state.favorites.size;$('homeTotalDrillCount').textContent=state.pgnList.length;
   if(state.sessionActive&&state.sessionTotalCount){
     const left=state.sessionDeck.length+(state.sessionCurrentDone?0:1);
-    $('homeResumeBadge').textContent=state.subfolder;
-    $('homeResumeStatsText').textContent=`${state.sessionTotalCount-left}/${state.sessionTotalCount} done • ${left} drills left`;
-    $('homeResumeBanner').classList.remove('hidden');
+    $('homeResumeBadge').textContent=state.subfolder;$('homeResumeStatsText').textContent=`${state.sessionTotalCount-left}/${state.sessionTotalCount} done • ${left} drills left`;$('homeResumeBanner').classList.remove('hidden');
   }else $('homeResumeBanner').classList.add('hidden');
-
   const subs=state.availableFolders.filter(f=>f.includes('/'));
   $('subfolderAccuracyChartContainer').innerHTML=subs.length?subs.map(s=>{
-    let tot=0,gld=0;
-    state.pgnList.forEach((_,i)=>{if(normF(state.pgnFolders[i])===normF(s)){tot++;if((state.masteryStreaks[i]||0)>=3)gld++;}});
+    let tot=0,gld=0;state.pgnList.forEach((_,i)=>{if(normF(state.pgnFolders[i])===normF(s)){tot++;if((state.masteryStreaks[i]||0)>=3)gld++;}});
     const pct=tot?Math.round((gld/tot)*100):0,col=pct>=80?'emerald':pct>=40?'amber':'rose';
     return`<div class="space-y-1"><div class="flex justify-between text-xs font-mono"><span class="text-gray-300 font-semibold">${esc(s)}</span><span class="text-${col}-400">${pct}% (${gld}⭐ / ${tot})</span></div><div class="w-full bg-gray-950 h-2 rounded-full overflow-hidden border border-gray-800"><div class="bg-${col}-500 h-full" style="width:${pct}%"></div></div></div>`;
   }).join(''):'<div class="text-gray-500 py-2 text-center text-xs italic">No subfolders.</div>';
 }
 
 function renderFolderHub(){
-  updateDashboard();
-  $('targetModeBadge').textContent=state.targetMode.toUpperCase();
+  updateDashboard();$('targetModeBadge').textContent=state.targetMode.toUpperCase();
   $('targetModeBadge').className=`text-xs uppercase font-mono font-bold px-2 py-0.5 rounded ${state.targetMode==='drill'?'bg-indigo-950 border border-indigo-700 text-indigo-300':'bg-teal-950 border border-teal-700 text-teal-300'}`;
-  if(!state.rootCat){
-    $('folderHubTitle').textContent=`Select Category to ${state.targetMode==='drill'?'Train':'Explore'}`;
-    $('rootFolderDeck').classList.remove('hidden');$('subfolderDeckContainer').classList.add('hidden');
-  }else{
-    $('folderHubTitle').textContent=`${state.rootCat} Subfolders`;
-    $('rootFolderDeck').classList.add('hidden');$('subfolderDeckContainer').classList.remove('hidden');
-    $('currentRootName').textContent=state.rootCat;
-    const allKnown=[...new Set([...state.availableFolders,...Object.values(state.pgnFolders).map(normF)])];
-    const subs=allKnown.filter(f=>f===state.rootCat||f.startsWith(state.rootCat+'/'));
+  if(!state.rootCat){$('folderHubTitle').textContent=`Select Category to ${state.targetMode==='drill'?'Train':'Explore'}`;$('rootFolderDeck').classList.remove('hidden');$('subfolderDeckContainer').classList.add('hidden');}
+  else{
+    $('folderHubTitle').textContent=`${state.rootCat} Subfolders`;$('rootFolderDeck').classList.add('hidden');$('subfolderDeckContainer').classList.remove('hidden');$('currentRootName').textContent=state.rootCat;
+    const subs=[...new Set([...state.availableFolders,...Object.values(state.pgnFolders).map(normF)])].filter(f=>f===state.rootCat||f.startsWith(state.rootCat+'/'));
     const counts={};state.pgnList.forEach((_,i)=>{const f=normF(state.pgnFolders[i]);counts[f]=(counts[f]||0)+1;});
     const rootTotal=state.pgnList.filter((_,i)=>{const f=normF(state.pgnFolders[i]);return f===state.rootCat||f.startsWith(state.rootCat+'/');}).length;
     let html=`<button data-act="startSubfolder" data-folder="all" class="p-3 bg-gray-900 border border-gray-800 hover:border-indigo-500 rounded-lg text-left flex justify-between items-center"><div><div class="font-bold text-white">📁 All ${esc(state.rootCat)}</div><div class="text-[10px] text-indigo-300">All lines in category</div></div><span class="text-xs font-mono bg-gray-800 px-2.5 py-1 rounded text-gray-200 font-bold">${rootTotal} PGNs</span></button>`;
     subs.forEach(sf=>{
       if(sf===state.rootCat)return;
-      html+=`<div class="p-3 bg-gray-900 border border-gray-800 rounded-lg flex items-center justify-between hover:border-teal-500 gap-1.5">
-        <button data-act="startSubfolder" data-folder="${esc(sf)}" class="flex-1 text-left flex items-center justify-between pr-1 min-w-0">
-          <div class="truncate"><div class="font-bold text-teal-300 truncate">${esc(sf.split('/').pop())}</div><div class="text-[10px] text-gray-400">${counts[sf]||0} PGNs</div></div>
-          <span class="px-2 py-1 rounded bg-gray-800 text-gray-200 font-mono font-bold text-[11px] shrink-0">${state.targetMode==='drill'?'▶ Start':'Open'}</span>
-        </button>
-        <div class="flex items-center gap-1 shrink-0">
-          <button data-act="openDirectAddModal" data-folder="${esc(sf)}" class="px-2 py-1 bg-teal-900/60 border border-teal-700/60 hover:bg-teal-700 text-teal-200 rounded font-semibold text-[11px]" title="Direct Import to ${esc(sf)}">+ Add</button>
-          <button data-act="renameSubfolder" data-folder="${esc(sf)}" class="px-1.5 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded text-[11px]" title="Rename Subfolder">✏️</button>
-          <button data-act="deleteSubfolder" data-folder="${esc(sf)}" class="px-1.5 py-1 bg-rose-950/70 hover:bg-rose-800 border border-rose-700/60 text-rose-300 rounded text-[11px]" title="Delete Subfolder & PGNs">🗑️</button>
-        </div>
-      </div>`;
+      html+=`<div class="p-3 bg-gray-900 border border-gray-800 rounded-lg flex items-center justify-between hover:border-teal-500 gap-1.5"><button data-act="startSubfolder" data-folder="${esc(sf)}" class="flex-1 text-left flex items-center justify-between pr-1 min-w-0"><div class="truncate"><div class="font-bold text-teal-300 truncate">${esc(sf.split('/').pop())}</div><div class="text-[10px] text-gray-400">${counts[sf]||0} PGNs</div></div><span class="px-2 py-1 rounded bg-gray-800 text-gray-200 font-mono font-bold text-[11px] shrink-0">${state.targetMode==='drill'?'▶ Start':'Open'}</span></button><div class="flex items-center gap-1 shrink-0"><button data-act="openDirectAddModal" data-folder="${esc(sf)}" class="px-2 py-1 bg-teal-900/60 border border-teal-700/60 hover:bg-teal-700 text-teal-200 rounded font-semibold text-[11px]" title="Direct Import to ${esc(sf)}">+ Add</button><button data-act="renameSubfolder" data-folder="${esc(sf)}" class="px-1.5 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded text-[11px]" title="Rename Subfolder">✏️</button><button data-act="deleteSubfolder" data-folder="${esc(sf)}" class="px-1.5 py-1 bg-rose-950/70 hover:bg-rose-800 border border-rose-700/60 text-rose-300 rounded text-[11px]" title="Delete Subfolder & PGNs">🗑️</button></div></div>`;
     });
     $('subfolderList').innerHTML=html;
   }
 }
 
 function loadGame(isRepeat=false){
-  clearTimers();
-  state.selectedSquare=null;
-  $('nextDrillBtn')?.classList.remove('ring-2','ring-amber-400','animate-pulse');
+  clearTimers();state.selectedSquare=null;$('nextDrillBtn')?.classList.remove('ring-2','ring-amber-400','animate-pulse');
   ['promoModal','syzygyBanner','masterBookBanner','quickInspectErrorBtn'].forEach(id=>$(id).classList.add('hidden'));
   Object.assign(state,{activeArrows:[],activeRings:[],activeBranchMoves:[],branchStartPly:-1,currentMoveIndex:0,explorePlyIndex:0,expectedMoves:[],currentLineMoves:[],hadMistake:false,lastMoveSquares:null,moveStartTime:Date.now()});
   if(!isRepeat)state.sessionCurrentDone=false;
   renderCanvasOverlays();clearHighlights();state.game.reset();
-
-  const pool=getPool();
-  if(!pool.length){state.board?.position('start');renderHistory(0);updateSessionUI();setStatus('No drills in queue.');return;}
+  const pool=getPool();if(!pool.length){state.board?.position('start');renderHistory(0);updateSessionUI();setStatus('No drills in queue.');return;}
   if(!pool.includes(state.currentIndex))state.currentIndex=pool[0];
   updateSessionUI();
-
-  const rawPgn=(state.pgnList[state.currentIndex]||'').replace(/\r\n/g,'\n');
-  parseComments(rawPgn);
-
+  const rawPgn=(state.pgnList[state.currentIndex]||'').replace(/\r\n/g,'\n');parseComments(rawPgn);
   if(state.playerSide!=='auto')state.board.orientation(state.playerSide==='w'?'white':'black');
-  else{
-    const bm=rawPgn.match(/\[Black\s+"([^"]+)"\]/i),wm=rawPgn.match(/\[White\s+"([^"]+)"\]/i);
-    state.board.orientation(bm&&/user|player|me/i.test(bm[1])&&!(wm&&/user|player|me/i.test(wm[1]))?'black':'white');
-  }
+  else{const bm=rawPgn.match(/\[Black\s+"([^"]+)"\]/i),wm=rawPgn.match(/\[White\s+"([^"]+)"\]/i);state.board.orientation(bm&&/user|player|me/i.test(bm[1])&&!(wm&&/user|player|me/i.test(wm[1]))?'black':'white');}
   resizeCanvas();
-
   const streak=state.masteryStreaks[state.currentIndex]||0;
-  $('statMasteryLevel').textContent=streak>=3?'⭐ Gold':streak>=1?'⭐ Silver':'Bronze';
-  $('wsMasteryStarBadge').classList.toggle('hidden',!streak);
-
-  const fm=rawPgn.match(/\[FEN\s+"([^"]+)"\]/i);
-  state.initialFen=fm?fm[1].trim():START_FEN;
-
+  $('statMasteryLevel').textContent=streak>=3?'⭐ Gold':streak>=1?'⭐ Silver':'Bronze';$('wsMasteryStarBadge').classList.toggle('hidden',!streak);
+  const fm=rawPgn.match(/\[FEN\s+"([^"]+)"\]/i);state.initialFen=fm?fm[1].trim():START_FEN;
   if(loadPgnSafe(state.scratchGame,rawPgn)){
-    state.expectedMoves=state.scratchGame.history({verbose:true});
-    state.currentLineMoves=[...state.expectedMoves];
-    state.game.load(state.initialFen);
+    state.expectedMoves=state.scratchGame.history({verbose:true});state.currentLineMoves=[...state.expectedMoves];state.game.load(state.initialFen);
     if(state.mode==='drill'&&state.randomStartActive&&state.expectedMoves.length>4){
       const jIdx=(Math.random()*(state.expectedMoves.length-2)+1)|0;
-      for(let p=0;p<jIdx;p++){
-        const em=state.expectedMoves[p];
-        state.game.move({from:em.from,to:em.to,promotion:em.promotion||'q'});
-        if(p===jIdx-1)state.lastMoveSquares={from:em.from,to:em.to};
-      }
+      for(let p=0;p<jIdx;p++){const em=state.expectedMoves[p];state.game.move({from:em.from,to:em.to,promotion:em.promotion||'q'});if(p===jIdx-1)state.lastMoveSquares={from:em.from,to:em.to};}
       state.currentMoveIndex=jIdx;
     }
-    state.board.position(state.game.fen());
-    renderHighlights();updateCoachNote();renderHistory();checkSyzygy();fetchBook(state.game.fen());persist();
+    state.board.position(state.game.fen());renderHighlights();updateCoachNote();renderHistory();checkSyzygy();fetchBook(state.game.fen());persist();
     if(state.mode==='drill'){
       setStatus(isRepeat?'Drill reset.':`Session Active (${state.sessionDeck.length+1} left).`);
-      if(state.game.turn()!==(state.board.orientation()==='black'?'b':'w')&&state.expectedMoves.length>state.currentMoveIndex){
-        setStatus('Opponent thinking...');oppTimer=setTimeout(oppMove,450);
-      }
+      if(state.game.turn()!==(state.board.orientation()==='black'?'b':'w')&&state.expectedMoves.length>state.currentMoveIndex){setStatus('Opponent thinking...');oppTimer=setTimeout(oppMove,450);}
     }else evalBoard();
   }else setStatus('PGN load error.',true);
 }
 
 function oppMove(){
-  oppTimer=null;
-  if(state.currentMoveIndex>=state.expectedMoves.length||state.currentMoveIndex>=state.targetMaxPly)return finishDrill();
+  oppTimer=null;if(state.currentMoveIndex>=state.expectedMoves.length||state.currentMoveIndex>=state.targetMaxPly)return finishDrill();
   const m=state.expectedMoves[state.currentMoveIndex++],res=state.game.move({from:m.from,to:m.to,promotion:m.promotion||'q'});
-  state.lastMoveSquares={from:m.from,to:m.to};state.board.position(state.game.fen());
-  renderHistory();updateCoachNote();checkSyzygy();renderHighlights();
+  state.lastMoveSquares={from:m.from,to:m.to};state.board.position(state.game.fen());renderHistory();updateCoachNote();checkSyzygy();renderHighlights();
   if(state.drillShowEngine)evalBoard();
   playSound(res?.captured?'capture':(state.game.in_check()?'check':'move'));
   if(state.currentMoveIndex>=state.expectedMoves.length||state.currentMoveIndex>=state.targetMaxPly)finishDrill();
@@ -778,185 +535,100 @@ function oppMove(){
 }
 
 function finishDrill(){
-  clearTimers();
-  state.completedGames.add(state.currentIndex);state.sessionCurrentDone=true;
-  const s=normF(state.pgnFolders[state.currentIndex]);
-  if(!state.subfolderStats[s])state.subfolderStats[s]={correct:0,total:0};
-  state.subfolderStats[s].total++;
+  clearTimers();state.completedGames.add(state.currentIndex);state.sessionCurrentDone=true;
+  const s=normF(state.pgnFolders[state.currentIndex]);if(!state.subfolderStats[s])state.subfolderStats[s]={correct:0,total:0};state.subfolderStats[s].total++;
   if(!state.hadMistake){
-    state.mistakeQueue.delete(state.currentIndex);state.subfolderStats[s].correct++;
-    state.masteryStreaks[state.currentIndex]=(state.masteryStreaks[state.currentIndex]||0)+1;
-    playSound('check');
-    setStatus(`✅ Drill passed! (${state.sessionDeck.length} left) — Click Next →`);
-  }else{
-    state.masteryStreaks[state.currentIndex]=0;
-    setStatus(`⚠️ Line finished with errors (${state.sessionDeck.length} left) — Click Next → or Repeat`,true);
-  }
-  $('nextDrillBtn')?.classList.add('ring-2','ring-amber-400','animate-pulse');
-  updateSessionUI();updateAnalytics();persist();
+    state.mistakeQueue.delete(state.currentIndex);state.subfolderStats[s].correct++;state.masteryStreaks[state.currentIndex]=(state.masteryStreaks[state.currentIndex]||0)+1;
+    playSound('check');setStatus(`✅ Drill passed! (${state.sessionDeck.length} left) — Click Next →`);
+  }else{state.masteryStreaks[state.currentIndex]=0;setStatus(`⚠️ Line finished with errors (${state.sessionDeck.length} left) — Click Next → or Repeat`,true);}
+  $('nextDrillBtn')?.classList.add('ring-2','ring-amber-400','animate-pulse');updateSessionUI();updateAnalytics();persist();
 }
 
 function nextDrill(){
-  clearTimers();
-  if(!getPool().length)return;
+  clearTimers();if(!getPool().length)return;
   if(state.sessionActive){
-    if(state.sessionDeck.length>0){
-      state.drillHistoryStack.push(state.currentIndex);state.currentIndex=state.sessionDeck.shift();
-      state.sessionCurrentDone=false;loadGame();
-    }else{
-      state.sessionActive=false;state.sessionCurrentDone=true;updateSessionUI();persist();
-      $('nextDrillBtn')?.classList.remove('ring-2','ring-amber-400','animate-pulse');
-      setStatus(`🎉 Session Complete! All ${state.sessionTotalCount} drills finished.`);
-    }
+    if(state.sessionDeck.length>0){state.drillHistoryStack.push(state.currentIndex);state.currentIndex=state.sessionDeck.shift();state.sessionCurrentDone=false;loadGame();}
+    else{state.sessionActive=false;state.sessionCurrentDone=true;updateSessionUI();persist();$('nextDrillBtn')?.classList.remove('ring-2','ring-amber-400','animate-pulse');setStatus(`🎉 Session Complete! All ${state.sessionTotalCount} drills finished.`);}
   }else startSession(state.subfolder,state.activeQueueMode);
 }
 
 function attemptMove(from,to,promo='q'){
-  clearHighlights();
-  if(state.clearArrowsOnMove&&state.mode!=='drill'){state.activeArrows=[];state.activeRings=[];renderCanvasOverlays();}
+  clearHighlights();if(state.clearArrowsOnMove&&state.mode!=='drill'){state.activeArrows=[];state.activeRings=[];renderCanvasOverlays();}
   if(state.mode==='sandbox'||state.mode==='explore'){
-    const curLen=state.game.history().length,m=state.game.move({from,to,promotion:promo});
-    if(!m){renderHighlights();return false;}
+    const curLen=state.game.history().length,m=state.game.move({from,to,promotion:promo});if(!m){renderHighlights();return false;}
     state.lastMoveSquares={from,to};
     if(state.mode==='explore'){
       const exp=state.expectedMoves[curLen];
-      if(!exp||exp.from!==from||exp.to!==to||(exp.promotion&&exp.promotion!==promo)||state.activeBranchMoves.length){
-        if(state.branchStartPly===-1)state.branchStartPly=curLen;
-        state.activeBranchMoves.push(m);
-      }
+      if(!exp||exp.from!==from||exp.to!==to||(exp.promotion&&exp.promotion!==promo)||state.activeBranchMoves.length){if(state.branchStartPly===-1)state.branchStartPly=curLen;state.activeBranchMoves.push(m);}
       state.explorePlyIndex=curLen+1;
-    }else{
-      state.currentLineMoves=state.game.history({verbose:true});
-      state.sandboxHistoryFens.push(state.game.fen());
-    }
+    }else{state.currentLineMoves=state.game.history({verbose:true});state.sandboxHistoryFens.push(state.game.fen());}
     renderHistory(state.game.history().length);renderHighlights();updateCoachNote();evalBoard();checkSyzygy();fetchBook(state.game.fen());
-    playSound(m.captured?'capture':(state.game.in_check()?'check':'move'));
-    if(state.mode==='explore'&&state.isSparring)triggerSparMove();
-    return true;
+    playSound(m.captured?'capture':(state.game.in_check()?'check':'move'));if(state.mode==='explore'&&state.isSparring)triggerSparMove();return true;
   }
   if(state.mode==='drill'){
     if(state.currentMoveIndex>=state.expectedMoves.length)return false;
     const exp=state.expectedMoves[state.currentMoveIndex],direct=from===exp.from&&to===exp.to&&(!exp.promotion||exp.promotion===promo);
-    state.scratchGame.load(state.game.fen());
-    const legal=state.scratchGame.move({from,to,promotion:promo});
-    state.totalAttempts++;
-    if(!legal){
-      playSound('error');state.hadMistake=true;state.mistakeQueue.add(state.currentIndex);
-      updateAnalytics();renderHighlights();setStatus('Illegal move!',true);return false;
-    }
+    state.scratchGame.load(state.game.fen());const legal=state.scratchGame.move({from,to,promotion:promo});state.totalAttempts++;
+    if(!legal){playSound('error');state.hadMistake=true;state.mistakeQueue.add(state.currentIndex);updateAnalytics();renderHighlights();setStatus('Illegal move!',true);return false;}
     const userFen=state.scratchGame.fen().split(' ').slice(0,4).join(' ');
-    state.scratchGame.load(state.game.fen());
-    state.scratchGame.move({from:exp.from,to:exp.to,promotion:exp.promotion||'q'});
+    state.scratchGame.load(state.game.fen());state.scratchGame.move({from:exp.from,to:exp.to,promotion:exp.promotion||'q'});
     const trans=userFen===state.scratchGame.fen().split(' ').slice(0,4).join(' ');
     if(direct||trans){
-      const res=state.game.move({from,to,promotion:promo});
-      state.lastMoveSquares={from,to};state.currentMoveIndex++;
-      renderHistory();updateCoachNote();checkSyzygy();renderHighlights();
-      if(state.drillShowEngine)evalBoard();
-      const sec=(Date.now()-state.moveStartTime)/1000;
-      if(sec>5)$('homeSpeedWarning').classList.remove('hidden');
-      state.totalMoveSeconds+=sec;state.timedMovesCount++;state.correctAttempts++;
-      updateAnalytics();playSound(res.captured?'capture':(state.game.in_check()?'check':'move'));
-      setStatus(trans&&!direct?'Transposition!':'Correct!');
-      if(state.currentMoveIndex<state.expectedMoves.length&&state.currentMoveIndex<state.targetMaxPly)oppTimer=setTimeout(oppMove,450);
-      else finishDrill();
+      const res=state.game.move({from,to,promotion:promo});state.lastMoveSquares={from,to};state.currentMoveIndex++;
+      renderHistory();updateCoachNote();checkSyzygy();renderHighlights();if(state.drillShowEngine)evalBoard();
+      const sec=(Date.now()-state.moveStartTime)/1000;if(sec>5)$('homeSpeedWarning').classList.remove('hidden');
+      state.totalMoveSeconds+=sec;state.timedMovesCount++;state.correctAttempts++;updateAnalytics();
+      playSound(res.captured?'capture':(state.game.in_check()?'check':'move'));setStatus(trans&&!direct?'Transposition!':'Correct!');
+      if(state.currentMoveIndex<state.expectedMoves.length&&state.currentMoveIndex<state.targetMaxPly)oppTimer=setTimeout(oppMove,450);else finishDrill();
       return true;
-    }else{
-      playSound('error');state.hadMistake=true;state.mistakeQueue.add(state.currentIndex);
-      updateAnalytics();renderHighlights();setStatus(`Blunder: ${legal.san} is incorrect!`,true);
-      $('quickInspectErrorBtn').classList.remove('hidden');return false;
-    }
+    }else{playSound('error');state.hadMistake=true;state.mistakeQueue.add(state.currentIndex);updateAnalytics();renderHighlights();setStatus(`Blunder: ${legal.san} is incorrect!`,true);$('quickInspectErrorBtn').classList.remove('hidden');return false;}
   }
   return false;
 }
 
 function renderHighlights(){
   clearHighlights();
-  if(state.lastMoveSquares){
-    $('board').querySelector(`.square-${state.lastMoveSquares.from}`)?.classList.add('highlight-last-from');
-    $('board').querySelector(`.square-${state.lastMoveSquares.to}`)?.classList.add('highlight-last-to');
-  }
-  if(state.game.in_check()){
-    const b=state.game.board();
-    for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(b[r][c]?.type==='k'&&b[r][c]?.color===state.game.turn())
-      $('board').querySelector(`.square-${String.fromCharCode(97+c)}${8-r}`)?.classList.add('highlight-check');
-  }
+  if(state.lastMoveSquares){$('board').querySelector(`.square-${state.lastMoveSquares.from}`)?.classList.add('highlight-last-from');$('board').querySelector(`.square-${state.lastMoveSquares.to}`)?.classList.add('highlight-last-to');}
+  if(state.game.in_check()){const b=state.game.board();for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(b[r][c]?.type==='k'&&b[r][c]?.color===state.game.turn())$('board').querySelector(`.square-${String.fromCharCode(97+c)}${8-r}`)?.classList.add('highlight-check');}
 }
 const clearHighlights=()=>$('board').querySelectorAll('.square-55d63').forEach(e=>e.classList.remove('highlight-hint','highlight-selected','legal-dot','legal-capture','highlight-last-from','highlight-last-to','highlight-check'));
-
-function showDots(sq){
-  clearHighlights();
-  $('board').querySelector(`.square-${sq}`)?.classList.add('highlight-selected');
-  state.game.moves({square:sq,verbose:true}).forEach(m=>$('board').querySelector(`.square-${m.to}`)?.classList.add(m.captured?'legal-capture':'legal-dot'));
-}
-
-function promptPromotion(from,to,col){
-  $('promoChoices').innerHTML=['q','r','b','n'].map(pr=>`<img src="${getPieceUrl(`${col}${pr.toUpperCase()}`)}" class="w-11 h-11 cursor-pointer hover:bg-gray-700 p-1 rounded" data-act="choosePromo" data-piece="${pr}">`).join('');
-  state._promoMove={from,to};
-  $('promoModal').classList.remove('hidden');
-}
+const showDots=sq=>{clearHighlights();$('board').querySelector(`.square-${sq}`)?.classList.add('highlight-selected');state.game.moves({square:sq,verbose:true}).forEach(m=>$('board').querySelector(`.square-${m.to}`)?.classList.add(m.captured?'legal-capture':'legal-dot'));};
+const promptPromotion=(from,to,col)=>{$('promoChoices').innerHTML=['q','r','b','n'].map(pr=>`<img src="${getPieceUrl(`${col}${pr.toUpperCase()}`)}" class="w-11 h-11 cursor-pointer hover:bg-gray-700 p-1 rounded" data-act="choosePromo" data-piece="${pr}">`).join('');state._promoMove={from,to};$('promoModal').classList.remove('hidden');};
 
 function handleSquare(sq){
-  if(state.game.game_over())return;
-  const p=state.game.get(sq);
+  if(state.game.game_over())return;const p=state.game.get(sq);
   if(!state.selectedSquare){
-    if(p){
-      if(state.mode==='drill'&&(p.color!==(state.board.orientation()==='black'?'b':'w')||p.color!==state.game.turn()))return;
-      if(state.mode!=='drill'&&p.color!==state.game.turn())return;
-      state.selectedSquare=sq;showDots(sq);
-    }
+    if(p){if(state.mode==='drill'&&(p.color!==(state.board.orientation()==='black'?'b':'w')||p.color!==state.game.turn()))return;if(state.mode!=='drill'&&p.color!==state.game.turn())return;state.selectedSquare=sq;showDots(sq);}
   }else{
     if(state.selectedSquare===sq){state.selectedSquare=null;clearHighlights();renderHighlights();return;}
     if(p&&p.color===state.game.turn()){state.selectedSquare=sq;showDots(sq);return;}
-    const from=state.selectedSquare,to=sq,movingPiece=state.game.get(from);
-    if(movingPiece?.type==='p'&&state.game.moves({square:from,verbose:true}).some(m=>m.to===to&&m.promotion)){
-      state.selectedSquare=null;clearHighlights();
-      promptPromotion(from,to,movingPiece.color);
-      return;
-    }
-    attemptMove(from,to,'q');
-    state.board.position(state.game.fen());
-    state.selectedSquare=null;renderHighlights();
+    const from=state.selectedSquare,to=sq,mp=state.game.get(from);
+    if(mp?.type==='p'&&state.game.moves({square:from,verbose:true}).some(m=>m.to===to&&m.promotion)){state.selectedSquare=null;clearHighlights();return promptPromotion(from,to,mp.color);}
+    attemptMove(from,to,'q');state.board.position(state.game.fen());state.selectedSquare=null;renderHighlights();
   }
 }
 
 function resizeCanvas(){
-  const r=$('board').getBoundingClientRect();if(!r.width)return;
-  const d=window.devicePixelRatio||1;
-  $('arrowCanvas').width=r.width*d;$('arrowCanvas').height=r.height*d;
-  $('arrowCanvas').style.width=`${r.width}px`;$('arrowCanvas').style.height=`${r.height}px`;
+  const r=$('board').getBoundingClientRect();if(!r.width)return;const d=window.devicePixelRatio||1;
+  $('arrowCanvas').width=r.width*d;$('arrowCanvas').height=r.height*d;$('arrowCanvas').style.width=`${r.width}px`;$('arrowCanvas').style.height=`${r.height}px`;
   arrowCtx.setTransform(d,0,0,d,0,0);renderCanvasOverlays();
 }
-
 function getSqPos(sq){
-  const r=$('board').getBoundingClientRect(),flip=state.board?.orientation()==='black';
-  let f=sq.charCodeAt(0)-97,rk=parseInt(sq[1],10)-1;
-  if(flip)f=7-f;else rk=7-rk;
-  const sz=r.width/8;
+  const r=$('board').getBoundingClientRect(),flip=state.board?.orientation()==='black',sz=r.width/8;
+  let f=sq.charCodeAt(0)-97,rk=parseInt(sq[1],10)-1;if(flip)f=7-f;else rk=7-rk;
   return{x:f*sz+sz/2,y:rk*sz+sz/2,sz};
 }
-
 function renderCanvasOverlays(){
-  const r=$('board').getBoundingClientRect();
-  arrowCtx.clearRect(0,0,r.width,r.height);
-  if(state.mode==='drill')return;
-  state.activeRings.forEach(({sq,color})=>{
-    const{x,y,sz}=getSqPos(sq);
-    arrowCtx.beginPath();arrowCtx.arc(x,y,sz*.4,0,2*Math.PI);arrowCtx.lineWidth=sz*.08;arrowCtx.strokeStyle=color;arrowCtx.stroke();
-  });
+  const r=$('board').getBoundingClientRect();arrowCtx.clearRect(0,0,r.width,r.height);if(state.mode==='drill')return;
+  state.activeRings.forEach(({sq,color})=>{const{x,y,sz}=getSqPos(sq);arrowCtx.beginPath();arrowCtx.arc(x,y,sz*.4,0,2*Math.PI);arrowCtx.lineWidth=sz*.08;arrowCtx.strokeStyle=color;arrowCtx.stroke();});
   state.activeArrows.forEach(({from,to,color})=>{
     const f=getSqPos(from),t=getSqPos(to),a=Math.atan2(t.y-f.y,t.x-f.x),h=r.width*.035;
-    arrowCtx.strokeStyle=arrowCtx.fillStyle=color||`rgba(20,184,166,${state.arrowOpacity})`;
-    arrowCtx.lineWidth=r.width*.024;arrowCtx.lineCap='round';
+    arrowCtx.strokeStyle=arrowCtx.fillStyle=color||`rgba(20,184,166,${state.arrowOpacity})`;arrowCtx.lineWidth=r.width*.024;arrowCtx.lineCap='round';
     arrowCtx.beginPath();arrowCtx.moveTo(f.x,f.y);arrowCtx.lineTo(t.x-Math.cos(a)*(h*.8),t.y-Math.sin(a)*(h*.8));arrowCtx.stroke();
-    arrowCtx.beginPath();arrowCtx.moveTo(t.x,t.y);
-    arrowCtx.lineTo(t.x-h*Math.cos(a-Math.PI/6),t.y-h*Math.sin(a-Math.PI/6));
-    arrowCtx.lineTo(t.x-h*Math.cos(a+Math.PI/6),t.y-h*Math.sin(a+Math.PI/6));
-    arrowCtx.closePath();arrowCtx.fill();
+    arrowCtx.beginPath();arrowCtx.moveTo(t.x,t.y);arrowCtx.lineTo(t.x-h*Math.cos(a-Math.PI/6),t.y-h*Math.sin(a-Math.PI/6));arrowCtx.lineTo(t.x-h*Math.cos(a+Math.PI/6),t.y-h*Math.sin(a+Math.PI/6));arrowCtx.closePath();arrowCtx.fill();
   });
 }
 
-// Speech Recognition ONLY for Move Note Dictation
 function initSpeech(){
   if(!SpeechRec)return;
   try{
@@ -968,41 +640,33 @@ function initSpeech(){
 }
 
 function formatEnginePv(fen,pvStr){
-  if(!pvStr)return'...';
-  const temp=new Chess();if(!temp.load(fen))return pvStr;
-  const tokens=pvStr.trim().split(/\s+/),out=[];
-  let moveNum=parseInt(fen.split(' ')[5],10)||1,turn=fen.split(' ')[1]||'w';
+  if(!pvStr)return'...';const temp=new Chess();if(!temp.load(fen))return pvStr;
+  const tokens=pvStr.trim().split(/\s+/),out=[];let moveNum=parseInt(fen.split(' ')[5],10)||1,turn=fen.split(' ')[1]||'w';
   for(let i=0;i<Math.min(tokens.length,6);i++){
-    const u=tokens[i];if(!u||u.length<4)break;
-    const m=temp.move({from:u.slice(0,2),to:u.slice(2,4),promotion:u[4]||'q'});if(!m)break;
-    if(turn==='w'){out.push(`${moveNum}. ${m.san}`);turn='b';}
-    else{out.push(i===0?`${moveNum}... ${m.san}`:m.san);turn='w';moveNum++;}
+    const u=tokens[i];if(!u||u.length<4)break;const m=temp.move({from:u.slice(0,2),to:u.slice(2,4),promotion:u[4]||'q'});if(!m)break;
+    if(turn==='w'){out.push(`${moveNum}. ${m.san}`);turn='b';}else{out.push(i===0?`${moveNum}... ${m.san}`:m.san);turn='w';moveNum++;}
   }
   return out.join(' ')||pvStr;
 }
 
 function initStockfish(){
-  const src=`var q=[];self.onmessage=e=>q.push(e.data);function fb(){try{self.onmessage=null;importScripts('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');self.postMessage('uciok_sf10');while(q.length)self.onmessage({data:q.shift()});}catch(e){self.postMessage('sf_err');}}if(typeof SharedArrayBuffer!=='undefined'){try{importScripts('https://unpkg.com/stockfish@16.0.0/src/stockfish-nnue-16-single.js');if(typeof Stockfish==='function'){Stockfish({locateFile:p=>'https://unpkg.com/stockfish@16.0.0/src/'+p}).then(sf=>{sf.addMessageListener(l=>self.postMessage(l));self.onmessage=e=>sf.postMessage(e.data);self.postMessage('uciok_nnue16');while(q.length)sf.postMessage(q.shift());}).catch(fb);}else fb();}catch(e){fb();}}else fb();`;
+  const src=`var q=[];self.onmessage=function(e){q.push(e.data);};function flush(){while(q.length&&typeof self.onmessage==='function')self.onmessage({data:q.shift()});}var urls=[['https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/stockfish-19-lite-single.js','NNUE 19'],['https://unpkg.com/stockfish@19.0.1/bin/stockfish-19-lite-single.js','NNUE 19'],['https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/stockfish-19-asm.js','SF 19 ASM'],['https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js','SF 10.0']];function tryLoad(idx){if(idx>=urls.length){self.postMessage('sf_err');return;}var u=urls[idx][0],label=urls[idx][1],base=u.substring(0,u.lastIndexOf('/')+1);self.Module={locateFile:function(p){return base+p;}};try{self.onmessage=null;importScripts(u);if(typeof self.onmessage==='function'){self.postMessage('sf_ver:'+label);setTimeout(flush,50);}else if(typeof Stockfish==='function'){Stockfish({locateFile:function(p){return base+p;}}).then(function(sf){sf.addMessageListener(function(l){self.postMessage(l);});self.onmessage=function(e){sf.postMessage(e.data);};self.postMessage('sf_ver:'+label);while(q.length)sf.postMessage(q.shift());}).catch(function(){tryLoad(idx+1);});}else{setTimeout(function(){if(typeof self.onmessage==='function'){self.postMessage('sf_ver:'+label);flush();}else tryLoad(idx+1);},250);}}catch(e){tryLoad(idx+1);}}tryLoad(0);`;
   try{
     engineWorker=new Worker(URL.createObjectURL(new Blob([src],{type:'application/javascript'})));
     engineWorker.postMessage('uci');engineWorker.postMessage('setoption name MultiPV value 3');engineWorker.postMessage('isready');
     engineWorker.onmessage=e=>{
       const l=String(e.data||'');
-      if(l==='uciok_nnue16')$('engineVersionBadge').textContent='NNUE 16';
-      if(l==='uciok_sf10'||l.includes('Stockfish 10'))$('engineVersionBadge').textContent='SF 10.0';
+      if(l.startsWith('sf_ver:'))$('engineVersionBadge').textContent=l.slice(7);
+      else if(l.includes('Stockfish 19'))$('engineVersionBadge').textContent='NNUE 19';
+      else if(l.includes('Stockfish 10'))$('engineVersionBadge').textContent='SF 10.0';
       if(state.isSparring&&state.mode==='explore'&&l.startsWith('bestmove')){
         const u=l.split(' ')[1];
         if(u&&u!=='(none)'&&state.game.turn()!==(state.board.orientation()==='black'?'b':'w')){
-          const curLen=state.game.history().length;
-          const res=state.game.move({from:u.slice(0,2),to:u.slice(2,4),promotion:u[4]||'q'});
+          const curLen=state.game.history().length,res=state.game.move({from:u.slice(0,2),to:u.slice(2,4),promotion:u[4]||'q'});
           if(res){
             const exp=state.expectedMoves[curLen];
-            if(!exp||exp.from!==res.from||exp.to!==res.to||state.activeBranchMoves.length){
-              if(state.branchStartPly===-1)state.branchStartPly=curLen;
-              state.activeBranchMoves.push(res);
-            }
-            state.explorePlyIndex=curLen+1;
-            state.lastMoveSquares={from:res.from,to:res.to};state.board.position(state.game.fen());
+            if(!exp||exp.from!==res.from||exp.to!==res.to||state.activeBranchMoves.length){if(state.branchStartPly===-1)state.branchStartPly=curLen;state.activeBranchMoves.push(res);}
+            state.explorePlyIndex=curLen+1;state.lastMoveSquares={from:res.from,to:res.to};state.board.position(state.game.fen());
             renderHistory(state.game.history().length);renderHighlights();evalBoard();checkSyzygy();fetchBook(state.game.fen());
             playSound(res.captured?'capture':(state.game.in_check()?'check':'move'));
           }
@@ -1011,26 +675,15 @@ function initStockfish(){
       if(l.startsWith('info')&&l.includes('multipv')){
         const m=l.match(/multipv\s+(\d+).*?score\s+(cp|mate)\s+(-?\d+).*?pv\s+(.*)/);
         if(m){
-          const[,mpv,type,rawVal,pv]=m;let v=parseInt(rawVal,10);
-          if(state.game.turn()==='b')v=-v;
+          const[,mpv,type,rawVal,pv]=m;let v=parseInt(rawVal,10);if(state.game.turn()==='b')v=-v;
           if(mpv==='1'){
             const pct=type==='mate'?(v>0?100:0):50+(Math.max(-10,Math.min(10,v/100))/10)*50;
-            $('evalBarWhite').style.height=`${pct}%`;
-            $('evalBarScoreText').textContent=type==='mate'?`M${v}`:`${v>0?'+':''}${(v/100).toFixed(1)}`;
-            const wp=type==='mate'?(v>0?100:0):Math.round(1/(1+Math.pow(10,-v/400))*100);
-            $('wdlText').textContent=`${wp}% W / ${100-wp}% B`;
-            if(state.mode==='explore'&&pv.length>=4){
-              const u1=pv.split(' ')[0];
-              state.activeArrows=[{from:u1.slice(0,2),to:u1.slice(2,4),color:'rgba(239,68,68,0.7)'}];
-              renderCanvasOverlays();
-            }
+            $('evalBarWhite').style.height=`${pct}%`;$('evalBarScoreText').textContent=type==='mate'?`M${v}`:`${v>0?'+':''}${(v/100).toFixed(1)}`;
+            const wp=type==='mate'?(v>0?100:0):Math.round(1/(1+Math.pow(10,-v/400))*100);$('wdlText').textContent=`${wp}% W / ${100-wp}% B`;
+            if(state.mode==='explore'&&pv.length>=4){const u1=pv.split(' ')[0];state.activeArrows=[{from:u1.slice(0,2),to:u1.slice(2,4),color:'rgba(239,68,68,0.7)'}];renderCanvasOverlays();}
           }
-          const score=type==='cp'?(v>0?`+${(v/100).toFixed(2)}`:(v/100).toFixed(2)):`M${v}`;
-          const el=$('engineLinesBox').children[parseInt(mpv,10)-1];
-          if(el){
-            el.innerHTML=`${mpv}. <span class="font-bold ${v>0?'text-teal-400':'text-rose-400'}">[${score}]</span> ${esc(formatEnginePv(state.game.fen(),pv))}`;
-            el.dataset.pvMove=pv.split(' ')[0];
-          }
+          const score=type==='cp'?(v>0?`+${(v/100).toFixed(2)}`:(v/100).toFixed(2)):`M${v}`,el=$('engineLinesBox').children[parseInt(mpv,10)-1];
+          if(el){el.innerHTML=`${mpv}. <span class="font-bold ${v>0?'text-teal-400':'text-rose-400'}">[${score}]</span> ${esc(formatEnginePv(state.game.fen(),pv))}`;el.dataset.pvMove=pv.split(' ')[0];}
         }
       }
     };
@@ -1038,199 +691,108 @@ function initStockfish(){
 }
 
 function triggerSparMove(){
-  if(!engineWorker||!state.isSparring||state.game.game_over())return;
-  if(state.game.turn()===(state.board.orientation()==='black'?'b':'w'))return;
-  clearTimeout(evalTimer);
-  evalTimer=setTimeout(()=>{
-    engineWorker.postMessage('stop');
-    engineWorker.postMessage('position fen '+state.game.fen());
-    engineWorker.postMessage('go depth 10');
-  },120);
+  if(!engineWorker||!state.isSparring||state.game.game_over()||state.game.turn()===(state.board.orientation()==='black'?'b':'w'))return;
+  clearTimeout(evalTimer);evalTimer=setTimeout(()=>{engineWorker.postMessage('stop');engineWorker.postMessage('position fen '+state.game.fen());engineWorker.postMessage('go depth 10');},120);
 }
 
 function evalBoard(){
   if(!engineWorker||(state.mode==='drill'&&!state.drillShowEngine))return;
   if(state.mode==='explore'&&state.isSparring&&state.game.turn()!==(state.board.orientation()==='black'?'b':'w'))return triggerSparMove();
-  clearTimeout(evalTimer);clearTimeout(idleTimer);
-  [...$('engineLinesBox').children].forEach(el=>delete el.dataset.pvMove);
+  clearTimeout(evalTimer);clearTimeout(idleTimer);[...$('engineLinesBox').children].forEach(el=>delete el.dataset.pvMove);
   evalTimer=setTimeout(()=>{
     if(state.game.game_over()){engineWorker.postMessage('stop');return;}
     const d=Math.max(10,Math.min(25,parseInt($('engineDepthInput').value,10)||18));
-    engineWorker.postMessage('stop');
-    engineWorker.postMessage('position fen '+state.game.fen());
-    engineWorker.postMessage(`go depth ${d}`);
+    engineWorker.postMessage('stop');engineWorker.postMessage('position fen '+state.game.fen());engineWorker.postMessage(`go depth ${d}`);
     idleTimer=setTimeout(()=>engineWorker.postMessage('stop'),60000);
   },60);
 }
 
 const fetchJson=async u=>{try{const r=await fetch(u);return r.ok?await r.json():null;}catch(e){return null;}};
-
 function checkSyzygy(){
-  clearTimeout(tbTimer);
-  const fen=state.game.fen();
+  clearTimeout(tbTimer);const fen=state.game.fen();
   if((fen.split(' ')[0].match(/[rnbqkpRNBQKP]/g)||[]).length>7){$('syzygyBanner').classList.add('hidden');return;}
   tbTimer=setTimeout(async()=>{
     const d=await fetchJson(`https://tablebase.lichess.ovh/standard?fen=${encodeURIComponent(fen)}`);
-    if(d?.category){
-      $('syzygyBanner').textContent=`🔮 Syzygy: ${d.category.toUpperCase()} (DTZ: ${Math.abs(d.dtz||0)}) ${d.moves?.[0]?'Best: '+d.moves[0].san:''}`;
-      $('syzygyBanner').classList.remove('hidden');
-    }else $('syzygyBanner').classList.add('hidden');
+    if(d?.category){$('syzygyBanner').textContent=`🔮 Syzygy: ${d.category.toUpperCase()} (DTZ: ${Math.abs(d.dtz||0)}) ${d.moves?.[0]?'Best: '+d.moves[0].san:''}`;$('syzygyBanner').classList.remove('hidden');}
+    else $('syzygyBanner').classList.add('hidden');
   },100);
 }
-
 function fetchBook(fen){
   if(state.mode==='drill')return;
   fetchJson(`https://explorer.lichess.ovh/masters?fen=${encodeURIComponent(fen)}`).then(d=>{
-    if(d?.moves?.length){
-      $('masterBookBanner').textContent='📚 Masters: '+d.moves.slice(0,3).map(m=>`${m.san} (${m.white}W/${m.draws}D/${m.black}B)`).join(' · ');
-      $('masterBookBanner').classList.remove('hidden');
-    }else $('masterBookBanner').classList.add('hidden');
+    if(d?.moves?.length){$('masterBookBanner').textContent='📚 Masters: '+d.moves.slice(0,3).map(m=>`${m.san} (${m.white}W/${m.draws}D/${m.black}B)`).join(' · ');$('masterBookBanner').classList.remove('hidden');}
+    else $('masterBookBanner').classList.add('hidden');
   });
 }
 
 function updateAnalytics(){
   $('statAccuracy').textContent=`${state.totalAttempts?Math.round((state.correctAttempts/state.totalAttempts)*100):100}%`;
   $('statAvgTime').textContent=`${state.timedMovesCount?(state.totalMoveSeconds/state.timedMovesCount).toFixed(1):'0.0'}s`;
-  $('queueSelect').options[1].text=`Queue: Mistakes Only (${state.mistakeQueue.size})`;
-  $('queueSelect').options[2].text=`Queue: Favourites Only (${state.favorites.size})`;
-  $('wsMistakeBadge').classList.toggle('hidden',state.activeQueueMode!=='mistakes');
-  $('wsFavQueueBadge').classList.toggle('hidden',state.activeQueueMode!=='favorites');
-  $('homeMistakeCountBadge').textContent=state.mistakeQueue.size;
-  $('homeFavCountBadge').textContent=state.favorites.size;
+  $('queueSelect').options[1].text=`Queue: Mistakes Only (${state.mistakeQueue.size})`;$('queueSelect').options[2].text=`Queue: Favourites Only (${state.favorites.size})`;
+  $('wsMistakeBadge').classList.toggle('hidden',state.activeQueueMode!=='mistakes');$('wsFavQueueBadge').classList.toggle('hidden',state.activeQueueMode!=='favorites');
+  $('homeMistakeCountBadge').textContent=state.mistakeQueue.size;$('homeFavCountBadge').textContent=state.favorites.size;
 }
 
 function deleteIndices(set){
   const newList=[],newFolders={},newStreaks={},newComp=new Set(),newMistakes=new Set(),newFavs=new Set(),map=new Map();
   state.pgnList.forEach((p,oldIdx)=>{
     if(!set.has(oldIdx)){
-      const nIdx=newList.length;map.set(oldIdx,nIdx);
-      newList.push(p);newFolders[nIdx]=normF(state.pgnFolders[oldIdx]);
+      const nIdx=newList.length;map.set(oldIdx,nIdx);newList.push(p);newFolders[nIdx]=normF(state.pgnFolders[oldIdx]);
       if(state.masteryStreaks[oldIdx])newStreaks[nIdx]=state.masteryStreaks[oldIdx];
-      if(state.completedGames.has(oldIdx))newComp.add(nIdx);
-      if(state.mistakeQueue.has(oldIdx))newMistakes.add(nIdx);
-      if(state.favorites.has(oldIdx))newFavs.add(nIdx);
+      if(state.completedGames.has(oldIdx))newComp.add(nIdx);if(state.mistakeQueue.has(oldIdx))newMistakes.add(nIdx);if(state.favorites.has(oldIdx))newFavs.add(nIdx);
     }
   });
-  Object.assign(state,{pgnList:newList,pgnFolders:newFolders,masteryStreaks:newStreaks,completedGames:newComp,mistakeQueue:newMistakes,favorites:newFavs});
-  state.sessionDeck=state.sessionDeck.filter(i=>map.has(i)).map(i=>map.get(i));
-  state.currentIndex=map.get(state.currentIndex)??0;
-  state.selectedDrillIndices.clear();
-  persist();updateDashboard();updateAnalytics();
+  Object.assign(state,{pgnList:newList,pgnFolders:newFolders,masteryStreaks:newStreaks,completedGames:newComp,mistakeQueue:newMistakes,favorites:newFavs,sessionDeck:state.sessionDeck.filter(i=>map.has(i)).map(i=>map.get(i)),currentIndex:map.get(state.currentIndex)??0});
+  state.selectedDrillIndices.clear();persist();updateDashboard();updateAnalytics();
 }
 
-function syncPlaySideButtons(){
-  ['w','b','auto'].forEach(s=>{
-    $(s==='w'?'sideWBtn':s==='b'?'sideBBtn':'sideAutoBtn').className=`px-3 py-1 rounded font-bold border ${state.playerSide===s?'bg-teal-700 border-teal-500 text-white':'bg-gray-800 border-gray-700 text-gray-300'}`;
-  });
-}
-
+const syncPlaySideButtons=()=>['w','b','auto'].forEach(s=>$(s==='w'?'sideWBtn':s==='b'?'sideBBtn':'sideAutoBtn').className=`px-3 py-1 rounded font-bold border ${state.playerSide===s?'bg-teal-700 border-teal-500 text-white':'bg-gray-800 border-gray-700 text-gray-300'}`);
 function initSandbox(){
-  clearTimers();
-  state.game.reset();state.scratchGame.reset();
-  Object.assign(state,{
-    initialFen:START_FEN,currentLineMoves:[],expectedMoves:[],activeBranchMoves:[],branchStartPly:-1,
-    moveAnnotations:{},sandboxHistoryFens:[state.game.fen()],lastMoveSquares:null,activeArrows:[],activeRings:[],selectedSquare:null
-  });
+  clearTimers();state.game.reset();state.scratchGame.reset();
+  Object.assign(state,{initialFen:START_FEN,currentLineMoves:[],expectedMoves:[],activeBranchMoves:[],branchStartPly:-1,moveAnnotations:{},sandboxHistoryFens:[state.game.fen()],lastMoveSquares:null,activeArrows:[],activeRings:[],selectedSquare:null});
   state.board.position('start');clearHighlights();renderCanvasOverlays();renderHistory(0);evalBoard();checkSyzygy();fetchBook(state.game.fen());
 }
 
 function ingestIntoFolder(rawText,folderTarget){
-  if(!rawText||!rawText.trim())return 0;
-  const fNorm=normF(folderTarget);
-  if(!state.availableFolders.includes(fNorm))state.availableFolders.push(fNorm);
-  const games=rawText.split(/(?:^|\n\n+)(?=\[(?:Event|Site|White|Black|FEN|SetUp)\s)/g).map(x=>x.trim()).filter(Boolean);
-  games.forEach(g=>{state.pgnList.push(g);state.pgnFolders[state.pgnList.length-1]=fNorm;});
-  persist();updateDashboard();updateSessionUI();
-  return games.length;
-}
-
-function handleMultiFileUpload(files,folderTarget,cb){
-  const list=[...files];if(!list.length)return;
-  let done=0,tot=0;
-  list.forEach(f=>{
-    const r=new FileReader();
-    r.onload=res=>{tot+=ingestIntoFolder(res.target.result,folderTarget);if(++done===list.length)cb(tot);};
-    r.readAsText(f);
+  if(!rawText?.trim())return 0;const fNorm=normF(folderTarget);if(!state.availableFolders.includes(fNorm))state.availableFolders.push(fNorm);
+  let added=0;rawText.split(/(?:^|\n\n+)(?=\[(?:Event|Site|White|Black|FEN|SetUp)\s)/g).map(x=>x.trim()).filter(Boolean).forEach(g=>{
+    splitPgnVariations(g).forEach(line=>{state.pgnList.push(line);state.pgnFolders[state.pgnList.length-1]=fNorm;added++;});
   });
+  persist();updateDashboard();updateSessionUI();return added;
+}
+function handleMultiFileUpload(files,folderTarget,cb){
+  const list=[...files];if(!list.length)return;let done=0,tot=0;
+  list.forEach(f=>{const r=new FileReader();r.onload=res=>{tot+=ingestIntoFolder(res.target.result,folderTarget);if(++done===list.length)cb(tot);};r.readAsText(f);});
 }
 
 function renderSubfolderModal(keepSearchFocus=false){
-  const pool=getFolderPool(),q=(state.sfSearchQuery||'').toLowerCase().trim();
-  const visiblePool=pool.filter(i=>!q||(state.pgnList[i]||'').toLowerCase().includes(q));
-  const allChecked=visiblePool.length>0&&visiblePool.every(i=>state.selectedDrillIndices.has(i));
-  const targetFolder=state.subfolder!=='all'?normF(state.subfolder):(state.rootCat||'Openings');
-  const otherFolders=state.availableFolders.filter(f=>f!==targetFolder);
-
+  const pool=getFolderPool(),q=(state.sfSearchQuery||'').toLowerCase().trim(),visiblePool=pool.filter(i=>!q||(state.pgnList[i]||'').toLowerCase().includes(q));
+  const allChecked=visiblePool.length>0&&visiblePool.every(i=>state.selectedDrillIndices.has(i)),targetFolder=state.subfolder!=='all'?normF(state.subfolder):(state.rootCat||'Openings'),otherFolders=state.availableFolders.filter(f=>f!==targetFolder);
   openModal(`📂 ${targetFolder} (${pool.length} Lines)`,`
     <details class="bg-gray-950 p-2.5 rounded-lg border border-teal-800/60 mb-2">
-      <summary class="font-bold text-teal-300 cursor-pointer flex items-center justify-between text-xs">
-        <span>📥 Direct-to-Folder Ingestion (${esc(targetFolder)})</span><span class="text-[10px] text-gray-400">Click to expand</span>
-      </summary>
+      <summary class="font-bold text-teal-300 cursor-pointer flex items-center justify-between text-xs"><span>📥 Direct-to-Folder Ingestion (${esc(targetFolder)})</span><span class="text-[10px] text-gray-400">Auto-splits ( ) variations</span></summary>
       <div class="mt-2 space-y-2 pt-2 border-t border-gray-800 flex flex-col">
         <input type="file" id="subfolderFileInput" multiple accept=".pgn,.txt,*/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-teal-700 file:text-white cursor-pointer">
-        <textarea id="subfolderPasteInput" rows="2" placeholder="Paste PGN text directly into this folder..." class="w-full bg-gray-900 border border-gray-700 p-1.5 rounded font-mono text-xs text-white outline-none"></textarea>
-        <button data-act="importDirectToSubfolder" class="self-end px-3 py-1 bg-teal-600 hover:bg-teal-500 rounded text-white font-bold text-xs">+ Ingest into ${esc(targetFolder)}</button>
+        <textarea id="subfolderPasteInput" rows="2" placeholder="Paste PGN study or lines directly into this folder..." class="w-full bg-gray-900 border border-gray-700 p-1.5 rounded font-mono text-xs text-white outline-none"></textarea>
+        <button data-act="importDirectToSubfolder" class="self-end px-3 py-1 bg-teal-600 hover:bg-teal-500 rounded text-white font-bold text-xs">+ Ingest & Split into ${esc(targetFolder)}</button>
       </div>
     </details>
-    <div class="flex items-center gap-2 mb-2">
-      <input type="text" id="sfSearchInput" value="${esc(state.sfSearchQuery)}" placeholder="Filter by event or moves..." class="flex-1 bg-gray-950 border border-gray-700 p-1.5 rounded text-white text-xs outline-none">
-    </div>
+    <div class="flex items-center gap-2 mb-2"><input type="text" id="sfSearchInput" value="${esc(state.sfSearchQuery)}" placeholder="Filter by event or moves..." class="flex-1 bg-gray-950 border border-gray-700 p-1.5 rounded text-white text-xs outline-none"></div>
     <div class="flex flex-wrap items-center justify-between gap-1.5 bg-gray-950/80 p-2 rounded border border-gray-800 text-xs">
-      <label class="flex items-center gap-1.5 font-bold text-teal-300 cursor-pointer">
-        <input type="checkbox" id="masterToggleCheckbox" class="w-3.5 h-3.5 accent-teal-600" ${allChecked?'checked':''}>
-        <span>Select All (${state.selectedDrillIndices.size})</span>
-      </label>
-      <div class="flex items-center gap-1">
-        <button data-act="batchFav" class="px-2 py-0.5 bg-pink-950 border border-pink-700 hover:bg-pink-900 text-pink-200 rounded font-semibold" title="Toggle Favourite on Checked">❤️ Fav</button>
-        <button data-act="batchExport" class="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-200 font-semibold">⬇ Export</button>
-        <button data-act="batchDelete" class="px-2 py-0.5 bg-rose-950 border border-rose-700 hover:bg-rose-900 text-rose-300 rounded font-bold">🗑️ Delete</button>
-      </div>
-      <div class="flex items-center gap-1 w-full pt-1 border-t border-gray-800/80">
-        <span class="text-gray-400 text-[10px]">Move to:</span>
-        <select id="batchMoveTargetSelect" class="flex-1 bg-gray-900 border border-gray-700 text-white rounded px-1.5 py-0.5 text-[11px] outline-none">
-          ${otherFolders.map(f=>`<option value="${esc(f)}">${esc(f)}</option>`).join('')}
-        </select>
-        <button data-act="batchMove" class="px-2 py-0.5 bg-indigo-950 border border-indigo-700 text-indigo-200 rounded font-bold text-[11px]">Move</button>
-      </div>
+      <label class="flex items-center gap-1.5 font-bold text-teal-300 cursor-pointer"><input type="checkbox" id="masterToggleCheckbox" class="w-3.5 h-3.5 accent-teal-600" ${allChecked?'checked':''}><span>Select All (${state.selectedDrillIndices.size})</span></label>
+      <div class="flex items-center gap-1"><button data-act="batchFav" class="px-2 py-0.5 bg-pink-950 border border-pink-700 hover:bg-pink-900 text-pink-200 rounded font-semibold" title="Toggle Favourite on Checked">❤️ Fav</button><button data-act="batchExport" class="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-200 font-semibold">⬇ Export</button><button data-act="batchDelete" class="px-2 py-0.5 bg-rose-950 border border-rose-700 hover:bg-rose-900 text-rose-300 rounded font-bold">🗑️ Delete</button></div>
+      <div class="flex items-center gap-1 w-full pt-1 border-t border-gray-800/80"><span class="text-gray-400 text-[10px]">Move to:</span><select id="batchMoveTargetSelect" class="flex-1 bg-gray-900 border border-gray-700 text-white rounded px-1.5 py-0.5 text-[11px] outline-none">${otherFolders.map(f=>`<option value="${esc(f)}">${esc(f)}</option>`).join('')}</select><button data-act="batchMove" class="px-2 py-0.5 bg-indigo-950 border border-indigo-700 text-indigo-200 rounded font-bold text-[11px]">Move</button></div>
     </div>
-    <div id="mDrillList" class="space-y-1 max-h-56 overflow-y-auto pr-1">
-      ${visiblePool.length?visiblePool.map(i=>{
-        const raw=state.pgnList[i]||'',title=raw.match(/\[Event\s+"([^"]+)"\]/i)?.[1]||`Drill #${i+1}`,st=state.masteryStreaks[i]||0;
-        const badge=st>=3?'⭐ Gold':(st>=1?'⭐ Silver':'Bronze');
-        const isFav=state.favorites.has(i);
-        return`<div class="flex items-center justify-between p-1.5 bg-gray-950 rounded border ${i===state.currentIndex?'border-teal-600':'border-gray-800'} gap-1.5">
-          <input type="checkbox" data-drill-idx="${i}" class="drill-row-checkbox w-3.5 h-3.5 accent-teal-600 cursor-pointer" ${state.selectedDrillIndices.has(i)?'checked':''}>
-          <div class="flex-1 min-w-0 pr-1">
-            <div class="flex items-center gap-1">
-              <span id="titleDisplay_${i}" class="font-bold text-gray-200 truncate cursor-pointer hover:text-teal-300" data-act="jumpToDrill" data-idx="${i}">${esc(title)}</span>
-              <input type="text" id="titleInput_${i}" value="${esc(title)}" class="hidden w-full bg-gray-900 border border-teal-500 px-1 py-0.5 text-white text-xs rounded outline-none" data-edit-idx="${i}">
-              <button data-act="toggleRenameTitle" data-idx="${i}" class="text-[10px] text-gray-500 hover:text-white" title="Rename Title">✏️</button>
-              <button data-act="autoDetectEco" data-idx="${i}" class="text-[10px] text-teal-400 hover:text-teal-200" title="Auto-Detect ECO">🏷️</button>
-            </div>
-            <div class="text-[10px] text-amber-400 font-mono flex items-center gap-2 mt-0.5">
-              <span>${badge}</span>
-              ${isFav?'<span class="text-pink-400 font-bold">❤️ Fav</span>':''}
-              ${state.mistakeQueue.has(i)?'<span class="text-rose-400 font-bold">🔥 Mistake</span>':''}
-            </div>
-          </div>
-          <div class="flex items-center gap-1">
-            <button data-act="toggleRowFav" data-idx="${i}" class="px-1 text-xs" title="Toggle Favourite">${isFav?'❤️':'🤍'}</button>
-            <button data-act="viewRawPgn" data-idx="${i}" class="text-gray-400 hover:text-teal-300 px-1" title="View / Edit Raw PGN">📄</button>
-            <button data-act="deleteSingleDrill" data-idx="${i}" class="text-gray-500 hover:text-rose-400 px-1" title="Delete Line">🗑️</button>
-          </div>
-        </div>`;
-      }).join(''):'<div class="text-gray-500 text-center py-4 italic">No drills found in this view.</div>'}
-    </div>
+    <div id="mDrillList" class="space-y-1 max-h-56 overflow-y-auto pr-1">${visiblePool.length?visiblePool.map(i=>{
+      const raw=state.pgnList[i]||'',title=raw.match(/\[Event\s+"([^"]+)"\]/i)?.[1]||`Drill #${i+1}`,st=state.masteryStreaks[i]||0,badge=st>=3?'⭐ Gold':(st>=1?'⭐ Silver':'Bronze'),isFav=state.favorites.has(i);
+      return`<div class="flex items-center justify-between p-1.5 bg-gray-950 rounded border ${i===state.currentIndex?'border-teal-600':'border-gray-800'} gap-1.5"><input type="checkbox" data-drill-idx="${i}" class="drill-row-checkbox w-3.5 h-3.5 accent-teal-600 cursor-pointer" ${state.selectedDrillIndices.has(i)?'checked':''}><div class="flex-1 min-w-0 pr-1"><div class="flex items-center gap-1"><span id="titleDisplay_${i}" class="font-bold text-gray-200 truncate cursor-pointer hover:text-teal-300" data-act="jumpToDrill" data-idx="${i}">${esc(title)}</span><input type="text" id="titleInput_${i}" value="${esc(title)}" class="hidden w-full bg-gray-900 border border-teal-500 px-1 py-0.5 text-white text-xs rounded outline-none" data-edit-idx="${i}"><button data-act="toggleRenameTitle" data-idx="${i}" class="text-[10px] text-gray-500 hover:text-white" title="Rename Title">✏️</button><button data-act="autoDetectEco" data-idx="${i}" class="text-[10px] text-teal-400 hover:text-teal-200" title="Auto-Detect ECO">🏷️</button></div><div class="text-[10px] text-amber-400 font-mono flex items-center gap-2 mt-0.5"><span>${badge}</span>${isFav?'<span class="text-pink-400 font-bold">❤️ Fav</span>':''}${state.mistakeQueue.has(i)?'<span class="text-rose-400 font-bold">🔥 Mistake</span>':''}</div></div><div class="flex items-center gap-1"><button data-act="toggleRowFav" data-idx="${i}" class="px-1 text-xs" title="Toggle Favourite">${isFav?'❤️':'🤍'}</button><button data-act="viewRawPgn" data-idx="${i}" class="text-gray-400 hover:text-teal-300 px-1" title="View / Edit Raw PGN">📄</button><button data-act="deleteSingleDrill" data-idx="${i}" class="text-gray-500 hover:text-rose-400 px-1" title="Delete Line">🗑️</button></div></div>`;
+    }).join(''):'<div class="text-gray-500 text-center py-4 italic">No drills found in this view.</div>'}</div>
   `,[{text:'Done',onClick:closeModal}],'max-w-xl');
-
-  const sInp=$('sfSearchInput');
-  if(keepSearchFocus){sInp.focus();sInp.setSelectionRange(sInp.value.length,sInp.value.length);}
+  const sInp=$('sfSearchInput');if(keepSearchFocus){sInp.focus();sInp.setSelectionRange(sInp.value.length,sInp.value.length);}
   sInp.oninput=e=>{state.sfSearchQuery=e.target.value;renderSubfolderModal(true);};
-  $('subfolderFileInput').onchange=ev=>handleMultiFileUpload(ev.target.files,targetFolder,tot=>{alert(`Imported ${tot} lines into ${targetFolder}!`);renderSubfolderModal();});
+  $('subfolderFileInput').onchange=ev=>handleMultiFileUpload(ev.target.files,targetFolder,tot=>{alert(`Imported & split ${tot} lines into ${targetFolder}!`);renderSubfolderModal();});
   $('masterToggleCheckbox').onchange=e=>{visiblePool.forEach(i=>e.target.checked?state.selectedDrillIndices.add(i):state.selectedDrillIndices.delete(i));renderSubfolderModal();};
-  document.querySelectorAll('.drill-row-checkbox').forEach(cb=>{
-    cb.onchange=ev=>{const idx=parseInt(ev.target.dataset.drillIdx,10);ev.target.checked?state.selectedDrillIndices.add(idx):state.selectedDrillIndices.delete(idx);renderSubfolderModal();};
-  });
+  document.querySelectorAll('.drill-row-checkbox').forEach(cb=>cb.onchange=ev=>{const idx=parseInt(ev.target.dataset.drillIdx,10);ev.target.checked?state.selectedDrillIndices.add(idx):state.selectedDrillIndices.delete(idx);renderSubfolderModal();});
   document.querySelectorAll('[data-edit-idx]').forEach(inp=>{
     inp.onkeydown=ev=>{if(ev.key==='Enter'){ev.target.onblur=null;saveInlineRename(parseInt(ev.target.dataset.editIdx,10),ev.target.value);}else if(ev.key==='Escape'){ev.target.onblur=null;renderSubfolderModal();}};
     inp.onblur=ev=>saveInlineRename(parseInt(ev.target.dataset.editIdx,10),ev.target.value);
@@ -1238,323 +800,141 @@ function renderSubfolderModal(keepSearchFocus=false){
 }
 
 function saveInlineRename(idx,newTitle){
-  if(!newTitle||!newTitle.trim())return renderSubfolderModal();
+  if(!newTitle?.trim())return renderSubfolderModal();
   const raw=state.pgnList[idx]||'',clean=newTitle.trim().replace(/"/g,"'");
   state.pgnList[idx]=/\[Event\s+"[^"]*"\]/i.test(raw)?raw.replace(/\[Event\s+"[^"]*"\]/i,`[Event "${clean}"]`):`[Event "${clean}"]\n${raw}`;
-  persist();renderSubfolderModal();
-  if(idx===state.currentIndex)loadGame();
+  persist();renderSubfolderModal();if(idx===state.currentIndex)loadGame();
 }
-
-function downloadBlob(content,filename,type='text/plain'){
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([content],{type}));
-  a.download=filename;a.click();
-}
+function downloadBlob(content,filename,type='text/plain'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=filename;a.click();}
 
 const actions={
-  closeModal,
-  closeToast:()=>$('cloudToast').classList.add('hidden'),
-  navHome:()=>switchView('home'),
-  openCategories:()=>switchView('folderHub'),
-  launchDrill:()=>{state.targetMode='drill';state.rootCat=null;switchView('folderHub');},
-  launchExplore:()=>{state.targetMode='explore';state.rootCat=null;switchView('folderHub');},
-  launchSandbox:()=>{state.mode='sandbox';switchView('workspace');},
-  resumeSession:()=>{state.mode='drill';switchView('workspace');},
+  closeModal,closeToast:()=>$('cloudToast').classList.add('hidden'),navHome:()=>switchView('home'),openCategories:()=>switchView('folderHub'),
+  launchDrill:()=>{state.targetMode='drill';state.rootCat=null;switchView('folderHub');},launchExplore:()=>{state.targetMode='explore';state.rootCat=null;switchView('folderHub');},
+  launchSandbox:()=>{state.mode='sandbox';switchView('workspace');},resumeSession:()=>{state.mode='drill';switchView('workspace');},
   drillMistakes:()=>{if(state.mistakeQueue.size){state.rootCat=null;startSession('all','mistakes');}else alert('No mistakes logged.');},
   drillFavorites:()=>{if(state.favorites.size){state.rootCat=null;startSession('all','favorites');}else alert('No favourite PGNs marked yet.');},
   folderBack:()=>{if(state.rootCat){state.rootCat=null;renderFolderHub();}else switchView('home');},
   startSubfolder:e=>{
     const f=e.target.closest('[data-folder]').dataset.folder;
     if(state.targetMode==='drill')startSession(f);
-    else{
-      state.subfolder=f==='all'?'all':normF(f);
-      state.mode='explore';
-      const pool=getFolderPool();
-      if(pool.length&&!pool.includes(state.currentIndex))state.currentIndex=pool[0];
-      switchView('workspace');
-    }
+    else{state.subfolder=f==='all'?'all':normF(f);state.mode='explore';const pool=getFolderPool();if(pool.length&&!pool.includes(state.currentIndex))state.currentIndex=pool[0];switchView('workspace');}
   },
   renameSubfolder:e=>{
-    e.stopPropagation();
-    const oldF=normF(e.target.closest('[data-folder]').dataset.folder);
-    const parts=oldF.split('/'),root=parts[0],oldLeaf=parts.slice(1).join('/');
-    const newLeaf=prompt(`Rename subfolder "${oldLeaf}" in ${root}/:`,oldLeaf);
-    if(!newLeaf||!newLeaf.trim())return;
-    const newF=`${root}/${newLeaf.trim()}`;
-    if(newF===oldF)return;
-    if(state.availableFolders.includes(newF))return alert('A subfolder with that name already exists.');
+    e.stopPropagation();const oldF=normF(e.target.closest('[data-folder]').dataset.folder),parts=oldF.split('/'),root=parts[0],oldLeaf=parts.slice(1).join('/');
+    const newLeaf=prompt(`Rename subfolder "${oldLeaf}" in ${root}/:`,oldLeaf);if(!newLeaf?.trim())return;
+    const newF=`${root}/${newLeaf.trim()}`;if(newF===oldF)return;if(state.availableFolders.includes(newF))return alert('A subfolder with that name already exists.');
     state.availableFolders=state.availableFolders.map(f=>f===oldF?newF:f);
     Object.keys(state.pgnFolders).forEach(k=>{if(normF(state.pgnFolders[k])===oldF)state.pgnFolders[k]=newF;});
     if(state.subfolderStats[oldF]){state.subfolderStats[newF]=state.subfolderStats[oldF];delete state.subfolderStats[oldF];}
-    if(state.subfolder===oldF)state.subfolder=newF;
-    persist();renderFolderHub();
+    if(state.subfolder===oldF)state.subfolder=newF;persist();renderFolderHub();
   },
   deleteSubfolder:e=>{
-    e.stopPropagation();
-    const delF=normF(e.target.closest('[data-folder]').dataset.folder);
-    const toDelete=new Set();
+    e.stopPropagation();const delF=normF(e.target.closest('[data-folder]').dataset.folder),toDelete=new Set();
     state.pgnList.forEach((_,i)=>{if(normF(state.pgnFolders[i])===delF)toDelete.add(i);});
     if(!confirm(`Delete subfolder "${delF}" and permanently delete all ${toDelete.size} PGN drill(s) inside it?`))return;
-    deleteIndices(toDelete);
-    state.availableFolders=state.availableFolders.filter(f=>normF(f)!==delF);
-    delete state.subfolderStats[delF];
-    if(state.subfolder===delF)state.subfolder='all';
-    persist();renderFolderHub();
+    deleteIndices(toDelete);state.availableFolders=state.availableFolders.filter(f=>normF(f)!==delF);delete state.subfolderStats[delF];if(state.subfolder===delF)state.subfolder='all';persist();renderFolderHub();
   },
   openDirectAddModal:e=>{
-    e.stopPropagation();
-    const folder=normF(e.target.closest('[data-folder]').dataset.folder);
-    openModal(`📥 Direct Add: ${folder}`,`<div class="space-y-2"><input type="file" id="directCardFileInput" multiple accept=".pgn,.txt,*/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-teal-700 file:text-white cursor-pointer"><textarea id="directCardPasteInput" rows="3" placeholder="Paste raw PGN text here..." class="w-full bg-gray-950 border border-gray-700 p-1.5 rounded font-mono text-xs text-white outline-none"></textarea></div>`,[
-      {text:'Cancel',cls:'bg-gray-800 text-white',onClick:closeModal},
-      {text:'+ Import',onClick:()=>{const c=ingestIntoFolder($('directCardPasteInput').value,folder);alert(`Imported ${c} lines to ${folder}!`);closeModal();renderFolderHub();}}
+    e.stopPropagation();const folder=normF(e.target.closest('[data-folder]').dataset.folder);
+    openModal(`📥 Direct Add: ${folder}`,`<div class="space-y-2"><p class="text-[11px] text-gray-400">Multi-variation studies with <code class="text-teal-300">( ... )</code> sidelines are automatically split into separate drills.</p><input type="file" id="directCardFileInput" multiple accept=".pgn,.txt,*/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-teal-700 file:text-white cursor-pointer"><textarea id="directCardPasteInput" rows="3" placeholder="Paste raw PGN or multi-variation study here..." class="w-full bg-gray-950 border border-gray-700 p-1.5 rounded font-mono text-xs text-white outline-none"></textarea></div>`,[
+      {text:'Cancel',cls:'bg-gray-800 text-white',onClick:closeModal},{text:'+ Import & Split',onClick:()=>{const c=ingestIntoFolder($('directCardPasteInput').value,folder);alert(`Imported ${c} line(s) to ${folder}!`);closeModal();renderFolderHub();}}
     ]);
-    $('directCardFileInput').onchange=ev=>handleMultiFileUpload(ev.target.files,folder,tot=>{alert(`Imported ${tot} lines to ${folder}!`);closeModal();renderFolderHub();});
+    $('directCardFileInput').onchange=ev=>handleMultiFileUpload(ev.target.files,folder,tot=>{alert(`Imported ${tot} line(s) to ${folder}!`);closeModal();renderFolderHub();});
   },
-  importDirectToSubfolder:()=>{
-    const folder=state.subfolder!=='all'?normF(state.subfolder):(state.rootCat||'Openings');
-    const count=ingestIntoFolder($('subfolderPasteInput')?.value||'',folder);
-    alert(`Imported ${count} lines directly into ${folder}!`);
-    renderSubfolderModal();
-  },
-  newSubfolder:()=>{
-    const n=prompt(`New folder in ${state.rootCat}/:`);
-    if(!n||!n.trim())return;
-    const full=`${state.rootCat}/${n.trim()}`;
-    if(!state.availableFolders.includes(full)){
-      state.availableFolders.push(full);persist();renderFolderHub();
-    }
-  },
-  toggleCurrentFav:()=>{
-    if(!state.pgnList.length||state.mode==='sandbox')return;
-    const i=state.currentIndex;
-    state.favorites.has(i)?state.favorites.delete(i):state.favorites.add(i);
-    persist();updateSessionUI();updateAnalytics();
-  },
-  toggleRowFav:e=>{
-    const idx=parseInt(e.target.closest('[data-idx]').dataset.idx,10);
-    state.favorites.has(idx)?state.favorites.delete(idx):state.favorites.add(idx);
-    persist();updateSessionUI();updateAnalytics();renderSubfolderModal();
-  },
-  batchFav:()=>{
-    if(!state.selectedDrillIndices.size)return alert('No lines checked.');
-    const allFav=[...state.selectedDrillIndices].every(i=>state.favorites.has(i));
-    state.selectedDrillIndices.forEach(i=>allFav?state.favorites.delete(i):state.favorites.add(i));
-    persist();updateSessionUI();updateAnalytics();renderSubfolderModal();
-  },
+  importDirectToSubfolder:()=>{const folder=state.subfolder!=='all'?normF(state.subfolder):(state.rootCat||'Openings'),count=ingestIntoFolder($('subfolderPasteInput')?.value||'',folder);alert(`Imported ${count} line(s) directly into ${folder}!`);renderSubfolderModal();},
+  newSubfolder:()=>{const n=prompt(`New folder in ${state.rootCat}/:`);if(!n?.trim())return;const full=`${state.rootCat}/${n.trim()}`;if(!state.availableFolders.includes(full)){state.availableFolders.push(full);persist();renderFolderHub();}},
+  toggleCurrentFav:()=>{if(!state.pgnList.length||state.mode==='sandbox')return;const i=state.currentIndex;state.favorites.has(i)?state.favorites.delete(i):state.favorites.add(i);persist();updateSessionUI();updateAnalytics();},
+  toggleRowFav:e=>{const idx=parseInt(e.target.closest('[data-idx]').dataset.idx,10);state.favorites.has(idx)?state.favorites.delete(idx):state.favorites.add(idx);persist();updateSessionUI();updateAnalytics();renderSubfolderModal();},
+  batchFav:()=>{if(!state.selectedDrillIndices.size)return alert('No lines checked.');const allFav=[...state.selectedDrillIndices].every(i=>state.favorites.has(i));state.selectedDrillIndices.forEach(i=>allFav?state.favorites.delete(i):state.favorites.add(i));persist();updateSessionUI();updateAnalytics();renderSubfolderModal();},
   setSide:e=>{state.playerSide=e.target.closest('[data-side]').dataset.side;syncPlaySideButtons();persist();loadGame(true);},
-  switchDrill:()=>{state.mode='drill';applyWorkspaceMode();loadGame();},
-  switchExplore:()=>{state.mode='explore';state.explorePlyIndex=state.game.history().length;applyWorkspaceMode();renderHistory();},
-  flipBoard:()=>{state.board.flip();resizeCanvas();if(state.mode==='explore'&&state.isSparring)triggerSparMove();},
-  nextDrill,
-  repeatDrill:()=>loadGame(true),
+  switchDrill:()=>{state.mode='drill';applyWorkspaceMode();loadGame();},switchExplore:()=>{state.mode='explore';state.explorePlyIndex=state.game.history().length;applyWorkspaceMode();renderHistory();},
+  flipBoard:()=>{state.board.flip();resizeCanvas();if(state.mode==='explore'&&state.isSparring)triggerSparMove();},nextDrill,repeatDrill:()=>loadGame(true),
   prevDrill:()=>{if(state.drillHistoryStack.length){state.currentIndex=state.drillHistoryStack.pop();loadGame();}},
   hintMove:()=>{if(state.expectedMoves[state.currentMoveIndex]){clearHighlights();$('board').querySelector(`.square-${state.expectedMoves[state.currentMoveIndex].from}`)?.classList.add('highlight-hint');}},
   toggleRandomStart:()=>{state.randomStartActive=!state.randomStartActive;loadGame(true);},
   setTargetPly:()=>{const v=prompt('Max move count to drill (0 for full line):','10');if(v!==null){state.targetMaxPly=parseInt(v,10)>0?parseInt(v,10)*2:999;loadGame(true);}},
-  toggleDrillEngine:()=>{
-    state.drillShowEngine=!state.drillShowEngine;
-    $('drillToggleEngineBtn').textContent=state.drillShowEngine?'Engine: On':'Engine: Off';
-    $('engineSection').classList.toggle('hidden',!state.drillShowEngine);
-    $('evalBarWrapper').classList.toggle('hidden',!state.drillShowEngine);
-    if(state.drillShowEngine)evalBoard();
-  },
+  toggleDrillEngine:()=>{state.drillShowEngine=!state.drillShowEngine;$('drillToggleEngineBtn').textContent=state.drillShowEngine?'Engine: On':'Engine: Off';$('engineSection').classList.toggle('hidden',!state.drillShowEngine);$('evalBarWrapper').classList.toggle('hidden',!state.drillShowEngine);if(state.drillShowEngine)evalBoard();},
   clearArrows:()=>{state.activeArrows=[];state.activeRings=[];renderCanvasOverlays();},
   expNav:e=>{
     const step=e.target.closest('[data-step]').dataset.step;
-    if(step==='start')jumpToPly(0);
-    else if(step==='end')jumpToPly(state.expectedMoves.length);
+    if(step==='start')jumpToPly(0);else if(step==='end')jumpToPly(state.expectedMoves.length);
     else if(step==='prev'){state.game.undo();if(state.activeBranchMoves.length)state.activeBranchMoves.pop();jumpToPly(state.game.history().length);}
-    else if(step==='next'){
-      const idx=state.game.history().length;
-      if(idx<state.expectedMoves.length&&!state.activeBranchMoves.length){state.game.move(state.expectedMoves[idx]);jumpToPly(state.game.history().length);}
-    }
+    else if(step==='next'){const idx=state.game.history().length;if(idx<state.expectedMoves.length&&!state.activeBranchMoves.length){state.game.move(state.expectedMoves[idx]);jumpToPly(state.game.history().length);}}
   },
-  toggleSpar:()=>{
-    state.isSparring=!state.isSparring;
-    $('expSparBtn').textContent=state.isSparring?'🛑 Stop Spar':'⚔️ Spar Engine';
-    if(state.isSparring)triggerSparMove();else evalBoard();
-  },
-  extractBranch:()=>{
-    if(!state.game.history().length)return alert('Play moves first.');
-    const t=prompt('Title for branch:');if(!t)return;
-    state.pgnList.push(generateAnnotatedPgn(t));
-    state.pgnFolders[state.pgnList.length-1]=state.subfolder!=='all'?normF(state.subfolder):'Openings';
-    persist();updateDashboard();updateSessionUI();setStatus('Branch saved with notes!');
-  },
+  toggleSpar:()=>{state.isSparring=!state.isSparring;$('expSparBtn').textContent=state.isSparring?'🛑 Stop Spar':'⚔️ Spar Engine';if(state.isSparring)triggerSparMove();else evalBoard();},
+  extractBranch:()=>{if(!state.game.history().length)return alert('Play moves first.');const t=prompt('Title for branch:');if(!t)return;state.pgnList.push(generateAnnotatedPgn(t));state.pgnFolders[state.pgnList.length-1]=state.subfolder!=='all'?normF(state.subfolder):'Openings';persist();updateDashboard();updateSessionUI();setStatus('Branch saved with notes!');},
   openCompareModal:()=>{
-    state.scratchGame.load(state.initialFen);
-    state.expectedMoves.forEach(m=>state.scratchGame.move(m));
+    state.scratchGame.load(state.initialFen);state.expectedMoves.forEach(m=>state.scratchGame.move(m));
     openModal('🔍 Side-by-Side Compare',`<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="flex flex-col items-center"><span class="font-bold text-teal-400">Active</span><div id="board-comp-1" class="w-[280px] aspect-square rounded border border-gray-700"></div></div><div class="flex flex-col items-center"><span class="font-bold text-indigo-400">Reference Line</span><div id="board-comp-2" class="w-[280px] aspect-square rounded border border-gray-700"></div></div></div>`,[{text:'Close',onClick:closeModal}],'max-w-3xl');
-    setTimeout(()=>{
-      state.boardComp1?.destroy();state.boardComp2?.destroy();
-      state.boardComp1=Chessboard('board-comp-1',{position:state.game.fen(),draggable:false,pieceTheme:getPieceUrl});
-      state.boardComp2=Chessboard('board-comp-2',{position:state.scratchGame.fen(),draggable:false,pieceTheme:getPieceUrl});
-    },100);
+    setTimeout(()=>{state.boardComp1?.destroy();state.boardComp2?.destroy();state.boardComp1=Chessboard('board-comp-1',{position:state.game.fen(),draggable:false,pieceTheme:getPieceUrl});state.boardComp2=Chessboard('board-comp-2',{position:state.scratchGame.fen(),draggable:false,pieceTheme:getPieceUrl});},100);
   },
-  resetSandbox:initSandbox,
-  undoSandbox:()=>{
-    state.game.undo();state.currentLineMoves=state.game.history({verbose:true});
-    state.board.position(state.game.fen());renderHistory(state.currentLineMoves.length);renderHighlights();evalBoard();
-  },
-  saveSandboxDrill:()=>{
-    if(!state.game.history().length&&!state.moveAnnotations[0])return alert('No moves or notes.');
-    const t=prompt('Title:');if(!t)return;
-    const f=normF(prompt('Folder:','Openings'));if(!f)return;
-    if(!state.availableFolders.includes(f))state.availableFolders.push(f);
-    state.pgnList.push(generateAnnotatedPgn(t));
-    state.pgnFolders[state.pgnList.length-1]=f;
-    persist();updateDashboard();setStatus('Saved to repertoire with notes!');
-  },
-  quickExport:()=>{
-    let content=state.pgnList[state.currentIndex];
-    if(!content)content=generateAnnotatedPgn(`Drill ${state.currentIndex+1}`);
-    downloadBlob(content,`drill_${state.currentIndex+1}.pgn`);
-  },
+  resetSandbox:initSandbox,undoSandbox:()=>{state.game.undo();state.currentLineMoves=state.game.history({verbose:true});state.board.position(state.game.fen());renderHistory(state.currentLineMoves.length);renderHighlights();evalBoard();},
+  saveSandboxDrill:()=>{if(!state.game.history().length&&!state.moveAnnotations[0])return alert('No moves or notes.');const t=prompt('Title:');if(!t)return;const f=normF(prompt('Folder:','Openings'));if(!f)return;if(!state.availableFolders.includes(f))state.availableFolders.push(f);state.pgnList.push(generateAnnotatedPgn(t));state.pgnFolders[state.pgnList.length-1]=f;persist();updateDashboard();setStatus('Saved to repertoire with notes!');},
+  quickExport:()=>downloadBlob(state.pgnList[state.currentIndex]||generateAnnotatedPgn(`Drill ${state.currentIndex+1}`),`drill_${state.currentIndex+1}.pgn`),
   jumpPly:e=>jumpToPly(parseInt(e.target.dataset.ply,10)),
   editNote:e=>{
     activeNotePly=parseInt(e.target.dataset.ply,10);
     openModal(`📝 Move Note: Ply ${activeNotePly}`,`<div class="relative"><textarea id="noteModalTextarea" rows="3" placeholder="Type or click 🎤 to dictate..." class="w-full bg-gray-950 border border-gray-700 rounded-lg p-2.5 text-xs text-gray-100 outline-none pr-10 resize-none">${esc(state.moveAnnotations[activeNotePly]||'')}</textarea><button id="dictateBtn" class="absolute right-2.5 top-2.5 p-1.5 rounded-full bg-gray-800 text-gray-300">🎤</button></div>`,[
-      {text:'Cancel',cls:'bg-gray-800 text-white',onClick:closeModal},
-      {text:'Save Note',onClick:()=>{
-        const v=$('noteModalTextarea').value.trim();
-        if(v)state.moveAnnotations[activeNotePly]=v;else delete state.moveAnnotations[activeNotePly];
-        syncCurrentPgn();updateCoachNote();renderHistory();persist();closeModal();
-      }}
+      {text:'Cancel',cls:'bg-gray-800 text-white',onClick:closeModal},{text:'Save Note',onClick:()=>{const v=$('noteModalTextarea').value.trim();if(v)state.moveAnnotations[activeNotePly]=v;else delete state.moveAnnotations[activeNotePly];syncCurrentPgn();updateCoachNote();renderHistory();persist();closeModal();}}
     ]);
     $('dictateBtn').onclick=()=>{if(!rec)return alert('Speech not available.');isRecording?rec.stop():rec.start();};
   },
-  choosePromo:e=>{
-    $('promoModal').classList.add('hidden');
-    if(state._promoMove){attemptMove(state._promoMove.from,state._promoMove.to,e.target.dataset.piece);state.board.position(state.game.fen());renderHighlights();state._promoMove=null;}
-  },
+  choosePromo:e=>{$('promoModal').classList.add('hidden');if(state._promoMove){attemptMove(state._promoMove.from,state._promoMove.to,e.target.dataset.piece);state.board.position(state.game.fen());renderHighlights();state._promoMove=null;}},
   openBoardSettings:()=>{
     let selectedSize=state.boardSize;
     openModal('🎨 Board Settings',`<div class="space-y-3"><div><label class="font-bold text-teal-300">Interaction</label><select id="mInputMode" class="w-full bg-gray-950 border border-gray-700 p-1.5 rounded text-white outline-none"><option value="tap" ${state.inputMode==='tap'?'selected':''}>Tap to Move</option><option value="drag" ${state.inputMode==='drag'?'selected':''}>Drag & Drop</option></select></div><div class="grid grid-cols-2 gap-2"><div><span class="text-gray-400 text-[10px]">Light Square</span><input type="color" id="mLight" value="${state.boardLightColor}" class="w-full h-8 bg-transparent cursor-pointer"></div><div><span class="text-gray-400 text-[10px]">Dark Square</span><input type="color" id="mDark" value="${state.boardDarkColor}" class="w-full h-8 bg-transparent cursor-pointer"></div></div><div><label class="text-gray-400 text-[10px] block mb-1">Custom Piece URL</label><input type="text" id="mPieceUrl" value="${esc(state.customPieceUrl)}" placeholder="https://.../{piece}.svg" class="w-full bg-gray-950 border border-gray-700 p-1.5 rounded text-white text-xs outline-none"></div><div><label class="text-gray-400 text-[10px] block mb-1">Board Size Preset</label><div class="grid grid-cols-3 gap-1.5">${[[320,'Compact'],[380,'Standard'],[440,'Large']].map(([sz,lbl])=>`<button type="button" class="size-btn p-1.5 rounded border border-gray-700 font-bold ${selectedSize===sz?'bg-teal-700 text-white border-teal-500':'bg-gray-800 text-gray-300'}" data-sz="${sz}">${lbl}</button>`).join('')}</div></div></div>`,[{
-      text:'Apply Changes',
-      onClick:()=>{
-        Object.assign(state,{inputMode:$('mInputMode').value,boardLightColor:$('mLight').value,boardDarkColor:$('mDark').value,customPieceUrl:$('mPieceUrl').value.trim(),boardSize:selectedSize});
-        applyCustomColors();persist();applyBoardSize(state.boardSize);
-        if(state.board){state.board.destroy();initBoard();renderHighlights();}
-        closeModal();
-      }
+      text:'Apply Changes',onClick:()=>{Object.assign(state,{inputMode:$('mInputMode').value,boardLightColor:$('mLight').value,boardDarkColor:$('mDark').value,customPieceUrl:$('mPieceUrl').value.trim(),boardSize:selectedSize});applyCustomColors();persist();applyBoardSize(state.boardSize);if(state.board){state.board.destroy();initBoard();renderHighlights();}closeModal();}
     }]);
-    $('appModalBody').querySelectorAll('.size-btn').forEach(btn=>{
-      btn.onclick=()=>{
-        selectedSize=parseInt(btn.dataset.sz,10);
-        $('appModalBody').querySelectorAll('.size-btn').forEach(b=>b.className=`size-btn p-1.5 rounded border border-gray-700 font-bold ${parseInt(b.dataset.sz,10)===selectedSize?'bg-teal-700 text-white border-teal-500':'bg-gray-800 text-gray-300'}`);
-      };
-    });
+    $('appModalBody').querySelectorAll('.size-btn').forEach(btn=>btn.onclick=()=>{selectedSize=parseInt(btn.dataset.sz,10);$('appModalBody').querySelectorAll('.size-btn').forEach(b=>b.className=`size-btn p-1.5 rounded border border-gray-700 font-bold ${parseInt(b.dataset.sz,10)===selectedSize?'bg-teal-700 text-white border-teal-500':'bg-gray-800 text-gray-300'}`);});
   },
-  openSettingsModal:()=>{
-    openModal('⚙️ Preferences & Global Database',`<div class="space-y-3"><div><label class="text-gray-300">Play Side</label><select id="mSide" class="w-full bg-gray-950 border border-gray-700 p-1.5 rounded text-white"><option value="auto">Auto-Detect</option><option value="w" ${state.playerSide==='w'?'selected':''}>Always White</option><option value="b" ${state.playerSide==='b'?'selected':''}>Always Black</option></select></div><div><label class="text-gray-300">Theme Atmosphere</label><select id="mAtmo" class="w-full bg-gray-950 border border-gray-700 p-1.5 rounded text-white"><option value="dark">Studio Dark</option><option value="oled" ${state.atmosphereTheme==='oled'?'selected':''}>OLED Black</option></select></div><div><label class="text-gray-300">Audio Theme</label><select id="mSound" class="w-full bg-gray-950 border border-gray-700 p-1.5 rounded text-white"><option value="synth">Synthesizer</option><option value="wood" ${state.soundTheme==='wood'?'selected':''}>Wood</option><option value="beep" ${state.soundTheme==='beep'?'selected':''}>Digital Beep</option><option value="silent" ${state.soundTheme==='silent'?'selected':''}>Muted</option></select></div><div class="pt-2 border-t border-gray-800 flex flex-col gap-2"><button class="text-left text-teal-400 font-semibold" data-act="exportAllRepertoire">⬇ Export All Games (${state.pgnList.length})</button><button class="text-left text-amber-400" data-act="resetStars">Reset Mastery Stars</button><button class="text-left text-rose-400 font-semibold" data-act="purgeDatabase">🗑️ Purge Entire Database</button></div></div>`,[{
-      text:'Save Preferences',
-      onClick:()=>{Object.assign(state,{playerSide:$('mSide').value,atmosphereTheme:$('mAtmo').value,soundTheme:$('mSound').value});applyTheme();syncPlaySideButtons();persist();closeModal();}
-    }]);
-  },
+  openSettingsModal:()=>openModal('⚙️ Preferences & Global Database',`<div class="space-y-3"><div><label class="text-gray-300">Play Side</label><select id="mSide" class="w-full bg-gray-950 border border-gray-700 p-1.5 rounded text-white"><option value="auto">Auto-Detect</option><option value="w" ${state.playerSide==='w'?'selected':''}>Always White</option><option value="b" ${state.playerSide==='b'?'selected':''}>Always Black</option></select></div><div><label class="text-gray-300">Theme Atmosphere</label><select id="mAtmo" class="w-full bg-gray-950 border border-gray-700 p-1.5 rounded text-white"><option value="dark">Studio Dark</option><option value="oled" ${state.atmosphereTheme==='oled'?'selected':''}>OLED Black</option></select></div><div><label class="text-gray-300">Audio Theme</label><select id="mSound" class="w-full bg-gray-950 border border-gray-700 p-1.5 rounded text-white"><option value="synth">Synthesizer</option><option value="wood" ${state.soundTheme==='wood'?'selected':''}>Wood</option><option value="beep" ${state.soundTheme==='beep'?'selected':''}>Digital Beep</option><option value="silent" ${state.soundTheme==='silent'?'selected':''}>Muted</option></select></div><div class="pt-2 border-t border-gray-800 flex flex-col gap-2"><button class="text-left text-teal-400 font-semibold" data-act="exportAllRepertoire">⬇ Export All Games (${state.pgnList.length})</button><button class="text-left text-amber-400" data-act="resetStars">Reset Mastery Stars</button><button class="text-left text-rose-400 font-semibold" data-act="purgeDatabase">🗑️ Purge Entire Database</button></div></div>`,[{text:'Save Preferences',onClick:()=>{Object.assign(state,{playerSide:$('mSide').value,atmosphereTheme:$('mAtmo').value,soundTheme:$('mSound').value});applyTheme();syncPlaySideButtons();persist();closeModal();}}]),
   resetStars:()=>{if(confirm('Reset stars?')){state.masteryStreaks={};persist();updateDashboard();closeModal();}},
   exportAllRepertoire:()=>downloadBlob(state.pgnList.join('\n\n'),`full_repertoire_${new Date().toISOString().slice(0,10)}.pgn`),
-  purgeDatabase:()=>{
-    if(confirm('CRITICAL: Purge ALL repertoire lines and reset to blank?')){
-      state.pgnList=[];state.pgnFolders={};state.masteryStreaks={};
-      state.completedGames.clear();state.mistakeQueue.clear();state.favorites.clear();state.sessionDeck=[];
-      persist();updateDashboard();updateAnalytics();closeModal();loadGame();
-    }
-  },
+  purgeDatabase:()=>{if(confirm('CRITICAL: Purge ALL repertoire lines and reset to blank?')){state.pgnList=[];state.pgnFolders={};state.masteryStreaks={};state.completedGames.clear();state.mistakeQueue.clear();state.favorites.clear();state.sessionDeck=[];persist();updateDashboard();updateAnalytics();closeModal();loadGame();}},
   openSyncModal:()=>{
     openModal('☁️ GitHub Sync & Backup',`<div class="space-y-2"><div><label class="text-gray-400">GitHub PAT</label><input type="password" id="mPat" value="${esc(localStorage.getItem('pgn_pat')||'')}" class="w-full bg-gray-950 border border-gray-700 p-1 rounded font-mono text-white"></div><div><label class="text-gray-400">Gist ID</label><input type="text" id="mGist" value="${esc(localStorage.getItem('pgn_gist')||'')}" class="w-full bg-gray-950 border border-gray-700 p-1 rounded font-mono text-white"></div><div class="grid grid-cols-2 gap-2 pt-1"><button data-act="pullGist" class="bg-teal-700 p-1.5 rounded text-white font-bold">⬇ Pull</button><button data-act="pushGist" class="bg-blue-600 p-1.5 rounded text-white font-bold">⬆ Push</button></div><div class="border-t border-gray-800 pt-2 grid grid-cols-2 gap-2"><button data-act="exportJson" class="bg-gray-800 p-1 rounded">💾 Export JSON</button><label class="bg-gray-800 p-1 rounded text-center cursor-pointer"><span>📂 Import JSON</span><input type="file" id="mImport" accept=".json" class="hidden"></label></div></div>`,[{text:'Close',onClick:closeModal}]);
     $('mImport').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{try{applySyncState(JSON.parse(ev.target.result));persist();location.reload();}catch(err){alert('Invalid JSON file.');}};rd.readAsText(f);};
   },
   pullGist:async()=>{
-    const pat=$('mPat')?.value.trim()||localStorage.getItem('pgn_pat'),gist=$('mGist')?.value.trim()||localStorage.getItem('pgn_gist');
-    if(!pat||!gist)return alert('Token & Gist ID required.');
+    const pat=$('mPat')?.value.trim()||localStorage.getItem('pgn_pat'),gist=$('mGist')?.value.trim()||localStorage.getItem('pgn_gist');if(!pat||!gist)return alert('Token & Gist ID required.');
     localStorage.setItem('pgn_pat',pat);localStorage.setItem('pgn_gist',gist);
-    try{
-      const r=await fetch(`https://api.github.com/gists/${gist}`,{headers:{Authorization:`Bearer ${pat}`}});
-      if(!r.ok)throw new Error(`HTTP ${r.status}`);
-      const d=await r.json(),c=d.files?.['pgn_drills_state.json']?.content;
-      if(c){applySyncState(JSON.parse(c));persist();$('cloudToast').classList.add('hidden');alert('Pulled state! Reloading...');location.reload();}
-      else alert('No pgn_drills_state.json found in this Gist.');
-    }catch(e){alert('Pull error: '+e.message);}
+    try{const r=await fetch(`https://api.github.com/gists/${gist}`,{headers:{Authorization:`Bearer ${pat}`}});if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json(),c=d.files?.['pgn_drills_state.json']?.content;if(c){applySyncState(JSON.parse(c));persist();$('cloudToast').classList.add('hidden');alert('Pulled state! Reloading...');location.reload();}else alert('No pgn_drills_state.json found in this Gist.');}catch(e){alert('Pull error: '+e.message);}
   },
   pushGist:async()=>{
-    const pat=$('mPat')?.value.trim()||localStorage.getItem('pgn_pat'),gist=$('mGist')?.value.trim()||localStorage.getItem('pgn_gist');
-    if(!pat||!gist)return alert('Token & Gist ID required.');
+    const pat=$('mPat')?.value.trim()||localStorage.getItem('pgn_pat'),gist=$('mGist')?.value.trim()||localStorage.getItem('pgn_gist');if(!pat||!gist)return alert('Token & Gist ID required.');
     localStorage.setItem('pgn_pat',pat);localStorage.setItem('pgn_gist',gist);
-    try{
-      state.lastSavedTs=Date.now();
-      const r=await fetch(`https://api.github.com/gists/${gist}`,{
-        method:'PATCH',headers:{Authorization:`Bearer ${pat}`,Accept:'application/vnd.github+json'},
-        body:JSON.stringify({files:{'pgn_drills_state.json':{content:JSON.stringify(getSyncPayload(),null,2)}}})
-      });
-      if(!r.ok)throw new Error(`HTTP ${r.status}`);
-      $('syncDirtyDot').className='w-2 h-2 rounded-full ring-2 ring-gray-900 bg-emerald-400';
-      state.isDirtySync=false;alert('Saved to GitHub Gist! ✅');
-    }catch(e){alert('Push error: '+e.message);}
+    try{state.lastSavedTs=Date.now();const r=await fetch(`https://api.github.com/gists/${gist}`,{method:'PATCH',headers:{Authorization:`Bearer ${pat}`,Accept:'application/vnd.github+json'},body:JSON.stringify({files:{'pgn_drills_state.json':{content:JSON.stringify(getSyncPayload(),null,2)}}})});if(!r.ok)throw new Error(`HTTP ${r.status}`);$('syncDirtyDot').className='w-2 h-2 rounded-full ring-2 ring-gray-900 bg-emerald-400';state.isDirtySync=false;alert('Saved to GitHub Gist! ✅');}catch(e){alert('Push error: '+e.message);}
   },
   exportJson:()=>downloadBlob(JSON.stringify(getSyncPayload(),null,2),'repertoire_backup.json','application/json'),
   openFolderModal:()=>{state.selectedDrillIndices.clear();state.sfSearchQuery='';renderSubfolderModal();},
   jumpToDrill:e=>{state.currentIndex=parseInt(e.target.dataset.idx,10);closeModal();loadGame();},
-  toggleRenameTitle:e=>{
-    const idx=e.target.closest('[data-idx]').dataset.idx;
-    $(`titleDisplay_${idx}`).classList.add('hidden');
-    const inp=$(`titleInput_${idx}`);inp.classList.remove('hidden');inp.focus();inp.select();
-  },
-  autoDetectEco:e=>{
-    const idx=parseInt(e.target.closest('[data-idx]').dataset.idx,10),auto=detectEcoAndTitle(state.pgnList[idx]||'');
-    auto?saveInlineRename(idx,auto):alert('No standard ECO sequence matched for this line.');
-  },
+  toggleRenameTitle:e=>{const idx=e.target.closest('[data-idx]').dataset.idx;$(`titleDisplay_${idx}`).classList.add('hidden');const inp=$(`titleInput_${idx}`);inp.classList.remove('hidden');inp.focus();inp.select();},
+  autoDetectEco:e=>{const idx=parseInt(e.target.closest('[data-idx]').dataset.idx,10),auto=detectEcoAndTitle(state.pgnList[idx]||'');auto?saveInlineRename(idx,auto):alert('No standard ECO sequence matched for this line.');},
   viewRawPgn:e=>{
     const idx=parseInt(e.target.closest('[data-idx]').dataset.idx,10);
     openModal(`📄 Raw PGN: Drill #${idx+1}`,`<textarea id="rawPgnModalText" rows="10" class="w-full bg-gray-950 border border-gray-700 p-2 font-mono text-xs text-white rounded outline-none">${esc(state.pgnList[idx]||'')}</textarea>`,[
-      {text:'Cancel',cls:'bg-gray-800 text-white',onClick:()=>renderSubfolderModal()},
-      {text:'Save PGN',onClick:()=>{
-        const raw=$('rawPgnModalText').value;
-        if(loadPgnSafe(state.scratchGame,raw)){state.pgnList[idx]=raw;persist();if(idx===state.currentIndex)loadGame();renderSubfolderModal();}
+      {text:'Cancel',cls:'bg-gray-800 text-white',onClick:()=>renderSubfolderModal()},{text:'Save / Split PGN',onClick:()=>{
+        const raw=$('rawPgnModalText').value.trim(),splitLines=splitPgnVariations(raw);
+        if(splitLines.length>1){
+          if(loadPgnSafe(state.scratchGame,splitLines[0])){const f=normF(state.pgnFolders[idx]);state.pgnList[idx]=splitLines[0];for(let k=1;k<splitLines.length;k++){state.pgnList.push(splitLines[k]);state.pgnFolders[state.pgnList.length-1]=f;}persist();updateDashboard();if(idx===state.currentIndex)loadGame();renderSubfolderModal();alert(`Split into ${splitLines.length} separate variation lines!`);}
+          else alert('Syntax Error: chess.js could not validate this PGN.');
+        }else if(loadPgnSafe(state.scratchGame,raw)){state.pgnList[idx]=raw;persist();if(idx===state.currentIndex)loadGame();renderSubfolderModal();}
         else alert('Syntax Error: chess.js could not validate this PGN.');
       }}
     ],'max-w-xl');
   },
-  deleteSingleDrill:e=>{
-    const idx=parseInt(e.target.closest('[data-idx]').dataset.idx,10);
-    if(confirm('Delete this line?')){deleteIndices(new Set([idx]));renderSubfolderModal();loadGame();}
-  },
-  batchDelete:()=>{
-    if(!state.selectedDrillIndices.size)return alert('No lines checked.');
-    if(confirm(`Delete ${state.selectedDrillIndices.size} selected line(s)?`)){deleteIndices(new Set(state.selectedDrillIndices));renderSubfolderModal();loadGame();}
-  },
-  batchExport:()=>{
-    const pool=getFolderPool(),exp=state.selectedDrillIndices.size?[...state.selectedDrillIndices]:pool;
-    if(!exp.length)return alert('No drills to export.');
-    downloadBlob(exp.map(i=>state.pgnList[i]).join('\n\n'),`${(state.subfolder!=='all'?state.subfolder:'repertoire').replace(/\//g,'_')}_export.pgn`);
-  },
-  batchMove:()=>{
-    if(!state.selectedDrillIndices.size)return alert('No lines checked to move.');
-    const target=normF($('batchMoveTargetSelect')?.value);
-    if(!target)return alert('No destination folder selected.');
-    state.selectedDrillIndices.forEach(idx=>state.pgnFolders[idx]=target);
-    persist();alert(`Moved ${state.selectedDrillIndices.size} line(s) to ${target}!`);
-    state.selectedDrillIndices.clear();renderSubfolderModal();updateDashboard();updateSessionUI();
-  },
+  deleteSingleDrill:e=>{const idx=parseInt(e.target.closest('[data-idx]').dataset.idx,10);if(confirm('Delete this line?')){deleteIndices(new Set([idx]));renderSubfolderModal();loadGame();}},
+  batchDelete:()=>{if(!state.selectedDrillIndices.size)return alert('No lines checked.');if(confirm(`Delete ${state.selectedDrillIndices.size} selected line(s)?`)){deleteIndices(new Set(state.selectedDrillIndices));renderSubfolderModal();loadGame();}},
+  batchExport:()=>{const pool=getFolderPool(),exp=state.selectedDrillIndices.size?[...state.selectedDrillIndices]:pool;if(!exp.length)return alert('No drills to export.');downloadBlob(exp.map(i=>state.pgnList[i]).join('\n\n'),`${(state.subfolder!=='all'?state.subfolder:'repertoire').replace(/\//g,'_')}_export.pgn`);},
+  batchMove:()=>{if(!state.selectedDrillIndices.size)return alert('No lines checked to move.');const target=normF($('batchMoveTargetSelect')?.value);if(!target)return alert('No destination folder selected.');state.selectedDrillIndices.forEach(idx=>state.pgnFolders[idx]=target);persist();alert(`Moved ${state.selectedDrillIndices.size} line(s) to ${target}!`);state.selectedDrillIndices.clear();renderSubfolderModal();updateDashboard();updateSessionUI();},
   reshuffleSession:()=>startSession(state.subfolder,state.activeQueueMode)
 };
 
 function initBoard(){
   state.board=Chessboard('board',{
     draggable:state.inputMode==='drag',position:state.game.fen()||'start',orientation:state.board?state.board.orientation():'white',pieceTheme:getPieceUrl,
-    onDragStart:(s,p)=>{
-      if(state.game.game_over())return false;
-      if(state.mode==='drill'&&(p[0]!==(state.board.orientation()==='black'?'b':'w')||p[0]!==state.game.turn()))return false;
-      if(state.mode!=='drill'&&p[0]!==state.game.turn())return false;
-      state.selectedSquare=null;
-      showDots(s);
-    },
-    onDrop:(s,t)=>{
-      clearHighlights();if(s===t)return;
-      if(state.game.get(s)?.type==='p'&&state.game.moves({square:s,verbose:true}).some(m=>m.to===t&&m.promotion)){
-        promptPromotion(s,t,state.game.get(s).color);return;
-      }
-      if(!attemptMove(s,t,'q'))return'snapback';
-    },
+    onDragStart:(s,p)=>{if(state.game.game_over()||(state.mode==='drill'&&(p[0]!==(state.board.orientation()==='black'?'b':'w')||p[0]!==state.game.turn()))||(state.mode!=='drill'&&p[0]!==state.game.turn()))return false;state.selectedSquare=null;showDots(s);},
+    onDrop:(s,t)=>{clearHighlights();if(s===t)return;if(state.game.get(s)?.type==='p'&&state.game.moves({square:s,verbose:true}).some(m=>m.to===t&&m.promotion)){promptPromotion(s,t,state.game.get(s).color);return;}if(!attemptMove(s,t,'q'))return'snapback';},
     onSnapEnd:()=>{state.board.position(state.game.fen());renderHighlights();}
   });
   applyBoardSize(state.boardSize);
@@ -1564,17 +944,9 @@ document.addEventListener('click',e=>{
   if(e.target.id==='appModal')return closeModal();
   const act=e.target.closest('[data-act]')?.dataset.act;if(act&&actions[act])actions[act](e);
   const root=e.target.closest('.root-cat')?.dataset.root;if(root){state.rootCat=root;renderFolderHub();}
-  const pv=e.target.closest('.pv-line')?.dataset.pvMove;
-  if(pv&&pv.length>=4){
-    if(attemptMove(pv.slice(0,2),pv.slice(2,4),pv[4]||'q')){state.board.position(state.game.fen());renderHighlights();}
-  }
+  const pv=e.target.closest('.pv-line')?.dataset.pvMove;if(pv&&pv.length>=4&&attemptMove(pv.slice(0,2),pv.slice(2,4),pv[4]||'q')){state.board.position(state.game.fen());renderHighlights();}
 });
-
-$('board').addEventListener('click',e=>{
-  if(state.inputMode!=='tap')return;
-  const sq=e.target.closest('.square-55d63')?.dataset?.square;
-  if(sq)handleSquare(sq);
-});
+$('board').addEventListener('click',e=>{if(state.inputMode==='tap'){const sq=e.target.closest('.square-55d63')?.dataset?.square;if(sq)handleSquare(sq);}});
 $('board').addEventListener('contextmenu',e=>e.preventDefault());
 $('board').addEventListener('mousedown',e=>{if(e.button===2&&state.mode!=='drill')state.arrowStartSquare=e.target.closest('.square-55d63')?.dataset?.square;});
 $('board').addEventListener('mouseup',e=>{
@@ -1582,28 +954,22 @@ $('board').addEventListener('mouseup',e=>{
     const to=e.target.closest('.square-55d63')?.dataset?.square;
     if(to){
       const col=e.shiftKey?`rgba(239,68,68,${state.arrowOpacity})`:`rgba(20,184,166,${state.arrowOpacity})`;
-      if(to===state.arrowStartSquare){
-        const ex=state.activeRings.findIndex(r=>r.sq===to);
-        ex!==-1?state.activeRings.splice(ex,1):state.activeRings.push({sq:to,color:col});
-      }else state.activeArrows.push({from:state.arrowStartSquare,to,color:col});
+      if(to===state.arrowStartSquare){const ex=state.activeRings.findIndex(r=>r.sq===to);ex!==-1?state.activeRings.splice(ex,1):state.activeRings.push({sq:to,color:col});}
+      else state.activeArrows.push({from:state.arrowStartSquare,to,color:col});
       renderCanvasOverlays();
     }
     state.arrowStartSquare=null;
   }
 });
-
 window.addEventListener('keydown',e=>{
-  if(['TEXTAREA','INPUT','SELECT'].includes(document.activeElement?.tagName))return;
-  const k=e.key.toLowerCase();
+  if(['TEXTAREA','INPUT','SELECT'].includes(document.activeElement?.tagName))return;const k=e.key.toLowerCase();
   if(e.key==='Escape')closeModal();
   else if(e.key===' '||e.code==='Space'){e.preventDefault();if(state.mode==='drill')actions.hintMove();}
-  else if(k==='f')actions.flipBoard();
-  else if(k==='r')state.mode==='drill'?loadGame(true):actions.resetSandbox();
+  else if(k==='f')actions.flipBoard();else if(k==='r')state.mode==='drill'?loadGame(true):actions.resetSandbox();
   else if(k==='n'&&state.mode==='drill')actions.nextDrill();
   else if(k==='z'||e.key==='ArrowLeft')state.mode==='explore'?actions.expNav({target:{closest:()=>({dataset:{step:'prev'}})}}):actions.undoSandbox();
   else if((k==='x'||e.key==='ArrowRight')&&state.mode==='explore')actions.expNav({target:{closest:()=>({dataset:{step:'next'}})}});
 });
-
 window.addEventListener('resize',()=>applyBoardSize(state.boardSize));
 $('queueSelect').onchange=e=>startSession(state.subfolder,e.target.value);
 $('engineDepthInput').onchange=()=>evalBoard();
